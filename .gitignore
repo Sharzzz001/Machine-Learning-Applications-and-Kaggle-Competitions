@@ -34,3 +34,5 @@ dma-project/rent_model.h5
 /kaggle-house-price-prediction/sample_submission.csv
 /kaggle-house-price-prediction/test.csv
 /kaggle-house-price-prediction/train.csv
+/kaggle-house-price-prediction/rent_model.h5
+/kaggle-house-price-prediction/pred_rfcv.csv

@@ -43,3 +43,7 @@ dma-project/rent_model.h5
 /Self-Projects/ISP Churn/rfcv.pkl
 /Self-Projects/ISP Churn/churn_model.h5
 /Self-Projects/Maternal Risk/maternal_model.h5
+/spaceship_titanic/Predictions_new_CNN.csv
+/spaceship_titanic/Predictions_new_RFcv.csv
+/spaceship_titanic/Predictions_new.csv
+/spaceship_titanic/space_model.h5

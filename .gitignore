@@ -53,3 +53,7 @@ KKBox/transactions_v2.csv
 /KKBox/user_logs_v2.csv
 /Self-Projects/Bankruptcy/data.csv
 /Self-Projects/Bankruptcy/bank_model.h5
+/Playground S3e3/emp_model.h5
+Playground S3e3/sample_submission.csv
+Playground S3e3/test.csv
+Playground S3e3/train.csv

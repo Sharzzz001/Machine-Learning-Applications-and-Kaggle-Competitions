@@ -1,0 +1,793 @@
+,brand,model,price (eur),engine,year,mileage (kms),fuel,gearbox,location
+0,SEAT,Ibiza,8990,SC 1.2 TSI 90cv Style,2016,67000,Gasolina,Manual,Granollers
+1,Hyundai,i30,9990,1.6 CRDi 110cv Tecno,2014,104868,Diésel,Manual,Viladecans
+2,BMW,Serie 5,13490,530d Touring,2011,137566,Diésel,Automatica,Viladecans
+3,Volkswagen,Golf,24990,GTI 2.0 TSI 169kW (230CV),2018,44495,Gasolina,Manual,Viladecans
+4,Opel,Corsa,10460,1.4 Expression 90 CV,2016,69800,Gasolina,Manual,Sabadell 1
+5,SEAT,Ibiza,8490,SC 1.2 TSI 105cv FR,2014,114295,Gasolina,Manual,Granollers
+6,Jeep,Wrangler,23990,3.8 Rubicon Auto,2011,103000,Gasolina,Automatica,Granollers
+7,Kia,Sportage,14990,1.6 GDi 97kW (132CV) Basic 4x2,2017,81999,Gasolina,Manual,Gavá
+8,Land,Rover Discovery Sport,19490,2.0L eD4 110kW (150CV) 4x2 SE,2017,148575,Diésel,Manual,Gavá
+9,SEAT,Leon,21990,1.5 eTSI 110kW DSG-7 S&S Xcellence Go M,2020,18999,Híbrido,Automatica,Gavá
+10,Nissan,Micra,9990,5p 1.0G ACENTA,2017,73633,Gasolina,Manual,Mataró
+11,Fiat,Doblò,9990,Panorama Lounge 1.6 Multijet 105cv E5+,2015,110642,Diésel,Manual,Mataró
+12,BMW,Serie 1,25490,118i,2019,27985,Gasolina,Automatica,Mataró
+13,SEAT,Leon,23990,2.0 TSI 221kW (300CV) DSG-6 St&Sp CUPRA,2018,40250,Gasolina,Automatica,Mataró
+14,Ford,Focus,14490,1.0 Ecoboost 92kW ST-Line,2019,99958,Gasolina,Manual,Mataró
+15,Citroen,C4 Cactus,9990,PureTech 82cv S&S ETG Shine,2015,62750,Gasolina,Manual,Mataró
+16,Toyota,C-HR,17990,1.8 125H Advance,2018,66000,Híbrido,Automatica,Mataró
+17,Toyota,Yaris,12990,1.5 110 Active Tech,2019,26073,Gasolina,Manual,Mataró
+18,Hyundai,i30,13490,1.0 TGDI Link Fastback,2018,69317,Gasolina,Manual,Mataró
+19,Volkswagen,Touran,18490,Edition 1.6 TDI CR 115CV BMT,2016,46993,Diésel,Manual,Sabadell 2
+20,BMW,Serie 3,15990,320d Gran Turismo,2014,118200,Diésel,Manual,Sabadell 2
+21,SEAT,Ibiza,10490,1.0 EcoTSI 95cv Style Connect,2016,99898,Gasolina,Manual,Mataró
+22,Peugeot,208,10460,5P STYLE 1.6 BlueHDi 100,2016,109252,Diésel,Manual,Sabadell 1
+23,Dacia,Duster,12880,Prestige TCE 92kW (125CV) 4X2,2018,44503,Gasolina,Manual,Sabadell 1
+24,SEAT,Ibiza,16820,1.0 EcoTSI 85kW (115CV) FR Plus,2018,19800,Gasolina,Manual,Sabadell 1
+25,Toyota,Rav4,9950,2.2 D-4D Advance 4x2,2011,192000,Diésel,Manual,Sabadell 1
+26,Mini,Paceman,14980,COOPER SD PACEMAN automático,2015,101000,Diésel,Automatica,Sabadell 1
+27,BMW,Serie 3,11380,318d Touring,2014,194000,Diésel,Manual,Sabadell 1
+28,Peugeot,3008,9990,Access 1.6 HDI 111 FAP,2012,99738,Diésel,Manual,Esplugas
+29,Renault,Clio,12990,Business TCe 55kW (75CV) -18,2019,24506,Gasolina,Manual,Esplugas
+30,Citroen,C3,13490,PureTech 60KW (83CV) Feel,2021,2546,Gasolina,Manual,Esplugas
+31,Toyota,Verso,10490,1.6D 115D Business 5pl.,2016,178807,Diésel,Manual,Esplugas
+32,Subaru,XV,13990,2.0i Executive Plus Auto,2015,110096,Gasolina,Automatica,Esplugas
+33,Ford,Tourneo Courier,12990,1.0 EcoBoost 100cv Ambiente,2016,96652,Gasolina,Manual,Esplugas
+34,Peugeot,2008,12990,Active 1.2L PureTech 110 S&S,2016,83400,Gasolina,Manual,Sabadell 2
+35,Ford,Transit Connect,12490,Van 1.6 TDCi 115cv Base 200 L1,2014,126400,Diésel,Manual,Sabadell 2
+36,Opel,Grandland X,17990,1.2 Turbo Ultimate,2019,42368,Gasolina,Manual,Gavá
+37,BMW,Serie 4,57990,M4 COMPETITION,2018,28999,Gasolina,Automatica,Gavá
+38,Audi,A4,16490,2.0 TDI 150CV multitronic S line edition,2015,123253,Diésel,Automatica,Gavá
+39,Volkswagen,Transporter,17990,Kombi PRO Corto TM 2.0 TDI BMT 114CV,2015,122500,Diésel,Manual,Sabadell 2
+40,Volkswagen,Golf,18990,Advance 1.4 TSI 92kW (125CV) DSG,2018,39245,Gasolina,Automatica,Gavá
+41,Peugeot,Partner,12990,TEPEE Access BlueHDi 1.6 HDi 100,2015,117417,Diésel,Manual,Gavá
+42,Citroen,C3 Picasso,11490,PureTech 81KW (110CV) Feel Edition,2017,78453,Gasolina,Manual,Gavá
+43,SEAT,Ibiza,12990,1.0 MPI 59kW (80CV) Style,2019,16000,Gasolina,Manual,Gavá
+44,Opel,Mokka X,17490,1.4 T 103kW 4X2 S&S Innovation,2019,56900,Gasolina,Manual,Hospitalet
+45,Nissan,JUKE,8490,1.5 dCi EDICIÓN ESPECIAL KURO 4X2,2013,152100,Diésel,Manual,Hospitalet
+46,Mercedes,Benz Clase A,20990,A 180,2018,69500,Gasolina,Manual,Hospitalet
+47,Volkswagen,Golf,17490,Sport 1.0 TSI 85kW (115CV) Variant,2019,77900,Gasolina,Manual,Hospitalet
+48,Volkswagen,Touran,13490,1.6 TDI 105cv DSG Edition,2013,99990,Diésel,Automatica,Esplugas
+49,Opel,Crossland X,15490,1.2 96kW (130CV) Innovation S/S,2019,67100,Gasolina,Manual,Hospitalet
+50,Mercedes,Benz Clase SLK,19490,SLK 250 BlueEfficiency,2011,72000,Gasolina,Manual,Hospitalet
+51,Nissan,Qashqai,18990,DIG-T 85 kW (115 CV) N-CONNECTA,2018,33150,Gasolina,Automatica,Sabadell 2
+52,Kia,Ceed Tourer,18960,Tourer 1.0 T-GDi 88kW (120CV) GT Line,2019,32360,Gasolina,Manual,Sabadell 1
+53,Mazda,Mazda3,18890,2.0 SKYACTIV-G 88KW ZENITH,2018,29230,Gasolina,Manual,Sabadell 1
+54,BMW,Serie 2 Active Tourer,14970,216d,2016,160000,Diésel,Manual,Sabadell 1
+55,SEAT,Ibiza,10570,1.0 EcoTSI 95cv Reference,2016,86528,Gasolina,Manual,Sabadell 1
+56,Mazda,CX-5,27990,2.0 GE 121kW (165CV) Zenith,2021,15000,Gasolina,Manual,Hospitalet
+57,SEAT,Ibiza,12990,1.0 EcoTSI 70kW (95CV) Style,2017,42700,Gasolina,Manual,Mataró
+58,Fiat,Panda,7990,1.2 Lounge 69cv EU6,2016,50000,Gasolina,Manual,Hospitalet
+59,SEAT,Leon,11490,1.6 TDI 66kW (90CV) Reference,2017,128000,Diésel,Manual,Hospitalet
+60,Opel,Astra,15490,1.2T SHL 81kW (110CV) Astra,2020,7500,Gasolina,Manual,Hospitalet
+61,SEAT,Leon,8990,1.2 TSI 105cv Style Copa,2012,146000,Gasolina,Manual,Hospitalet
+62,Mercedes,Benz Clase E,30490,E 220 d,2018,97164,Diésel,Automatica,Viladecans
+63,Citroen,C3,11990,PureTech 60KW (82CV) S&S FEEL,2018,29513,Gasolina,Manual,Viladecans
+64,Renault,Clio,8990,Dynamique Energy TCe 90 S&S eco2,2014,55315,Gasolina,Manual,Viladecans
+65,SEAT,Toledo,12990,1.0 TSI 81kW St&Sp STYLE EDITION,2018,20253,Gasolina,Manual,Mataró
+66,Toyota,Yaris,15990,1.5 100H Feel,2020,19700,Híbrido,Automatica,Badalona
+67,Ford,S-Max,9990,2.0 TDCi 140cv DPF Trend,2012,100500,Diésel,Automatica,Badalona
+68,Fiat,500,8990,1.2 8v 69 CV Lounge,2016,80000,Gasolina,Manual,Badalona
+69,Volkswagen,Tiguan,13990,T1 2.0 TDI 110CV BMT 4x2,2015,99265,Diésel,Manual,Badalona
+70,Lexus,CT,18490,1.8 200h Business,2018,43909,Híbrido,Automatica,Esplugas
+71,BMW,X4,26990,xDrive30d,2017,187000,Diésel,Automatica,Sabadell 3
+72,BMW,Serie 3,18990,318d,2017,126000,Diésel,Automatica,Sabadell 3
+73,Audi,Q5,30490,2.0 TDI clean diesel 140kW quattro S tro,2017,122593,Diésel,Automatica,Sabadell 2
+74,Ford,Kuga,14490,1.5 TDCi 120 4x2 A-S-S Titanium,2016,81320,Diésel,Manual,Sabadell 2
+75,Ford,Kuga,16490,1.5 TDCi 88kW 4x2 A-S-S Trend,2017,42900,Diésel,Manual,Sabadell 2
+76,Ford,Fiesta,13490,1.0 EcoBoost 103kW(140CV) ST-Line S/S 5p,2019,38950,Gasolina,Manual,Sabadell 2
+77,Nissan,Qashqai,13990,1.5dCi S&S ACENTA 4x2,2014,54956,Diésel,Manual,Esplugas
+78,Citroen,C4,5990,1.6 e-HDi 110cv Collection,2012,199990,Diésel,Manual,Esplugas
+79,Renault,Captur,14790,Life TCe 66kW (90CV),2019,23500,Gasolina,Manual,Granollers
+80,SEAT,Ibiza,10490,1.2 TSI 66kW (90CV) Style,2017,95500,Gasolina,Manual,Sabadell 2
+81,SEAT,Leon,22990,2.0 TSI 221kW (300CV) DSG-6 St&Sp CUPRA,2017,64100,Gasolina,Manual,Sabadell 2
+82,BMW,X1,20990,sDrive18d Pack M,2016,116387,Diésel,Automatica,Mataró
+83,Toyota,C-HR,16990,1.8 125H Dynamic Plus,2017,99658,Híbrido,Automatica,Mataró
+84,Kia,Sportage,21990,1.6 T-GDi 130kW GT Line Plus DCT 4x4,2018,23400,Gasolina,Automatica,Badalona
+85,Mercedes,Benz Clase GLA,24490,GLA 220 d 4MATIC AMG Line,2016,83100,Diésel,Automatica,Granollers
+86,Renault,Clio,9490,Zen Energy dCi 66kW (90CV),2016,130300,Diésel,Manual,Granollers
+87,Renault,Espace,18990,Zen Energy dCi 118kW (160CV) TT EDC,2017,105000,Diésel,Automatica,Granollers
+88,Opel,Mokka X,16990,1.4 T 103kW 4X4 S&S Innovation,2019,53405,Gasolina,Manual,Gavá
+89,Kia,Optima,19990,1.7 CRDi VGT 141CV Emotion Eco-Dynamics,2016,88884,Diésel,Automatica,Gavá
+90,Opel,Astra,12990,1.6 CDTi 81kW (110CV) Dynamic,2017,66515,Diésel,Manual,Gavá
+91,Audi,Q3,22990,Sport edition 2.0 TDI 88kW (120CV),2018,57425,Diésel,Manual,Gavá
+92,Peugeot,3008,18990,1.2 PURETECH 96KW (130CV) ALLURE S&S,2018,106350,Gasolina,Manual,Gavá
+93,Audi,A1,15990,Sportback 1.0 TFSI 95CVSLine Adrenalin,2016,37308,Gasolina,Manual,Viladecans
+94,Mercedes,Benz Clase A,14990,A 180 CDI Urban,2015,153501,Diésel,Manual,Mataró
+95,Volkswagen,Polo,9990,Advance 1.0 75CV BMT,2015,46347,Gasolina,Manual,Viladecans
+96,Volvo,V40,15990,2.0 T2 Momentum,2018,76086,Gasolina,Manual,Viladecans
+97,Citroen,C-Elysée,11990,BlueHDi 75KW (100CV) Shine,2019,47196,Diésel,Manual,Viladecans
+98,Audi,A4,18490,Avant 2.0 TDI 150CV S tronic,2016,118173,Diésel,Automatica,Viladecans
+99,Mitsubishi,Outlander,9490,220 DI-D SST Kaiteki,2011,170000,Diésel,Automatica,Granollers
+100,Land,Rover Discovery Sport,33990,2.0D I4-L.Flw 150 PS AWD Auto HSE,2019,65950,Diésel,Automatica,Hospitalet
+101,SEAT,Ibiza,9490,1.6 TDI 90cv Reference,2013,94500,Diésel,Manual,Mataró
+102,SEAT,Arona,15770,1.0 TSI 70kW (95CV) Style Edition Eco,2019,44158,Gasolina,Manual,Sabadell 1
+103,Alfa,Romeo Giulietta,7670,1.6 JTDm 105cv Distinctive,2011,125739,Diésel,Manual,Sabadell 1
+104,Toyota,Yaris,10260,1.3 100 Active,2016,77977,Gasolina,Manual,Sabadell 1
+105,Toyota,Verso,10370,115D Advance 5pl.,2015,129460,Diésel,Manual,Sabadell 1
+106,Opel,Corsa,10120,1.4 Selective 66kW (90CV),2018,25200,Gasolina,Manual,Sabadell 1
+107,Ford,Focus,16990,1.0 Ecoboost 92kW Titanium,2020,34100,Gasolina,Manual,Sabadell 3
+108,Audi,A7,20990,Sportback 3.0 TDI 245 quattro S tronic,2014,216107,Diésel,Automatica,Sabadell 3
+109,Ford,Focus,12490,1.5 TDCi E6 88kW (120CV) Trend+,2017,102000,Diésel,Manual,Sabadell 3
+110,Hyundai,i20,13290,1.0 TGDI 74kW(100CV) Tecno DT 2C,2019,33832,Gasolina,Manual,Mataró
+111,Fiat,Tipo,8990,1.4 16v Lounge 70kW (95CV) gasolina,2017,50500,Gasolina,Manual,Sabadell 3
+112,Opel,Astra,8990,1.6 CDTi S/S 110 CV Excellence,2015,114400,Diésel,Manual,Sabadell 3
+113,SEAT,Leon,18330,1.4 TSI 110kW (150CV) ACT St&Sp FR,2018,26000,Gasolina,Manual,Sabadell 1
+114,Renault,Kangoo Furgón,14430,Profesional Blue dCi 59 kW (80CV),2020,25100,Diésel,Manual,Sabadell 1
+115,Dacia,Sandero,10150,Stepway dCi 90,2015,31000,Diésel,Manual,Sabadell 1
+116,Citroen,C4 Picasso,11490,1.6 e-HDi 115cv ETG6 Seduction,2014,120000,Diésel,Automatica,Sabadell 3
+117,Renault,Clio 4,8990,Zen Energy TCe 66kW (90CV),2016,110000,Gasolina,Manual,Sabadell 3
+118,Audi,A3,11430,Sportback 1.6 TDI 105cv Ambition,2014,97000,Diésel,Manual,Sabadell 1
+119,Dacia,Dokker,10680,Van Essential Blue dCi 70kW (95CV),2020,32600,Diésel,Manual,Sabadell 1
+120,Peugeot,5008,24990,Allure 1.5L BlueHDi 96kW (130CV) S&S,2018,80995,Diésel,Automatica,Granollers
+121,Volkswagen,T-Cross,23990,Advance 1.0 TSI 81kW (110CV) DSG,2020,12100,Gasolina,Automatica,Hospitalet
+122,SEAT,Ibiza,8990,1.2 TSI 66kW (90CV) Reference,2017,39100,Gasolina,Manual,Hospitalet
+123,Kia,Sportage,15990,1.6 GDi 97kW (132CV) x-Tech17 4x2,2017,18000,Gasolina,Manual,Hospitalet
+124,Opel,Astra,9990,1.6 Selective,2015,48000,Gasolina,Manual,Hospitalet
+125,Ford,Ka+,9990,1.2 Ti-VCT White&Black Edition,2017,26400,Gasolina,Manual,Sabadell 2
+126,Citroen,C3 Aircross,15990,PureTech 81kW (110CV) S&S C-Series,2021,8450,Gasolina,Manual,Sabadell 2
+127,Jaguar,F-Pace,26990,2.0L i4D AWD Automático Prestige,2016,65244,Diésel,Automatica,Esplugas
+128,Mini,Mini,11990,ONE,2016,54870,Gasolina,Manual,Esplugas
+129,Kia,Ceed,8490,1.6 CRDi VGT Drive,2016,173127,Diésel,Manual,Esplugas
+130,Citroen,C4 Picasso,11490,BlueHDi 120cv Live Edition,2016,70528,Diésel,Manual,Esplugas
+131,Toyota,Yaris,5990,90D ACTIVE,2012,144437,Diésel,Manual,Esplugas
+132,SEAT,Arona,14990,1.0 TSI 70kW (95CV) Style Ecomotive,2017,32760,Gasolina,Manual,Sabadell 2
+133,Peugeot,2008,14990,Style 1.6 BlueHDi 73KW (100CV),2018,96970,Diésel,Manual,Sabadell 2
+134,Land,Rover Discovery Sport,22990,2.0L eD4 110kW (150CV) 4x2 SE,2017,82800,Diésel,Manual,Sabadell 2
+135,Ford,Kuga,10990,1.6 EcoBoost 150 A-S-S 4x2 Titanium,2014,176400,Gasolina,Manual,Sabadell 2
+136,Citroen,C4 Picasso,15990,PureTech 96KW (130CV) S&S 6v EAT6 Live,2017,53160,Gasolina,Manual,Sabadell 2
+137,BMW,Serie 1,11990,118d,2013,158000,Diésel,Manual,Granollers
+138,Land,Rover Range Rover Evoque,22990,2.2L TD4 150CV 4x4 Prestige Auto,2015,112000,Diésel,Automatica,Granollers
+139,Ford,C-Max,10990,1.0 EcoBoost 125CV Trend+,2015,120597,Gasolina,Manual,Esplugas
+140,Abarth,500,16990,595 Turismo 1.4 16v T-Jet 121kW E6,2017,69000,Gasolina,Automatica,Mataró
+141,Hyundai,Tucson,17730,1.7CRDi 85kW (115CV) BD 25 Aniv. Sky 4x2,2017,98000,Diésel,Manual,Sabadell 1
+142,Toyota,Avensis,11970,120D Advance Cross Sport,2015,97800,Diésel,Manual,Sabadell 1
+143,SEAT,Arona,14990,1.0 TSI 70kW (95CV) Style Ecomotive,2018,42591,Gasolina,Manual,Viladecans
+144,Opel,Mokka,10990,1.7 CDTi 4X2 S&S Selective,2013,78000,Diésel,Manual,Mataró
+145,Renault,Kadjar,15990,Zen Energy dCi 96kW (130CV),2017,84300,Diésel,Manual,Sabadell 3
+146,SEAT,Ateca,25990,2.0 TDI 110kW (150CV) S&S FR Edition,2019,53000,Diésel,Manual,Badalona
+147,Volkswagen,Touran,22490,Advance 2.0 TDI 110kW(150CV) BMT,2017,23000,Diésel,Manual,Sabadell 3
+148,Kia,Sportage,16490,1.6 GDi 97kW (132CV) Drive 4x2,2018,55600,Gasolina,Manual,Sabadell 3
+149,Toyota,C-HR,15990,1.8 125H Advance,2017,134000,Híbrido,Automatica,Sabadell 3
+150,BMW,X3,22990,sDrive18d,2016,96700,Diésel,Manual,Sabadell 3
+151,Suzuki,SX4 S-Cross,13490,1.0 DITC GLE,2017,79000,Gasolina,Manual,Sabadell 3
+152,Nissan,X-Trail,15880,dCi 130CV (96kW) 4x4-i TEKNA,2015,144000,Diésel,Manual,Sabadell 1
+153,SEAT,Leon,13270,1.4 TSI ACT 110kW (150CV) DSG-7 St&Sp FR,2017,169000,Gasolina,Manual,Sabadell 1
+154,SEAT,Arona,14490,1.0 TSI 70kW (95CV) Style Ecomotive,2018,95947,Gasolina,Manual,Mataró
+155,SEAT,Ibiza,9990,ST 1.6 TDI 105cv Style ITech 30 Aniver,2015,67600,Diésel,Manual,Viladecans
+156,Mercedes,Benz Clase CLA,24990,CLA 220 d AMG Line,2016,74580,Diésel,Automatica,Mataró
+157,Nissan,Qashqai,15990,DIG-T 85 kW (115 CV) N-CONNECTA,2017,34620,Gasolina,Manual,Mataró
+158,Peugeot,3008,18990,1.2 PURETECH 96KW (130CV) ACTIVE EAT8,2019,131900,Gasolina,Manual,Sabadell 2
+159,Jeep,Renegade,16990,1.0G 88kW Sport 4x2,2018,61970,Gasolina,Manual,Sabadell 2
+160,Audi,A1,12490,Sportback 1.0 TFSI 95CV Adrenalin2,2015,109450,Gasolina,Manual,Sabadell 2
+161,Nissan,NV250,22990,4pl 1.5dCi 70 kW (95 CV) L2H1 COMFORT,2021,1258,Diésel,Manual,Viladecans
+162,Nissan,Qashqai,13490,1.6dCi S&S ACENTA 4x2,2014,143866,Diésel,Manual,Viladecans
+163,Hyundai,Kona,19490,XLE 4X2 ,2021,11757,Gasolina,Manual,Viladecans
+164,Volkswagen,Polo,13990,Advance 1.0 TSI 70kW (95CV),2018,73000,Gasolina,Manual,Granollers
+165,Nissan,X-Trail,16990,dCi 130CV (96kW) 360 7 plazas,2015,165000,Diésel,Manual,Granollers
+166,Kia,ProCeed,18990,1.6 T-GDi 204CV GT,2016,80000,Gasolina,Manual,Badalona
+167,SEAT,Leon,14990,1.5 TSI 96kW (130CV) S&S Style Visio Ed,2019,70665,Gasolina,Manual,Badalona
+168,Nissan,Micra,11990,IG-T 74 kW (100 CV) E6D Acenta,2019,21017,Gasolina,Manual,Badalona
+169,Peugeot,308,9990,Nuevo 308 SW Business Line 1.6 HDI 92,2015,90500,Diésel,Manual,Badalona
+170,Mazda,Mazda6,12990,2.2 DE AT 4WD L+P+ T.+SR (CN) WGN,2016,170000,Diésel,Automatica,Granollers
+171,Hyundai,i30,14990,1.0 TGDI Link Fastback,2018,35400,Gasolina,Manual,Granollers
+172,Peugeot,5008,11990,Allure 1.6 BlueHDi 88KW (120CV),2016,106000,Diésel,Manual,Granollers
+173,Renault,Clio,16490,Zen TCe GPF 96 kW (130CV) EDC,2020,6425,Gasolina,Automatica,Sabadell 2
+174,Opel,Vivaro,15990,1.6 CDTI 90 CV Expression L1 H1 2.7t,2016,53600,Diésel,Manual,Sabadell 2
+175,Ford,EcoSport,14490,1.0T EcoBoost 92kW (125CV) S&S ST Line,2018,29213,Gasolina,Manual,Sabadell 2
+176,BMW,Serie 5,11490,520d,2011,199600,Diésel,Manual,Sabadell 2
+177,Audi,A3,12990,Sportb 2.0 TDI 150 clean S line edition,2014,159782,Diésel,Manual,Sabadell 2
+178,Ford,Fiesta,10990,1.0 EcoBoost 74kW ST-Line 5p,2017,90378,Gasolina,Manual,Gavá
+179,Nissan,Micra,10990,IG-T 66 kW (90 CV) S&S Acenta,2018,23462,Gasolina,Manual,Mataró
+180,Kia,Ceed,19990,1.4 T-GDi 103kW (140CV) Tech,2018,28096,Gasolina,Manual,Gavá
+181,Toyota,Verso,14990,1.6D 115D Advance + Pack Style 7pl.,2016,98861,Diésel,Manual,Gavá
+182,Dacia,Sandero,9990,Stepway TCE 66kW (90CV) EU6,2016,97756,Gasolina,Manual,Gavá
+183,Hyundai,i30,14490,1.6 CRDi 81kW (110CV) Tecno Tech,2017,56294,Diésel,Manual,Esplugas
+184,Renault,Megane,17990,Limited TCe 103 kW (140CV) GPF -SS,2020,33375,Gasolina,Automatica,Esplugas
+185,Mercedes,Benz Clase A,14990,A 180 CDI BlueEFFICIENCY Urban,2013,90270,Diésel,Automatica,Esplugas
+186,Ford,Puma,18990,1.0 EcoBoost 92kW (125cv) ST-Line MHEV,2020,2584,Híbrido,Manual,Esplugas
+187,Audi,A1,15290,1.0 TFSI 95CV S tronic Attracted,2015,111793,Gasolina,Automatica,Esplugas
+188,Fiat,500,10990,Mirror 1.2 8v 51KW (69 CV),2018,58000,Gasolina,Manual,Granollers
+189,Hyundai,Tucson,24990,1.6 GDI 97kW (131CV) N-Line Lite 4X2,2020,8320,Gasolina,Manual,Mataró
+190,Nissan,NV200,11280,"5pl. 1.5dCi 66kW (90CV) COMF A/C 15"" Kit",2016,189000,Diésel,Manual,Sabadell 1
+191,Volkswagen,Golf,18960,GTD 2.0 TDI 184CV DSG BMT,2016,85000,Diésel,Automatica,Sabadell 1
+192,Mercedes,Benz Clase CLA,16980,CLA 180d Urban,2014,144000,Diésel,Manual,Sabadell 1
+193,SEAT,Ibiza,12350,SC 1.0 EcoTSI 110cv FR,2016,56000,Gasolina,Manual,Sabadell 1
+194,Opel,Astra,10980,1.6 CDTi S/S 100kW (136CV) Dynamic,2016,155000,Diésel,Automatica,Sabadell 1
+195,SEAT,Arona,15490,1.0 TSI 70kW (95CV) Style Ecomotive,2017,55630,Gasolina,Manual,Hospitalet
+196,Ssangyong,REXTON,12990,200 e-Xdi 4x4 Limited,2013,92311,Diésel,Manual,Hospitalet
+197,Renault,Kangoo,10990,Profesional N1 Energy dCi 66kW (90CV) E6,2018,140000,Diésel,Manual,Hospitalet
+198,Ford,Tourneo Courier,12490,1.5 TDCi 74kW (100CV) Trend,2018,105000,Diésel,Manual,Badalona
+199,Audi,S5,19990,3.0 S5 TFSI quattro S Tronic cabrio,2011,156230,Gasolina,Automatica,Mataró
+200,BMW,Serie 5,14490,520d,2013,142121,Diésel,Manual,Esplugas
+201,Mitsubishi,Outlander,23990,2.0 PHEV Kaiteki Auto 4WD,2018,77700,Híbrido,Automatica,Sabadell 3
+202,Toyota,Verso,9990,120D Comfort 5pl.,2013,135800,Diésel,Manual,Sabadell 3
+203,Peugeot,308,10990,SW Allure 1.6 BlueHDI 120,2016,116800,Diésel,Manual,Sabadell 3
+204,Mazda,Mazda3,12990,2.2 DE 150 MT Luxury,2016,101300,Diésel,Manual,Sabadell 3
+205,Kia,Niro,19490,1.6 GDi Híbrido 104kW (141CV) Drive,2019,42000,Híbrido,Automatica,Sabadell 3
+206,Opel,Mokka,10990,1.7 CDTi 4X2 S&S Excellence,2014,90000,Diésel,Manual,Sabadell 3
+207,Mercedes,Benz Clase GLK,14990,GLK 220 CDI,2014,173170,Diésel,Manual,Sabadell 3
+208,Suzuki,Baleno,10990,1.2 GL 5p,2017,56000,Gasolina,Manual,Sabadell 3
+209,SEAT,Exeo,9990,ST 2.0 TDI CR 120 CV Style Ecomotive,2013,112200,Diésel,Manual,Sabadell 3
+210,Jeep,Renegade,14490,1.6 E-TORQ 81kW Sport FWD E6,2018,52400,Gasolina,Manual,Sabadell 3
+211,Toyota,Yaris,9990,1.3 100 Feel,2017,95200,Gasolina,Manual,Sabadell 3
+212,Renault,Megane,15990,Sp. Tourer GT Line En. TCe 97kW (130CV),2017,55603,Gasolina,Manual,Esplugas
+213,SEAT,Arona,14990,1.0 TSI 70kW (95CV) Style Ecomotive,2018,43451,Gasolina,Manual,Esplugas
+214,Jeep,Compass,20490,1.4 Mair 103kW Limited 4x2,2019,26200,Gasolina,Manual,Esplugas
+215,SEAT,Leon,15990,ST 2.0 TDI 150cv DSG-6 St&Sp FR,2014,143065,Diésel,Automatica,Esplugas
+216,Peugeot,2008,14990,Allure 1.2 PureTech 81KW (110CV)S&S EAT6,2018,86700,Gasolina,Automatica,Granollers
+217,SEAT,Tarraco,25990,1.5 TSI 110kW (150CV) St&Sp Style Plus,2019,25000,Gasolina,Manual,Granollers
+218,Mazda,CX-3,16490,2.0 G 89kW (121CV) 2WD Zenith,2018,78600,Gasolina,Manual,Granollers
+219,SEAT,Leon,18490,2.0 TDI 110kW (150CV) DSG-6 St&Sp FR,2018,86390,Diésel,Automatica,Sabadell 2
+220,SEAT,Ibiza,11990,1.0 EcoTSI 70kW (95CV) Reference,2017,55195,Gasolina,Manual,Sabadell 2
+221,Peugeot,208,9490,5P ACCESS 1.2L PureTech 82,2016,68720,Gasolina,Manual,Sabadell 2
+222,Renault,Megane,14990,GT Line Energy dCi 96kW (130CV),2018,110150,Diésel,Manual,Sabadell 2
+223,BMW,X5,27990,xDrive30d,2016,195000,Diésel,Automatica,Sabadell 2
+224,BMW,Serie 4,24990,420d Gran Coupe,2017,94370,Diésel,Automatica,Sabadell 2
+225,Opel,Astra,11490,1.6 CDTi 110 CV Selective,2016,103056,Diésel,Manual,Hospitalet
+226,Volkswagen,T-Roc,21430,Advance R-Line 1.0 TSI 81kW (110CV),2021,15600,Gasolina,Manual,Sabadell 1
+227,Mercedes,Benz Clase C,29950,C 220 d 4MATIC Estate,2018,65700,Diésel,Automatica,Sabadell 1
+228,Jeep,Compass,24410,2.0 Mjet 103kW Limited 4x4 ATX,2019,7000,Diésel,Automatica,Sabadell 1
+229,Opel,Combo Tour,10930,Tour Selective 1.6CDTI 70kW (95CV) L1 H1,2017,102000,Diésel,Manual,Sabadell 1
+230,Mini,Countryman,14470,2.0 Cooper SD,2013,154000,Diésel,Automatica,Sabadell 1
+231,Honda,CR-V,16210,1.6 i-DTEC 88kW (120CV) 4x2 Eleg P Nav P,2016,92000,Diésel,Manual,Sabadell 1
+232,Jeep,Renegade,16250,1.0G 88kW Sport 4x2,2019,102000,Gasolina,Manual,Sabadell 1
+233,Ford,Focus,19990,1.0 Ecoboost 92kW ST-Line Auto SportBr,2019,53400,Gasolina,Automatica,Hospitalet
+234,Hyundai,ix35,12990,1.7 CRDi Kosmo Sky 4x2,2014,56800,Diésel,Manual,Badalona
+235,Land,Rover Range Rover Evoque,48990,2.0 P250 S AUTO 4WD,2019,33703,Híbrido,Automatica,Gavá
+236,BMW,Serie 4,24990,418d Gran Coupe,2017,37197,Diésel,Manual,Gavá
+237,BMW,Serie 3,20490,318d,2017,37833,Diésel,Automatica,Gavá
+238,Kia,Sportage,13990,1.6 GDi 132CV Emotion 4x2,2016,137000,Gasolina,Manual,Gavá
+239,Nissan,JUKE,9990,1.6 NARU EDITION 4X2,2013,123500,Gasolina,Manual,Gavá
+240,Hyundai,i30,11490,1.0 TGDI Klass LE,2017,65000,Gasolina,Manual,Badalona
+241,Peugeot,208,11990,5P Signature 1.2L PureTech 60KW (82CV),2018,17600,Gasolina,Manual,Badalona
+242,Peugeot,208,6990,3P ALLURE 1.2 VTi 82,2012,102762,Gasolina,Manual,Badalona
+243,Citroen,C4 Cactus,12990,PureTech 81KW (110CV) S&S EAT6 Shine,2017,24000,Gasolina,Manual,Sabadell 3
+244,Porsche,Cayenne,28380,3.0 TD Tiptronic,2013,122000,Diésel,Automatica,Sabadell 1
+245,Audi,A3,25330,S line 35 TFSI 110kW (150CV) Sedan,2019,63500,Gasolina,Automatica,Sabadell 1
+246,Toyota,Auris,10880,90D Active Touring Sports,2014,122800,Diésel,Manual,Sabadell 1
+247,Peugeot,3008,21490,1.5L BlueHDi 96kW (130CV) S&S Allure,2018,93380,Diésel,Automatica,Sabadell 2
+248,Audi,A1,12990,S LINE ,2015,85700,Gasolina,Manual,Sabadell 2
+249,SEAT,Ibiza,11990,1.2 TSI 105cv FR,2015,56455,Gasolina,Manual,Mataró
+250,Mercedes,Benz Clase C,23990,C 220  AMG Line,2015,144100,Diésel,Automatica,Mataró
+251,Audi,A1,15490,1.6 TDI Attraction,2016,113000,Diésel,Manual,Granollers
+252,Kia,Picanto,8680,1.0 CVVT 49kW (66CV) Tech,2017,65600,Gasolina,Manual,Sabadell 1
+253,Citroen,C4,10490,C4 BlueHDi 120 S&S EAT6 Feel Edition,2016,120000,Diésel,Manual,Sabadell 1
+254,Renault,Captur,21990,Zen+ TCe 96kW (130CV) EDC,2020,3300,Gasolina,Automatica,Granollers
+255,Citroen,Berlingo,7490,1.6 HDi 90 Seduction,2012,160000,Diésel,Manual,Granollers
+256,Citroen,DS3,8490,1.2 VTi 82 Design,2014,150075,Gasolina,Manual,Esplugas
+257,Land,Rover Range Rover Evoque,23990,2.0L TD4 Diesel 150CV 4x4 SE Dynamic,2015,75756,Diésel,Automatica,Esplugas
+258,Ford,Ka+,10490,1.2 Ti-VCT 63kW Active,2019,40843,Gasolina,Manual,Esplugas
+259,Nissan,Qashqai,10990,"2.0 dCi TEKNA PREMIUM 4x4 18"" Piel",2011,138550,Diésel,Manual,Esplugas
+260,Citroen,C5 Aircross,23990,BlueHdi 96kW (130CV) S&S C Series,2021,27200,Diésel,Manual,Esplugas
+261,Jaguar,F-Pace,28990,2.0L i4D AWD Automático Pure,2016,82000,Diésel,Automatica,Badalona
+262,Opel,Crossland X,15490,1.2 96kW (130CV) Innovation S/S,2019,66500,Gasolina,Manual,Hospitalet
+263,BMW,Serie 3,16990,318d Touring,2016,132450,Diésel,Manual,Hospitalet
+264,SEAT,Ibiza,9290,1.0 EcoTSI 95cv Style Connect,2015,122800,Gasolina,Manual,Sabadell 2
+265,Mitsubishi,ASX,15990,160 MPI Motion,2018,60000,Gasolina,Manual,Granollers
+266,Peugeot,308,14990,5p Allure 2.0 BlueHDi 110KW (150CV),2017,88300,Diésel,Automatica,Sabadell 2
+267,Dacia,Sandero,7990,Laureate 1.2 75cv,2016,45190,Gasolina,Manual,Sabadell 2
+268,Jaguar,F-Pace,41990,3.0L TDV6 AWD Automático S,2016,53995,Diésel,Automatica,Mataró
+269,Toyota,Yaris,11990,1.0 70 Active,2019,28392,Gasolina,Manual,Mataró
+270,Mini,Countryman,23990,Cooper D,2018,40900,Diésel,Manual,Hospitalet
+271,Ford,Tourneo Courier,10990,1.6 TDCi 95cv Trend,2015,121846,Diésel,Manual,Mataró
+272,Land,Rover Range Rover Evoque,39990,2.0L Si4 213kW 4x4 HSE Dynamic Auto,2017,32703,Gasolina,Automatica,Mataró
+273,Kia,Carens,13990,1.7 CRDi VGT 104kW(115CV) Drive Eco-Dyn,2016,62900,Diésel,Manual,Hospitalet
+274,Mini,Mini,14990,ONE D 5 PUERTAS,2017,113275,Diésel,Manual,Hospitalet
+275,Peugeot,208,10990,5P STYLE 1.6 BlueHDi 73KW (100CV),2017,58323,Diésel,Manual,Gavá
+276,Peugeot,308,12990,5p Access 1.6 BlueHDi 73KW (100CV),2018,82172,Diésel,Manual,Gavá
+277,SEAT,Arona,14990,1.0 TSI 70kW (95CV) Style Ecomotive,2018,81533,Gasolina,Manual,Gavá
+278,Toyota,C-HR,19990,1.8 125H Advance,2018,51520,Híbrido,Automatica,Gavá
+279,Volkswagen,Passat CC,16990,2.0 TDI 140cv DSG BlueMotion Technology,2015,140927,Diésel,Automatica,Viladecans
+280,Citroen,C-Elysée,11990,BlueHDi 73KW (100CV) Shine,2018,51712,Diésel,Manual,Viladecans
+281,Ford,Fiesta,8990,1.25 Duratec 82cv Trend 5p,2016,64175,Gasolina,Manual,Viladecans
+282,Audi,A5,15490,Coupé 2.0 TDI 177 multitronic,2014,179383,Diésel,Automatica,Viladecans
+283,SEAT,Ibiza,12990,1.0 EcoTSI 70kW Style Connect,2017,17561,Gasolina,Manual,Viladecans
+284,Volkswagen,Polo,11990,Advance 1.2 TSI 90CV BMT DSG,2015,95677,Gasolina,Automatica,Mataró
+285,SEAT,Ibiza,12990,1.0 MPI 59kW (80CV) Style,2018,60000,Gasolina,Manual,Sabadell 3
+286,Toyota,Avensis,14990,2.0 150D BUSINESS ADVANCE TS,2018,119000,Diésel,Manual,Mataró
+287,Volkswagen,Golf,14990,2.0 TDI 150cv DSG,2013,141100,Diésel,Automatica,Mataró
+288,Mercedes,Benz Clase E,39990,Coupé E 220 d,2018,99700,Diésel,Automatica,Sabadell 3
+289,Nissan,Qashqai,18490,dCi 85 kW (115 CV) E6D DCT N-CONNECTA,2019,118700,Diésel,Manual,Sabadell 3
+290,Ford,Kuga,14990,1.5 TDCi 88kW 4x2 A-S-S Trend,2017,69000,Diésel,Manual,Sabadell 3
+291,Fiat,500X,13990,City Cross 1.6 E-Torq 81kW (110CV) 4x2,2019,68300,Gasolina,Manual,Sabadell 3
+292,Fiat,500X,14990,Cross 1.4 MultiAir 103kW (140CV) 4x2,2017,89000,Gasolina,Automatica,Viladecans
+293,Citroen,C4 Cactus,9990,PureTech 81KW (110CV) S&S Feel,2016,118069,Gasolina,Manual,Granollers
+294,SEAT,Tarraco,24990,2.0 TDI 110kW (150CV) S&S Style Plus,2019,65833,Diésel,Manual,Mataró
+295,Mercedes,Benz Citan,11990,109 CDI Tourer Base BE,2018,82000,Diésel,Manual,Badalona
+296,Ford,EcoSport,15490,1.0T EcoBoost 92kW (125CV) S&S ST Line,2019,25000,Gasolina,Manual,Badalona
+297,Citroen,C4 Aircross,10990,HDi 150cv 4x4 Exclusive,2012,97500,Diésel,Manual,Badalona
+298,SEAT,Ateca,18990,1.6 TDI 85kW (115CV) St&Sp Style Eco,2018,112250,Diésel,Manual,Hospitalet
+299,Peugeot,3008,19490,1.6BLUEHDI 120 HP ALLURE S&S,2016,95200,Diésel,Manual,Hospitalet
+300,Citroen,C4 Picasso,10990,1.6 HDi 90cv Attraction,2014,86007,Diésel,Manual,Viladecans
+301,Suzuki,Vitara,15490,1.4 T GLX,2019,72073,Gasolina,Manual,Viladecans
+302,Peugeot,208,7490,5P ALLURE 1.2L PureTech 82,2015,145954,Gasolina,Manual,Viladecans
+303,BMW,Serie 1,12490,116d,2013,75600,Diésel,Manual,Hospitalet
+304,Audi,Q3,21490,Sport ed 2.0 TDI 135kW(184CV) quat S tro,2017,161400,Diésel,Automatica,Hospitalet
+305,Hyundai,ix20,9990,1.4 MPI Klass,2014,57800,Gasolina,Manual,Hospitalet
+306,Skoda,Rapid,8210,1.2 TSI 66KW (90cv) Active,2016,73000,Gasolina,Manual,Sabadell 1
+307,Peugeot,208,15990,PureTech 73kW (100CV) EAT8 Active,2020,21660,Gasolina,Automatica,Sabadell 3
+308,Fiat,Tipo,6990,1.4 Lounge 88kW (120CV) gasolina/GLP 5p.,2018,189800,GLP,Manual,Sabadell 3
+309,BMW,X1,10990,sDrive20d,2012,135000,Diésel,Manual,Sabadell 3
+310,Hyundai,ix35,7990,1.7 CRDi GL Classic 4x2,2012,186350,Diésel,Manual,Sabadell 3
+311,BMW,Serie 1,15990,116d EfficientDynamics,2017,98600,Diésel,Manual,Sabadell 3
+312,BMW,X1,20490,xDrive18d,2018,110000,Diésel,Automatica,Sabadell 3
+313,Ford,Fiesta,13990,1.5 TDCi 63kW Trend+ 5p,2018,28467,Diésel,Manual,Sabadell 3
+314,Citroen,C3,11990,CITROEN C3 EDITION ELLE,2019,44200,Gasolina,Manual,Sabadell 3
+315,BMW,Serie 3,15490,318d Touring,2015,144900,Diésel,Automatica,Sabadell 3
+316,Toyota,Auris,15990,1.8 140H Advance Touring Sports,2018,64000,Híbrido,Automatica,Sabadell 3
+317,Audi,Q3,29990,35 TFSI 110kW (150CV),2019,18200,Gasolina,Automatica,Sabadell 1
+318,Fiat,Tipo,9990,1.4 16v Lounge 70kW (95CV) gasolina 5p.,2017,80131,Gasolina,Manual,Sabadell 2
+319,Fiat,500,11490,Lounge 1.2 8v 51KW (69 CV),2019,40000,Gasolina,Manual,Granollers
+320,Kia,Picanto,10990,1.0 CVVT 49kW (67CV) Concept,2019,16509,Gasolina,Manual,Granollers
+321,Mercedes,Benz Clase GLE Coupé,58990,Mercedes-AMG GLE 43 4MATIC,2018,111000,Gasolina,Automatica,Granollers
+322,Peugeot,2008,12490,Allure 1.2 PureTech 130 S&S,2016,87000,Gasolina,Manual,Granollers
+323,Mercedes,Benz Clase GLC,34990,GLC 250 d 4MATIC,2018,77738,Diésel,Automatica,Esplugas
+324,Smart,Fortwo,10490,0.9 66kW (90CV) S/S PROXY COUPE,2016,51500,Gasolina,Manual,Badalona
+325,Peugeot,308,10990,5p Access 1.6 BlueHDi 73KW (100CV),2017,115000,Diésel,Manual,Granollers
+326,BMW,Serie 3,23990,320d xDrive Gran Turismo,2017,126000,Diésel,Automatica,Granollers
+327,Mitsubishi,ASX,9990,200 DI-D Motion,2011,98814,Diésel,Manual,Esplugas
+328,BMW,X5,30990,sDrive25d,2018,101240,Diésel,Automatica,Viladecans
+329,Volkswagen,Scirocco,16990,Typhoon by R-Line 1.4 TSI 92kW (125CV),2017,73153,Gasolina,Manual,Gavá
+330,Volkswagen,Golf,14990,Advance 1.6 TDI BMT,2017,65655,Diésel,Manual,Gavá
+331,Renault,Clio,6990,Dynamique Energy dCi 90 S&S eco2,2013,161540,Diésel,Manual,Hospitalet
+332,BMW,Serie 5,20990,520d,2017,178000,Diésel,Automatica,Sabadell 3
+333,Volkswagen,Golf,10990,Advance 1.6 TDI 105cv BMT DSG,2013,136000,Diésel,Automatica,Sabadell 3
+334,SEAT,Ibiza,9490,1.6 TDI 105cv FR,2015,112700,Diésel,Manual,Hospitalet
+335,Jaguar,XE,22990,2.0 Diesel 132kW RWD Pure Auto,2019,51080,Diésel,Automatica,Sabadell 2
+336,Nissan,X-Trail,19970,7 Pl. DIG-T 120 kW (163 CV) N-CONNECTA,2018,55250,Gasolina,Manual,Sabadell 1
+337,Nissan,JUKE,11180,DIG-T EU6 85 kW (115 CV) 6M/T ACENTA,2018,122900,Gasolina,Manual,Sabadell 1
+338,Ford,Focus,15990,1.0 Ecoboost 92kW ST-Line,2019,30058,Gasolina,Manual,Sabadell 2
+339,Ford,Kuga,23490,Titanium 1.5 EcoBlue 88kW (120CV) Auto,2020,28000,Diésel,Automatica,Sabadell 2
+340,Kia,Ceed,15990,1.0 T-GDi 88kW (120CV) Business,2020,22800,Gasolina,Manual,Sabadell 2
+341,Volkswagen,T-Roc,23460,Advance Style 2.0 TDI 110kW (150CV),2019,19500,Diésel,Manual,Sabadell 1
+342,Honda,CR-V,14990,2.2 i-DTEC Comfort,2013,110000,Diésel,Manual,Sabadell 1
+343,Mercedes,Benz Vito,16490,110 CDI Compacta,2014,70000,Diésel,Manual,Sabadell 1
+344,Kia,Sportage,14490,1.7 CRDi VGT 115CV Drive 4x2 Eco-Dynam,2016,118000,Diésel,Manual,Sabadell 1
+345,SEAT,Leon,13580,2.0 TDI 150cv St&Sp FR,2014,90000,Diésel,Manual,Sabadell 1
+346,Ford,Kuga,13990,2.0 TDCi 140 4x2 Trend,2014,69429,Diésel,Manual,Esplugas
+347,Smart,Forfour,12490,60kW(81CV) electric drive,2018,60000,Eléctrico,Automatica,Badalona
+348,Toyota,Yaris,10990,1.0 70 Business,2019,16184,Gasolina,Manual,Mataró
+349,Jeep,Renegade,24990,Limited 1.3G 112kW (150CV) 4x2 DCT,2021,6500,Gasolina,Automatica,Badalona
+350,Mini,Mini,14990,Mini Cooper Cabrio,2016,62832,Gasolina,Manual,Sabadell 3
+351,Toyota,Auris,17490,1.8 140H Hybrid Advance,2016,36000,Híbrido,Automatica,Badalona
+352,Kia,Picanto,11990,1.0 DPi 49kW (67CV) Concept,2021,3800,Gasolina,Manual,Badalona
+353,Mini,Countryman,14990,COOPER D COUNTRYMAN automático,2015,145278,Diésel,Automatica,Esplugas
+354,Ford,Grand C-Max,11490,1.5 TDCi 120CV Titanium,2016,165000,Diésel,Manual,Hospitalet
+355,Mitsubishi,Outlander,10990,2.2 2WD Intense,2014,154300,Diésel,Manual,Badalona
+356,Kia,Stonic,15990,1.0 T-GDi 74kW (100CV) Tech,2019,64000,Gasolina,Manual,Hospitalet
+357,Audi,A1,20990,30 TFSI 85kW (116CV) Sportback SLine ,2019,40457,Gasolina,Manual,Mataró
+358,Opel,Astra,11490,1.6 CDTi S/S 110 CV Selective,2015,45300,Diésel,Manual,Hospitalet
+359,Citroen,C4 Cactus,14480,BlueHDi 73KW (100CV) Shine,2018,41360,Diésel,Manual,Sabadell 1
+360,Volvo,XC40,28990,1.5 T2 Momentum Core,2021,6000,Gasolina,Manual,Sabadell 3
+361,Kia,Ceed,13990,1.0 T-GDi 88kW (120CV) Tech,2019,70000,Gasolina,Manual,Sabadell 3
+362,Hyundai,Tucson,16990,1.6 GDi Tecno 4x2,2018,43390,Gasolina,Manual,Gavá
+363,Citroen,C3,11990,PureTech 60KW (82CV) FEEL,2018,55145,Gasolina,Manual,Gavá
+364,Renault,Megane,11990,Intens Energy dCi 81kW (110CV),2016,86310,Diésel,Manual,Granollers
+365,Ford,Fiesta,8990,1.0 EcoBoost 100cv Powershift Trend 5p,2015,71100,Gasolina,Manual,Granollers
+366,Nissan,Note,7490,5p. 1.2G 80CV Acenta,2015,85000,Gasolina,Manual,Badalona
+367,SEAT,Leon,10990,SC 1.2 TSI 110cv St&Sp Style,2014,95650,Gasolina,Manual,Badalona
+368,Volkswagen,Tiguan,15990,Sport 2.0 TDI 140CV DSG BMT 4Motion,2015,146500,Diésel,Automatica,Badalona
+369,Fiat,Tipo,9990,1.3 Lounge 70kW (95CV) diesel Multijet,2017,73700,Diésel,Manual,Sabadell 2
+370,Mercedes,Benz Clase GLA,27990,GLA 220D acabado AMG,2018,75716,Diésel,Automatica,Viladecans
+371,BMW,X5,82580,xDrive30d,2021,14000,Híbrido,Automatica,Sabadell 1
+372,Opel,Corsa,10990,1.4 Selective 66kW (90CV),2018,47450,Gasolina,Manual,Hospitalet
+373,Ford,Focus,16490,1.0 Ecoboost 92kW ST-Line,2019,28592,Gasolina,Manual,Esplugas
+374,Peugeot,208,10490,5P STYLE 1.2L PureTech 110,2016,80826,Gasolina,Manual,Esplugas
+375,Nissan,Qashqai,18490,DIG-T 117 kW (160 CV) E6D DCT N-CONNECTA,2019,109575,Gasolina,Automatica,Esplugas
+376,Mini,Mini,20990,COOPER 5 PUERTAS,2019,20525,Gasolina,Automatica,Esplugas
+377,SEAT,Leon,18990,1.5 TSI 110kW (150CV) DSG-7 St&Sp FR,2019,49200,Gasolina,Automatica,Hospitalet
+378,Ford,Fiesta,13490,1.5 TDCi 63kW Active 5p,2019,71000,Diésel,Manual,Hospitalet
+379,Renault,Clio,14990,Zen TCe 67 kW (91CV),2019,22137,Gasolina,Manual,Hospitalet
+380,Jaguar,F-Pace,34990,2.0L i4D 177kW R-Sport AWD Auto,2018,32920,Diésel,Automatica,Badalona
+381,SEAT,Ateca,20990,1.4 EcoTSI 110kW (150CV) DSG-7 S&S Xcel,2017,15000,Gasolina,Automatica,Badalona
+382,Ford,Focus,17990,1.0 Ecoboost 92kW ST-Line,2019,42800,Gasolina,Manual,Badalona
+383,Kia,Ceed,12990,1.4 CVVT 74kW (100CV) Drive,2018,30000,Gasolina,Manual,Badalona
+384,Cupra,Ateca,31990,2.0 TSI 221kW (300CV) 4Drive DSG St&Sp,2019,30000,Gasolina,Automatica,Badalona
+385,Toyota,Corolla,22990,2.0 180H FEEL! E-CVT TOURING SPORT,2020,21450,Híbrido,Automatica,Badalona
+386,Volkswagen,Scirocco,16990,R-Line 2.0 TDI 110kW(150CV) BMT DSG,2017,110700,Diésel,Automatica,Badalona
+387,Jeep,Compass,17990,1.4 Mair 103kW Longitude 4x2,2018,13000,Gasolina,Manual,Badalona
+388,Kia,Sportage,9990,1.6 GDI Drive 4x2,2011,101000,Gasolina,Manual,Badalona
+389,Audi,Q3,19990,2.0 TDI 184CV quattro S tronic,2016,144042,Diésel,Automatica,Badalona
+390,Audi,A1,9990,1.6 TDI 90cv Attraction,2014,142359,Diésel,Manual,Badalona
+391,Citroen,C3,7990,HDI 70 Collection,2014,47100,Diésel,Manual,Hospitalet
+392,Mercedes,Benz Clase C,18970,C 220 BlueTEC,2015,170000,Diésel,Automatica,Sabadell 1
+393,Ford,Focus,16990,1.0 Ecoboost 92kW Titanium,2019,26500,Gasolina,Manual,Hospitalet
+394,Honda,Civic,36990,2.0 I-VTEC TURBO TYPE R S,2018,17349,Gasolina,Manual,Viladecans
+395,Volvo,V40,13490,1.6 D2 Summum,2014,61987,Diésel,Manual,Viladecans
+396,Opel,Zafira Tourer,10990,1.6 CDTi S/S 120 CV Expression,2016,82650,Diésel,Manual,Sabadell 2
+397,Fiat,Panda,10490,1.2 City Cross 51kW (69CV) EU6,2018,53021,Gasolina,Manual,Viladecans
+398,Audi,TT,23990,Roadster 2.0 TFSI 230CV quat S tr S line,2015,155223,Gasolina,Automatica,Viladecans
+399,Mercedes,Benz Clase GLC,33860,GLC 220 d 4MATIC,2018,87500,Diésel,Automatica,Sabadell 1
+400,Audi,A4,19590,2.0 TDI 110kW(150CV),2017,101567,Diésel,Manual,Viladecans
+401,SEAT,Alhambra,12990,2.0 TDI 140 CV Ecomotive Style,2014,163000,Diésel,Manual,Sabadell 1
+402,Ford,Focus,18780,1.0 Ecoboost 92kW Trend+,2019,71000,Gasolina,Manual,Sabadell 1
+403,SEAT,Ibiza,11790,1.0 MPI 59kW (80CV) Style,2018,53000,Gasolina,Manual,Sabadell 1
+404,Audi,A7,20990,Sportback 3.0 TDI 245cv quattro S tronic,2011,137000,Diésel,Automatica,Sabadell 1
+405,SEAT,Leon,17490,ST 1.4 TSI 110kW ACT DSG-7 St&Sp FR,2017,47120,Gasolina,Automatica,Hospitalet
+406,Jeep,Grand Cherokee,17360,3.0 V6 CRD Limited 241 CV,2011,160000,Diésel,Automatica,Sabadell 1
+407,Fiat,500,12990,S 1.2 8v 51KW (69 CV),2019,28669,Gasolina,Manual,Granollers
+408,SEAT,Leon,14990,2.0 TDI 150cv St&Sp FR,2015,147978,Diésel,Manual,Mataró
+409,Ford,Fiesta,14490,1.0 EcoBoost 70kW (95CV) ST-Line S/S 5p,2020,11920,Gasolina,Manual,Sabadell 2
+410,Kia,ProCeed,14490,1.6 CRDi VGT 128CV Emotion Eco-Dynamics,2015,92000,Diésel,Manual,Badalona
+411,Renault,Espace,14990,Zen Energy dCi 160 Twin Turbo EDC,2015,130165,Diésel,Automatica,Gavá
+412,Mazda,MX-5,16990,1.5 96kW (131CV) Luxury,2017,106000,Gasolina,Manual,Gavá
+413,SEAT,Leon,24990,2.0 TSI 221kW (300CV) DSG-6 St&Sp CUPRA,2017,53500,Gasolina,Automatica,Gavá
+414,SEAT,Ibiza,16990,1.5 TSI 110kW (150CV) FR,2018,92959,Gasolina,Manual,Mataró
+415,Dacia,Logan,7490,MCV Laureate dCi 90,2015,50500,Diésel,Manual,Mataró
+416,Citroen,C4 Cactus,8990,BlueHDi 100 Shine Edition Urban,2015,154565,Diésel,Manual,Mataró
+417,Nissan,JUKE,9990,1.6 NARU EDITION 4X2,2013,95142,Gasolina,Manual,Mataró
+418,Peugeot,108,7990,Top! Allure 1.2 PureTech 82,2015,61500,Gasolina,Manual,Mataró
+419,Citroen,Berlingo,8990,Multispace LIVE Edition HDi 90 ,2016,142350,Diésel,Manual,Sabadell 3
+420,Kia,Sportage,19990,1.7 CRDi VGT GT Line DCT 4x2 Eco-Dynam,2017,86600,Diésel,Automatica,Sabadell 3
+421,Opel,Insignia,11990,1.6 CDTI S&S 88kW (120CV) Business,2017,98700,Diésel,Manual,Sabadell 3
+422,Volkswagen,Tiguan,22490,Sport 2.0 TDI 150CV BMT 4Motion DSG,2016,141350,Diésel,Automatica,Sabadell 3
+423,Ford,Focus,10990,1.5 TDCi E6 120cv PowerhS. Trend+,2016,125600,Diésel,Manual,Sabadell 3
+424,Nissan,Qashqai,14990,dCi 81 kW (110 CV) ACENTA,2017,131000,Diésel,Manual,Sabadell 3
+425,Peugeot,108,8990,1.2 PureTech 60KW (82CV),2018,60000,Gasolina,Manual,Granollers
+426,Fiat,500X,17290,"City Cross 1,0 Firefly T3 88KW S&S",2020,13423,Gasolina,Manual,Granollers
+427,Smart,Fortwo,12490,0.9 66kW (90CV) CABRIO,2017,68180,Gasolina,Automatica,Granollers
+428,Volkswagen,Polo,9290,1.2 TSI 90cv R-Line,2013,129980,Gasolina,Manual,Sabadell 2
+429,Ford,Focus,16490,1.0 Ecoboost 92kW ST-Line,2019,58520,Gasolina,Manual,Sabadell 2
+430,Ford,Ka,7490,Trend+ 1.2 Duratec Auto-Start-Stop,2016,48000,Gasolina,Manual,Granollers
+431,Mercedes,Benz Clase C,15990,C 220 CDI 4MATIC Estate,2014,201000,Diésel,Automatica,Sabadell 1
+432,Mercedes,Benz Clase E,34490,Coupé E 220 d,2017,95950,Diésel,Automatica,Hospitalet
+433,Toyota,Yaris,15990,1.5 Hybrid Active,2019,38255,Híbrido,Automatica,Esplugas
+434,SEAT,Leon,8490,1.6 TDI 105cv E-Ecomotive Style,2012,169927,Diésel,Manual,Esplugas
+435,Toyota,Land Cruiser,33990,2.8 D-4D VXL AUTO,2015,157515,Diésel,Automatica,Esplugas
+436,Kia,Sorento,22490,2.2 CRDi 147kW (200CV) Drive Auto 4x2,2017,115601,Diésel,Automatica,Esplugas
+437,Toyota,Yaris,14590,1.5 Hybrid Advance,2018,56935,Híbrido,Automatica,Viladecans
+438,Mercedes,Benz Clase A,14490,A 200 CDI BlueEFFICIENCY AMG Sport,2013,145240,Diésel,Manual,Mataró
+439,Opel,Adam,9990,1.2 XEL JAM,2016,32806,Gasolina,Manual,Mataró
+440,Land,Rover Range Rover Evoque,22990,2.0L TD4 180CV 4x4 SE Dynamic Auto,2016,109296,Diésel,Automatica,Mataró
+441,Opel,Astra,12490,1.4 Turbo S/S 92kW (125CV) Selective ST,2017,40000,Gasolina,Manual,Sabadell 3
+442,Renault,Clio 4,11990,Zen Energy TCe 88kW (120CV),2016,56300,Gasolina,Manual,Sabadell 3
+443,Ford,Focus,17990,1.0 Ecoboost 92kW ST-Line,2019,25543,Gasolina,Manual,Gavá
+444,Toyota,Auris,12990,Hybrid Active,2014,65989,Híbrido,Automatica,Hospitalet
+445,SEAT,Leon,16490,1.4 TSI 92kW (125CV) St&Sp FR,2016,63910,Gasolina,Manual,Hospitalet
+446,Volkswagen,Golf,9990,Variant Advance 1.6 TDI 105cv BMT DSG,2013,158500,Diésel,Automatica,Badalona
+447,Peugeot,2008,16990,Allure 1.2 PureTech 81KW (110CV) Auto,2019,32550,Gasolina,Automatica,Hospitalet
+448,Mini,Countryman,19990,One,2018,28492,Gasolina,Manual,Sabadell 3
+449,Nissan,JUKE,13990,G E6D-Temp 83 kW (112 CV) 5M/T ACENTA,2019,13500,Gasolina,Manual,Hospitalet
+450,Volvo,XC40,28490,2.0 D4 AWD Momentum Auto,2018,128000,Diésel,Automatica,Sabadell 3
+451,Audi,A5,32490,40 TDI  140kW quattro S tronic Sportback S-LINE,2019,61800,Diésel,Automatica,Sabadell 3
+452,Peugeot,3008,23490,2.0BLUEHDI 133KW (180CV) GT AUTO S&S,2018,130500,Diésel,Automatica,Sabadell 3
+453,SEAT,Leon,16710,1.5 TSI 110kW (150CV) DSG-7 S&S FR Ed Pl,2019,50500,Gasolina,Manual,Sabadell 1
+454,Toyota,Rav4,31990,2.5. Hibryd 180 CV. Automatica,2020,21000,Híbrido,Automatica,Sabadell 1
+455,Toyota,Rav4,19990,2.5l hybrid 2WD Advance,2017,133000,Híbrido,Automatica,Sabadell 1
+456,Renault,Grand Scenic,18990,Zen Energy TCe 103kW (140CV) EDC,2018,46000,Gasolina,Manual,Badalona
+457,Dacia,Sandero,8990,Stepway dCi 90,2015,96960,Diésel,Manual,Sabadell 1
+458,Mercedes,Benz Clase GLE,28990,GLE 250 d 4MATIC,2016,103500,Diésel,Automatica,Sabadell 1
+459,Mazda,MX-5,21490,2.0 118kW (160CV) Zenith,2018,18000,Gasolina,Manual,Sabadell 1
+460,Land,Rover Range Rover Evoque,17490,2.2L TD4 150CV 4x4 Dynamic,2013,137000,Diésel,Manual,Sabadell 1
+461,Volkswagen,Scirocco,12990,1.4 TSI 122cv by R-Line,2013,113800,Gasolina,Manual,Mataró
+462,Peugeot,Partner,14990,TEPEE Outdoor 1.6 BlueHDi 73KW (100CV),2017,87550,Diésel,Manual,Mataró
+463,Mercedes,Benz Clase A,22990,A 180 d,2018,56099,Diésel,Automatica,Gavá
+464,Mercedes,Benz Clase C,19990,C 220 BlueTEC Estate,2015,108000,Diésel,Automatica,Gavá
+465,Cupra,Formentor,27990,1.5 TSI 110kW (150 CV),2021,6308,Gasolina,Manual,Sabadell 2
+466,Fiat,500L,8790,1.3 16v Multijet II 85CV Start&Stop,2014,109162,Diésel,Manual,Sabadell 2
+467,Renault,Grand Scenic,17490,Edition One Energy TCe 97kW (130CV),2017,47154,Gasolina,Manual,Viladecans
+468,Renault,Talisman,14990,Limited Energy dCi 81kW (110CV),2018,41368,Diésel,Manual,Viladecans
+469,Mazda,CX-3,22490,2.0 SKYACTIV GE Luxury 2WD AT,2018,20545,Gasolina,Automatica,Viladecans
+470,Honda,CR-V,17990,1.6 i-DTEC 88kW (120CV) 4x2 Eleg Pl Nav,2016,63800,Diésel,Manual,Badalona
+471,Mitsubishi,ASX,15990,160 MPI Motion,2018,95274,Gasolina,Manual,Viladecans
+472,Peugeot,308,9990,SW Active 1.6 BlueHDi 100 FAP,2015,116806,Diésel,Manual,Viladecans
+473,Land,Rover Range Rover Evoque,20490,2.2L SD4 190CV 4x4 Prestige Limited Edition,2014,186166,Diésel,Automatica,Viladecans
+474,BMW,Serie 3,20990,318dA Gran Turismo,2015,126000,Diésel,Automatica,Viladecans
+475,Mazda,Mazda3,18990,1.8 SKYACTIV-D ORIGIN,2019,41000,Diésel,Manual,Badalona
+476,Honda,Civic,15490,1.0 I-VTEC TURBO COMFORT,2017,95694,Gasolina,Manual,Viladecans
+477,Toyota,Yaris,10990,1.5 Hybrid Active,2016,97500,Híbrido,Automatica,Badalona
+478,Porsche,Cayenne,38490,S Diesel,2017,162573,Diésel,Automatica,Esplugas
+479,SEAT,Leon,28990,2.0 TSI 213kW (290CV) DSG-7 St&Sp Cupra,2020,9870,Gasolina,Automatica,Esplugas
+480,Mercedes,Benz Clase GLA,23990,GLA 220 d,2018,46178,Diésel,Automatica,Esplugas
+481,SEAT,Ibiza,13990,1.0 EcoTSI 85kW (115CV) FR,2018,82477,Gasolina,Manual,Esplugas
+482,BMW,Serie 4,24490,430dA Gran Coupe,2017,178060,Diésel,Automatica,Hospitalet
+483,SEAT,Leon,12990,1.4 TSI 140cv St&Sp FR,2014,80500,Gasolina,Manual,Hospitalet
+484,Renault,Scenic,23490,Zen Blue dCi 110 kW (150CV) EDC - SS,2020,13379,Diésel,Manual,Sabadell 3
+485,Audi,A3,17490,2.0 TDI clean d 150CV S line edition,2016,113800,Diésel,Manual,Sabadell 3
+486,Fiat,500L,14490,1.4 16v 70kW (95CV) City Cross,2019,24300,Gasolina,Manual,Sabadell 3
+487,Renault,Clio,10990,Zen Energy TCe 66kW (90CV) -18,2018,55055,Gasolina,Manual,Sabadell 3
+488,Ford,Focus,16990,1.0 Ecoboost 92kW ST-Line Auto,2019,62000,Gasolina,Automatica,Gavá
+489,Ford,Fiesta,14990,1.0 EcoBoost 74kW Active S/S 5p,2019,21000,Gasolina,Manual,Gavá
+490,Audi,A3,16490,design edition 1.6 TDI Sedan,2016,133000,Diésel,Manual,Gavá
+491,Ford,Kuga,15490,1.5 EcoBoost 110kW A-S-S 4x2 Trend+,2017,67517,Gasolina,Manual,Hospitalet
+492,Citroen,C4,11990,C4 BlueHDi 88KW (120CV) Feel Edition,2016,70000,Diésel,Manual,Granollers
+493,Volkswagen,Scirocco,14990,1.4 TSI 125CV R-Line BMT,2015,90083,Gasolina,Manual,Viladecans
+494,BMW,i3,20490,94ah,2018,90680,Eléctrico,Automatica,Viladecans
+495,BMW,Serie 4,25490,420d xDrive Automática Gran Coupe,2016,100192,Diésel,Automatica,Viladecans
+496,Toyota,C-HR,19990,1.8 125H Active,2018,49424,Híbrido,Automatica,Viladecans
+497,Peugeot,208,9990,5P ACCESS 1.0L PureTech 68,2016,47658,Gasolina,Manual,Viladecans
+498,Mini,Countryman,10490,1.6 One D,2013,160500,Diésel,Manual,Granollers
+499,Volkswagen,Scirocco,13990,2.0 TDI 177cv DSG,2013,125000,Diésel,Automatica,Granollers
+500,Abarth,500,13990,1.4 16v T-Jet 135cv E6,2015,43000,Gasolina,Manual,Granollers
+501,Toyota,Auris,15490,1.8 140H Hybrid Active,2018,82800,Híbrido,Automatica,Granollers
+502,Mercedes,Benz Clase CLA,21990,CLA 200 d,2017,128754,Diésel,Manual,Gavá
+503,SEAT,Altea,5990,1.6 TDI 105cv Style Ecomotive,2010,132699,Diésel,Manual,Gavá
+504,Kia,Carens,9990,1.7 CRDi VGT 136CV Drive 5pl,2015,113299,Diésel,Manual,Gavá
+505,Citroen,Berlingo,19990,Talla M PureTech 110 S&S SHINE XTR,2019,45000,Gasolina,Manual,Gavá
+506,SEAT,Leon,14990,ST 2.0 TDI 150cv 4Drive St&Sp X-perience,2015,122631,Diésel,Manual,Esplugas
+507,Volkswagen,Tiguan,15990,T1 2.0 TDI 110CV BMT 4x2,2016,151500,Diésel,Manual,Granollers
+508,Volkswagen,Multivan,34490,Premium Corto 2.0 TDI 110kW BMT DSG,2016,83000,Diésel,Automatica,Esplugas
+509,Mazda,Mazda3,14490,2.0 GE 120 AT Style Confort SDN,2015,85000,Gasolina,Automatica,Hospitalet
+510,Renault,Scenic,10490,Limited Energy Tce 115,2014,73196,Gasolina,Manual,Sabadell 1
+511,Peugeot,2008,13470,Style 1.2L PureTech 81KW (110CV)S&S EAT6,2017,59283,Gasolina,Automatica,Sabadell 1
+512,Audi,Q3,17180,1.4 TFSI 150cv S tronic Ambition,2014,130601,Gasolina,Automatica,Sabadell 1
+513,BMW,Serie 3,19990,330d,2015,150000,Diésel,Automatica,Sabadell 1
+514,Jeep,Renegade,17990,1.0G 88kW Longitude 4x2,2019,38500,Gasolina,Manual,Badalona
+515,Mitsubishi,ASX,17990,160 MPI Motion,2018,31100,Gasolina,Manual,Badalona
+516,Dacia,Duster,17990,SL Aniversario TCE 110kW (150CV) 4X2 GPF,2020,26500,Gasolina,Manual,Badalona
+517,Fiat,500L,12990,Pop Star 1.6 16v Mjet 88kW (120CV) S&S,2016,52102,Diésel,Manual,Hospitalet
+518,Peugeot,3008,20990,2.0BLUEHDI 110KW (150CV) GT LINE S&S,2017,64200,Diésel,Manual,Badalona
+519,Citroen,C1,9490,PureTech 60KW (82CV) Feel,2018,16000,Gasolina,Manual,Hospitalet
+520,Peugeot,308,17990,GT Line PureTech 130 S&S EAT8,2019,68200,Gasolina,Automatica,Badalona
+521,SEAT,Leon,19990,ST 2.0 TDI 110kW (150CV) DSG-6 St&Sp FR,2018,71520,Diésel,Automatica,Badalona
+522,Renault,Captur,11990,Zen Energy TCe 90 eco2 Euro 6,2015,49100,Gasolina,Manual,Badalona
+523,Citroen,C3,10990,PureTech 60KW (82CV) FEEL,2018,34000,Gasolina,Manual,Badalona
+524,BMW,X2,30990,sDrive18d,2018,63166,Diésel,Automatica,Viladecans
+525,SEAT,Leon,24790,2.0 TSI 221kW (300CV) St&Sp CUPRA,2018,62147,Gasolina,Manual,Viladecans
+526,Mazda,CX-5,12490,2.2 110kW (150CV) DE 4WD Luxury,2016,198000,Diésel,Manual,Viladecans
+527,Peugeot,3008,19990,1.5L BlueHDi 96kW (130CV) S&S GT Line,2018,114000,Diésel,Automatica,Sabadell 3
+528,Peugeot,208,11490,5P STYLE S 1.6 BlueHDi 73KW (100CV),2017,78000,Diésel,Manual,Sabadell 3
+529,Opel,Insignia,13490,GS 1.6 CDTi 81kW ecoTEC D Business,2017,110000,Diésel,Manual,Sabadell 3
+530,SEAT,Ateca,19490,1.0 TSI 85kW (115CV) St&Sp Style Eco,2020,32000,Gasolina,Manual,Sabadell 3
+531,Volkswagen,Sharan,23990,Advance 2.0 TDI 150CV 4Motion BMT,2016,87000,Diésel,Manual,Sabadell 3
+532,Nissan,JUKE,12490,G EU6 86 kW (117 CV) XTRONIC N-CONNECTA,2017,97700,Gasolina,Automatica,Sabadell 3
+533,Dacia,Logan,9490,Ambiance 1.2 75 EU6,2016,4840,Gasolina,Manual,Sabadell 3
+534,Lexus,IS,20490,2.5 300h Business,2018,91620,Híbrido,Automatica,Sabadell 3
+535,Peugeot,2008,19990,Allure Puretech 100 S&S BVM6,2020,23000,Gasolina,Manual,Sabadell 3
+536,Ford,Focus,11990,1.0 Ecoboost Auto-St.-St. 92kW Business,2017,61901,Gasolina,Manual,Esplugas
+537,Nissan,X-Trail,16990,1.6 dCi XTRONIC TEKNA,2017,99566,Diésel,Manual,Esplugas
+538,Volkswagen,Golf,16990,Advance 2.0 TDI 150CV BMT,2016,21416,Diésel,Manual,Esplugas
+539,Citroen,C4 Cactus,14490,PureTech 110 S&S Feel,2020,24060,Gasolina,Manual,Esplugas
+540,Dacia,Sandero,8490,SL AuDacia dCi 90,2015,21050,Diésel,Manual,Sabadell 1
+541,Citroen,C4 Cactus,11490,BlueHDi 73KW (100CV) Feel,2017,117409,Diésel,Manual,Viladecans
+542,Toyota,Land Cruiser,32990,2.8 D-4D VX,2016,52345,Diésel,Manual,Mataró
+543,Alfa,Romeo Mito,7990,1.3 JTDm 85CV S&S Distinctive,2014,76586,Diésel,Manual,Gavá
+544,Jaguar,XF,10990,3.0 V6 Diésel Luxury,2011,163000,Diésel,Automatica,Gavá
+545,Nissan,JUKE,13990,G E6D-Temp 83kW(112CV) 5M/T BOSE PE BLA.,2019,43339,Gasolina,Manual,Badalona
+546,Toyota,Yaris,13490,1.5 Hybrid Active,2017,79648,Híbrido,Automatica,Mataró
+547,Renault,Clio,8290,1.0  GASOLINA 90CV ,2013,102000,Gasolina,Manual,Sabadell 2
+548,Hyundai,Tucson,16990,1.6 GDi Tecno 4x2,2018,53507,Gasolina,Manual,Viladecans
+549,Kia,Rio,7990,1.2 CVVT 85cv Concept,2014,75830,Gasolina,Manual,Mataró
+550,Volkswagen,Golf,23990,Life 1.5 TSI 96kW (130CV),2020,14722,Gasolina,Manual,Mataró
+551,Kia,Sportage,21990,1.6 T-GDi 130kW (177CV) GT Line 4x4,2018,17228,Gasolina,Automatica,Mataró
+552,Kia,Ceed,12990,1.0 T-GDi 74 kW Concept Plus Eco-Dynam,2018,52127,Gasolina,Manual,Viladecans
+553,BMW,Serie 1,13990,116d EfficientDynamics,2015,52407,Diésel,Manual,Granollers
+554,Porsche,Cayenne,22990,3.0 S Hybrid Tiptronic,2011,169227,Híbrido,Automatica,Gavá
+555,Ford,Focus,10490,1.0 Ecoboost Auto-Start-Stop 100cv Trend,2014,93000,Gasolina,Manual,Mataró
+556,Peugeot,2008,21790,Allure Pack BlueHDI 81kW (110CV),2021,2054,Diésel,Manual,Viladecans
+557,Abarth,500,15490,1.4 16v T-Jet 595 118kW (160CV) Pista E6,2018,51116,Gasolina,Manual,Viladecans
+558,Renault,Megane,12490,Bose Energy dCi 96kW (130CV),2016,102782,Diésel,Manual,Viladecans
+559,Ford,Fiesta,15490,1.0 EcoBoost 70kW (95CV) ST-Line S/S 5p,2019,6500,Gasolina,Manual,Gavá
+560,Alfa,Romeo Mito,9990,1.3 JTDM 85cv TECH A+B 5M Junior,2015,44500,Diésel,Manual,Sabadell 1
+561,SEAT,Ibiza,8990,1.2 12v 70cv Reference ITech 30 Aniv,2015,28500,Gasolina,Manual,Sabadell 2
+562,BMW,X3,30490,xDrive20d,2018,160816,Diésel,Automatica,Viladecans
+563,BMW,Serie 3,17990,318d,2016,91467,Diésel,Manual,Viladecans
+564,Kia,Ceed,13490,1.6 CRDi VGT 100kW (136CV) Drive,2018,72263,Diésel,Manual,Viladecans
+565,Ford,Grand C-Max,15990,1.0 EcoBoost 92kW (125CV) Titanium,2019,59500,Gasolina,Manual,Sabadell 1
+566,Peugeot,3008,11430,Style 1.6 BlueHDI 120 FAP,2016,94500,Diésel,Manual,Sabadell 1
+567,Lexus,CT,17990,1.8 200h Business,2018,82167,Híbrido,Automatica,Sabadell 3
+568,Renault,Scenic,10520,Selection Energy Tce 115,2015,55000,Gasolina,Manual,Sabadell 1
+569,Volkswagen,Polo,11990,Sport 1.2 TSI 90cv BMT by R-Line,2015,76490,Gasolina,Manual,Hospitalet
+570,Opel,Corsa,10990,1.4 Color Edition 90 CV,2016,32200,Gasolina,Manual,Mataró
+571,Renault,Clio,18990,RS Energy 147kW (200CV) EDC,2017,72000,Gasolina,Automatica,Sabadell 1
+572,Kia,Sportage,15490,1.6 GDi 97kW (132CV) Emotion 4x2,2017,93232,Gasolina,Manual,Sabadell 1
+573,Nissan,Qashqai,10770,1.5dCi S&S ACENTA 4x2,2014,147169,Diésel,Manual,Sabadell 1
+574,DS,DS 4,8790,1.6 HDi 90cv Design,2015,91700,Diésel,Manual,Sabadell 1
+575,Audi,A5,20970,Sportback 2.0 TDI clean 190CV quat S tro,2016,102000,Diésel,Automatica,Sabadell 1
+576,SEAT,Leon,18990,1.5 TSI 110kW (150CV) St&Sp FR,2019,51850,Gasolina,Manual,Sabadell 1
+577,SEAT,Leon,21990,CUPRA 290 DSG,2017,93298,Gasolina,Automatica,Esplugas
+578,BMW,Serie 1,14990,118d PACK-M,2015,116900,Diésel,Manual,Hospitalet
+579,Audi,Q3,22990,1.4 TFSI 150CV S tronic CoD,2016,101794,Gasolina,Automatica,Esplugas
+580,Fiat,Tipo,8990,1.4 T-Jet 16v Lounge 88kW (120CV) GLP,2018,118548,GLP,Manual,Esplugas
+581,SEAT,Arona,13990,1.0 TSI 70kW (95CV) Style Ecomotive,2018,44979,Gasolina,Manual,Esplugas
+582,BMW,X4,23490,xDrive30d,2014,168900,Diésel,Automatica,Hospitalet
+583,Toyota,Verso,15990,1.6 130 Advance 5pl.,2018,71000,Gasolina,Manual,Hospitalet
+584,Audi,A1,17990,Adrenalin 1.6 TDI 85kW (116CV) Sportback,2018,54900,Diésel,Manual,Hospitalet
+585,Mercedes,Benz Clase A,15490,A 180 CDI Style,2015,120600,Diésel,Automatica,Hospitalet
+586,Ford,Fiesta,8490,1.25 Duratec 60cv Trend 5p,2015,51995,Gasolina,Manual,Hospitalet
+587,Jeep,Renegade,12990,1.6 Mjet Limited 4x2,2015,141653,Diésel,Manual,Esplugas
+588,SEAT,Altea,7490,1.6 TDI 105cv Reference E-Ecomotive,2012,169999,Diésel,Manual,Gavá
+589,Citroen,Grand C4 Picasso,14490,BlueHDi 120cv EAT6 Feel,2016,98000,Diésel,Automatica,Gavá
+590,Dacia,Lodgy,9990,Laureate TCE 85kW (115CV) 7Pl,2017,84000,Gasolina,Manual,Badalona
+591,Mazda,Mazda6,14990,2.2 DE 175cv Luxury,2015,91930,Diésel,Manual,Hospitalet
+592,BMW,Serie 2 Active Tourer,18990,218d,2017,83000,Diésel,Manual,Granollers
+593,SEAT,Ibiza,11490,1.0 EcoTSI 70kW (95CV) Style,2018,94230,Gasolina,Manual,Granollers
+594,Subaru,Forester,28650,2.0i Hybrid CVT Executive Plus,2020,15135,Híbrido,Automatica,Sabadell 1
+595,Mini,Countryman,13990,2.0 Cooper SD,2013,121196,Diésel,Automatica,Mataró
+596,Audi,A3,11990,Sportback 1.4 TFSI 125cv Ambition,2011,107802,Gasolina,Manual,Mataró
+597,Ford,Fiesta,9990,1.0 EcoBoost 100cv Trend 5p,2016,91321,Gasolina,Manual,Mataró
+598,Kia,Soul EV,16490,Eléctrico (CHAdeMO),2016,54700,Eléctrico,Automatica,Badalona
+599,Opel,Combo,8990,Cargo 1.3 CDTI L1 H1,2016,99769,Diésel,Manual,Mataró
+600,Nissan,Micra,12290,5p IG-T TEKNA,2017,57819,Gasolina,Manual,Mataró
+601,Honda,CR-V,14990,2.2 i-DTEC Innova,2014,153286,Diésel,Manual,Hospitalet
+602,Mini,CLUBMAN,19990,COOPER D JOHN COOPER WORKS LINE,2019,21129,Diésel,Automatica,Gavá
+603,Citroen,C4 Picasso,7990,1.6 HDi CMP Exclusive S&S,2013,114000,Diésel,Automatica,Badalona
+604,SEAT,Ibiza,11990,1.6 TDI 70kW (95CV) Reference,2018,49276,Diésel,Manual,Sabadell 1
+605,BMW,X4,24490,xDrive20d,2016,126119,Diésel,Automatica,Gavá
+606,Mazda,CX-5,12990,2.2 175cv DE 4WD AT Luxury,2013,169800,Diésel,Automatica,Badalona
+607,Citroen,C4 Cactus,10990,BlueHDi 73KW (100CV) ETG6 Feel Edition,2017,100546,Diésel,Manual,Badalona
+608,Volkswagen,Golf,26990,GTI Clubsport 2.0 TSI BMT,2017,39400,Gasolina,Manual,Granollers
+609,Mercedes,Benz Clase B,18490,B 200 d AMG,2017,114000,Diésel,Automatica,Sabadell 1
+610,Nissan,Micra,12220,IG-T 66kW (90 CV) E6D CVT N-Connecta,2019,44990,Gasolina,Manual,Sabadell 1
+611,Renault,Clio,8490,Dynamique Energy TCe 90 S&S eco2,2014,97970,Gasolina,Manual,Viladecans
+612,BMW,Serie 1,14990,116d,2018,97265,Diésel,Manual,Viladecans
+613,Mitsubishi,ASX,14490,160 MPI Motion,2017,90455,Gasolina,Manual,Sabadell 3
+614,Kia,Ceed,17990,1.4 T-GDi 103kW GT Line DCT,2019,44230,Gasolina,Manual,Sabadell 3
+615,Mercedes,Benz Clase C,49990,Mercedes-AMG C 63 Estate,2017,63202,Gasolina,Automatica,Mataró
+616,Nissan,Micra,14490,IG-T 68 kW (92 CV) CVT N-Design Chrome,2021,4400,Gasolina,Automatica,Sabadell 3
+617,Citroen,Berlingo,19990,Talla M PureTech 110 S&S FEEL,2019,35050,Gasolina,Manual,Badalona
+618,Opel,Insignia,6990,1.8 16v Essentia,2011,134000,Gasolina,Manual,Sabadell 1
+619,Hyundai,Tucson,15490,1.7CRDi 85kW (115CV) BD 25 Aniversa. 4x2,2016,125000,Diésel,Manual,Sabadell 1
+620,Opel,Astra,17990,1.6 CDTi S/S 100kW (136CV) GSi Line,2019,22900,Diésel,Manual,Badalona
+621,Toyota,Auris,10990,1.8 140H Business,2015,146500,Híbrido,Automatica,Sabadell 2
+622,Citroen,C4,7490,1.6 HDi 110cv Seduction,2012,133744,Diésel,Manual,Esplugas
+623,BMW,X2,25990,sDrive18d,2018,99990,Diésel,Automatica,Esplugas
+624,Abarth,500,21990,1.4 16v T-Jet 595 118kW (160CV) Pista E6,2017,45845,Gasolina,Manual,Esplugas
+625,SEAT,Ibiza,13490,1.0 EcoTSI 70kW (95CV) Style,2018,27392,Gasolina,Manual,Esplugas
+626,Ford,Focus,17990,1.5 Ecoblue 88kW ST-Line Auto,2018,27000,Diésel,Automatica,Granollers
+627,Toyota,Yaris,13490,1.5 Hybrid Active,2017,57950,Híbrido,Automatica,Hospitalet
+628,Abarth,500,14780,595 Competizione 1.4 T-Jet 180cv E6 Sec,2015,89000,Gasolina,Automatica,Sabadell 1
+629,Audi,A4,17850,2.0 TDI 110kW (150CV) S tronic,2017,132853,Diésel,Automatica,Sabadell 1
+630,BMW,Serie 4,22490,420d Gran Coupe,2015,100787,Diésel,Automatica,Sabadell 1
+631,Suzuki,Vitara,16990,1.6 DDiS GLX 4WD TCSS,2017,87024,Diésel,Automatica,Sabadell 1
+632,Mazda,CX-3,14990,2.0 SKYACTIV GE Style Nav 2WD,2015,49000,Gasolina,Manual,Gavá
+633,Volkswagen,T-Roc,19590,Edition 1.0 TSI 85kW (115CV),2018,64181,Gasolina,Manual,Sabadell 1
+634,Peugeot,308,16280,GTi 184KW (250CV),2016,112000,Gasolina,Manual,Sabadell 1
+635,Renault,Megane,16990,Business TCe 85 kW (115CV) GPF,2020,17000,Gasolina,Manual,Granollers
+636,Mini,Mini,19490,COOPER,2017,48000,Gasolina,Automatica,Granollers
+637,BMW,Serie 1,15290,116d,2017,77800,Diésel,Manual,Badalona
+638,Porsche,Cayenne,20990,3.0 TD Tiptronic,2012,220000,Diésel,Automatica,Badalona
+639,Volkswagen,Touareg,18990,3.0 V6 TDI 245 Tiptronic BlueMotion Tech,2012,155000,Diésel,Automatica,Badalona
+640,Nissan,Qashqai,12990,1.6dCi S&S TEKNA PREM 4x2 XTRONIC Piel,2014,137000,Diésel,Automatica,Badalona
+641,Kia,Ceed,13790,1.6 CRDi VGT 100kW (136CV) Tech,2018,90760,Diésel,Manual,Viladecans
+642,Nissan,Qashqai,17490,1.2 DIG-T 85 kW (115 CV) Acenta,2018,37119,Gasolina,Manual,Viladecans
+643,Nissan,JUKE,10490,1.2 DIG-T TEKNA,2016,103127,Gasolina,Manual,Sabadell 2
+644,Renault,Scenic,10990,Intens dCi 110,2016,107410,Diésel,Manual,Sabadell 3
+645,SEAT,Ibiza,9990,1.2 TSI 90cv Style,2016,99869,Gasolina,Manual,Mataró
+646,Volkswagen,T-Roc,24990,Sport 2.0 TSI 140kW (190CV) 4 Motion DSG,2018,61220,Gasolina,Automatica,Gavá
+647,Mercedes,Benz Clase GLA,17490,GLA 200 d Urban,2016,132203,Diésel,Manual,Gavá
+648,Dacia,Sandero,9490,Ambiance 1.0 54kW (73CV),2017,17300,Gasolina,Manual,Hospitalet
+649,Toyota,Yaris,11990,1.5 Hybrid Active,2018,98400,Híbrido,Automatica,Gavá
+650,Opel,Grandland X,15990,1.5 CDTi Excellence,2018,39456,Diésel,Manual,Viladecans
+651,Mini,Mini,13790,ONE,2016,40000,Gasolina,Manual,Viladecans
+652,Peugeot,308,13990,5p Allure 1.2 PureTech 81KW (110CV) S&S,2018,75515,Gasolina,Manual,Hospitalet
+653,Hyundai,Tucson,15490,1.6 GDi BlueDrive Tecno 4x2,2017,83000,Gasolina,Manual,Viladecans
+654,BMW,Serie 2,29990,218iA Gran Coupe,2020,25807,Gasolina,Automatica,Esplugas
+655,Kia,Ceed,14990,1.0 T-GDi 88kW (120CV) Drive,2019,32000,Gasolina,Manual,Granollers
+656,SEAT,Ibiza,10290,1.0 EcoTSI 70kW Style Connect,2017,52000,Gasolina,Manual,Badalona
+657,Citroen,C4,6990,1.6 e-HDi 115cv Tonic,2014,160500,Diésel,Manual,Badalona
+658,Audi,A1,15990,Sportback 1.4 TFSI Adrenalin SLine,2017,53000,Gasolina,Manual,Badalona
+659,Abarth,500,18490,595 Competizione 1.4 16v T-Jet 132kW E6,2018,74552,Gasolina,Manual,Esplugas
+660,Ford,Kuga,18490,1.5 EcoBoost 88kW 4x2 Trend,2019,25396,Gasolina,Manual,Esplugas
+661,Audi,Q2,21990,sport ed 2.0 TDI 140kW quattro S tronic,2017,106455,Diésel,Automatica,Esplugas
+662,SEAT,Leon,7990,1.6 TDI 105cv Style,2013,144000,Diésel,Manual,Badalona
+663,BMW,X1,18490,xDrive18d,2016,122916,Diésel,Manual,Viladecans
+664,Kia,Stonic,13490,1.0 T-GDi 88kW (120CV) Drive Eco-Dynam,2018,91388,Gasolina,Manual,Viladecans
+665,Volkswagen,Passat,14990,Sport 2.0 TDI 150CV BMT DSG,2015,111240,Diésel,Automatica,Viladecans
+666,SEAT,Arona,16990,1.0 TSI 85kW (115CV) FR Ecomotive,2018,19754,Gasolina,Manual,Mataró
+667,Audi,A3,24990,Sportback Design 35 TFSI 110kW S tronic,2019,30450,Gasolina,Automatica,Hospitalet
+668,Kia,Picanto,10990,1.0 CVVT 49kW (67CV) Concept,2020,14000,Gasolina,Manual,Badalona
+669,Audi,A1,12990,Sportback 1.0 TFSI 95CV Adrenalin,2015,95100,Gasolina,Manual,Hospitalet
+670,BMW,Serie 4,22990,420d Gran Coupe,2016,104000,Diésel,Automatica,Badalona
+671,Renault,Megane,6990,Dynamique EDC dCi 110,2012,131783,Diésel,Manual,Mataró
+672,Ford,Kuga,9990,2.0 TDCi 140 4x2 Titanium,2012,110155,Diésel,Manual,Mataró
+673,SEAT,Leon,10990,1.6 TDI 105cv St&Sp Style,2014,138000,Diésel,Manual,Granollers
+674,Toyota,Yaris,13990,1.5 Hybrid Active,2018,65000,Híbrido,Automatica,Viladecans
+675,Renault,Kadjar,16990,Zen Energy dCi 81kW (110CV),2018,45000,Diésel,Manual,Granollers
+676,Volkswagen,Touran,24990,Advance 1.5 TSI 110kW (150CV) DSG,2019,52444,Gasolina,Automatica,Esplugas
+677,Citroen,C1,10490,PureTech 60KW (82CV) Feel,2018,20674,Gasolina,Manual,Esplugas
+678,Mazda,CX-3,14590,1.5 SKYACTIV DE Lux White 2WD,2016,62858,Diésel,Manual,Viladecans
+679,Chevrolet,Cruze,6490,1.6 LS,2011,97806,Gasolina,Manual,Viladecans
+680,BMW,Serie 1,25990,118d,2021,28237,Diésel,Automatica,Viladecans
+681,Toyota,Rav4,16490,2.0 150 AWD Executive,2015,131023,Gasolina,Manual,Esplugas
+682,BMW,Serie 1,9990,118d,2013,181200,Diésel,Manual,Sabadell 3
+683,BMW,Serie 1,26840,118d Pack M,2021,24000,Diésel,Automatica,Sabadell 1
+684,Volkswagen,Golf,17990,Business 1.5 TSI EVO 96kW (130CV),2019,26951,Gasolina,Automatica,Sabadell 2
+685,Mercedes,Benz Clase A,7790,A 180 CDI Exclusive Edition,2011,60000,Diésel,Manual,Badalona
+686,Renault,Talisman,17990,S.T. SL ICON Energy dCi 96 kW (130CV),2018,56000,Diésel,Automatica,Hospitalet
+687,Peugeot,208,17990,PureTech 73kW (100CV) GT Line,2020,22577,Gasolina,Manual,Gavá
+688,Audi,A8,31490,L 4.0 TFSI 435CV quattro tiptronic,2015,146000,Gasolina,Automatica,Granollers
+689,Kia,Ceed,16290,1.0 MHEV 88kW (120CV) Tech DCT,2021,13590,Gasolina,Manual,Sabadell 2
+690,Volkswagen,Tiguan,14990,2.0 TDI 177cv DSG 4x4 Sport BMotion Tech,2014,162895,Diésel,Automatica,Mataró
+691,Hyundai,Tucson,16690,1.6 GDi BlueDrive Link 4x2,2018,68750,Gasolina,Manual,Sabadell 1
+692,Citroen,C3,11490,PureTech 60KW (82CV) SHINE,2017,49200,Gasolina,Manual,Badalona
+693,Mini,Mini,13990,COOPER D 5 PUERTAS,2015,136800,Diésel,Automatica,Hospitalet
+694,Audi,A3,7780,Sportback 1.6 TDI 105 S tronic Ambition,2011,147000,Diésel,Manual,Sabadell 1
+695,Ford,Fiesta,13990,1.0 EcoBoost 70kW (95CV) Active S/S 5p,2020,40700,Gasolina,Manual,Granollers
+696,BMW,Serie 2 Gran Tourer,17490,218d,2017,97570,Diésel,Manual,Granollers
+697,Peugeot,308,14990,5p Tech Edition 1.2 PureTech 96KW,2019,27500,Gasolina,Manual,Hospitalet
+698,Mitsubishi,ASX,12990,180 DI-D Kaiteki,2015,74000,Diésel,Manual,Hospitalet
+699,Abarth,500,12490,595 Turismo 1.4 16v T-Jet 160cv E6,2015,80561,Gasolina,Manual,Gavá
+700,Mini,Countryman,11750,ONE COUNTRYMAN,2014,120000,Gasolina,Manual,Sabadell 1
+701,BMW,X3,13990,xDrive20d,2011,155044,Diésel,Automatica,Esplugas
+702,Audi,A3,13990,1.6 TDI clean diesel 110CV Attracted,2016,134535,Diésel,Manual,Granollers
+703,SEAT,Leon,22790,2.0 TSI 221kW (300CV) DSG-6 St&Sp CUPRA,2018,82490,Gasolina,Automatica,Sabadell 2
+704,Toyota,Auris,14990,1.8 140H Hybrid Advance,2018,60000,Híbrido,Automatica,Badalona
+705,Ford,Fiesta,7490,1.5 TDCi 75cv Trend 5p,2015,146388,Diésel,Manual,Viladecans
+706,SEAT,Ibiza,12950,1.0 EcoTSI 85kW (115CV) FR,2018,55548,Gasolina,Manual,Sabadell 1
+707,Nissan,X-Trail,17490,5 Pl. dCi 96 kW (130 CV) Xtronic TEKNA,2017,97900,Diésel,Automatica,Granollers
+708,Ford,Fiesta,4990,1.25 60cv Urban,2011,116300,Gasolina,Manual,Granollers
+709,BMW,Serie 3,9990,330xi,2007,145500,Gasolina,Automatica,Granollers
+710,Opel,Mokka X,12990,1.4 T 103kW (140CV) 4X2 S&S Excellence,2017,87000,Gasolina,Manual,Viladecans
+711,Peugeot,5008,7490,Sport Pack 1.6 HDI 112 FAP,2010,107108,Diésel,Manual,Viladecans
+712,Mini,Mini,19490,COOPER D CABRIO,2017,56819,Diésel,Manual,Esplugas
+713,Land,Rover Range Rover Evoque,17990,2.2L DW12C 190CV 4WD Prestige,2011,118300,Diésel,Automatica,Sabadell 2
+714,Nissan,X-Trail,17990,1.6 dCi XTRONIC N-CONNECTA,2017,61000,Diésel,Automatica,Badalona
+715,Hyundai,Tucson,14990,1.7 CRDi BlueDrive Tecno Sky Safe 4x2,2015,113000,Diésel,Manual,Badalona
+716,Toyota,Yaris,13990,1.5 Hybrid Feel,2018,61218,Híbrido,Automatica,Mataró
+717,Mazda,Mazda6,14490,2.2 DE 150cv Luxury WGN,2015,84100,Diésel,Manual,Hospitalet
+718,Renault,Grand Scenic,9990,SELECTION Energy dCi 110 eco2 7p Euro 6,2015,152710,Diésel,Manual,Sabadell 1
+719,Opel,Insignia,6760,2.0 CDTI Start & Stop 130 CV Selective,2012,191326,Diésel,Manual,Sabadell 1
+720,Audi,A3,12490,Sportback 1.6 TDI Ambiente Ed. especial,2013,134347,Diésel,Manual,Sabadell 1
+721,Citroen,C4 Cactus,8980,PureTech 82cv Feel Edition,2015,116000,Gasolina,Manual,Sabadell 1
+722,Mini,Mini,11990,Cooper SD,2011,124211,Diésel,Manual,Sabadell 1
+723,Mini,Countryman,8990,1.6 Cooper D,2011,104000,Diésel,Manual,Sabadell 1
+724,Volkswagen,Polo,7990,Advance 1.0 75CV BMT,2015,129700,Gasolina,Manual,Viladecans
+725,Volkswagen,Polo,8990,Advance 1.2 TSI 90CV BMT,2016,145700,Gasolina,Manual,Hospitalet
+726,Mercedes,Benz Clase GLC,35990,GLC 250 d 4MATIC,2018,103000,Diésel,Automatica,Hospitalet
+727,Hyundai,Tucson,19490,1.7 CRDi 104kW BD Tecno Sky Safe DCT 4x2,2017,67000,Diésel,Automatica,Mataró
+728,Volkswagen,Golf,14490,Edition 1.0 TSI 81kW (110CV),2017,61071,Gasolina,Manual,Viladecans
+729,Toyota,Prius,15990,1.8 Prius hibrido,2017,84735,Híbrido,Automatica,Viladecans
+730,Hyundai,i30,23960,2.0 TGDI N Performance,2018,68264,Gasolina,Manual,Sabadell 1
+731,Ford,Focus,17890,1.0 Ecoboost 92kW ST-Line SportBr,2019,21287,Gasolina,Manual,Sabadell 1
+732,BMW,Serie 1,16540,118d xDrive pack M,2017,75600,Diésel,Automatica,Sabadell 1
+733,Skoda,Fabia,6690,1.2 TSI 90cv Active,2015,132000,Gasolina,Manual,Sabadell 1
+734,Hyundai,i20,11880,1.0 TGDI 74kW (100CV) Tecno LE,2018,37044,Gasolina,Manual,Sabadell 1
+735,Audi,A3,15490,Sedan 1.6 TDI clean 110CV Attraction,2016,132252,Diésel,Manual,Granollers
+736,Renault,Clio,10520,Dynamique Energy TCe 90 eco2 Euro 6,2015,75000,Gasolina,Manual,Sabadell 1
+737,Kia,Sportage,17280,1.6 CRDi 85kW (115CV) Drive 4x2,2019,70265,Diésel,Manual,Sabadell 1
+738,Ford,Focus,6990,1.6 TDCi 115cv Trend,2014,127916,Diésel,Manual,Sabadell 1
+739,Mazda,CX-3,16990,2.0 SKYACTIV GE 88kW Luxury 2WD,2018,42875,Gasolina,Automatica,Mataró
+740,BMW,Serie 1,13490,116d EfficientDynamics,2016,124120,Diésel,Manual,Mataró
+741,Audi,A3,11990,2.0 TDI 150cv Attraction,2012,125000,Diésel,Manual,Granollers
+742,SEAT,Ateca,24980,2.0 TDI 110kW (150CV) S&S Style,2021,4600,Diésel,Manual,Badalona
+743,BMW,X1,13940,xDrive18d,2015,130017,Diésel,Manual,Sabadell 1
+744,Nissan,JUKE,12960,1.6 DIG-T 218 CV NISMO RS 4X2,2015,83029,Gasolina,Manual,Sabadell 1
+745,Ford,Focus,15490,1.0 Ecoboost 92kW ST-Line,2019,19200,Gasolina,Manual,Viladecans
+746,Dacia,Dokker,8490,Ambiance dCi 75 N1,2014,105948,Diésel,Manual,Viladecans
+747,Mercedes,Benz Clase CLA,22990,CLA 220 CDI 4M Aut. AMG Line,2015,65985,Diésel,Automatica,Viladecans
+748,Mini,Mini,13890,COOPER,2017,61842,Gasolina,Manual,Sabadell 1
+749,SEAT,Ibiza,15490,SC 1.8 TSI 192cv Cupra,2016,80600,Gasolina,Manual,Mataró
+750,SEAT,Leon,11990,ST 1.6 TDI 110cv St&Sp Style Con Bl Plus,2016,147676,Diésel,Manual,Viladecans
+751,SEAT,Leon,10990,SC 1.4 TSI 122cv St&Sp FR,2014,139500,Gasolina,Manual,Viladecans
+752,Peugeot,4007,9990,Sport Pack 7 Plazas 2.2 HDI 156 FAP,2012,104793,Diésel,Manual,Viladecans
+753,Ssangyong,Tivoli,10690,G16 Limited 4x2,2015,55000,Gasolina,Manual,Sabadell 2
+754,Fiat,Tipo,7320,1.4 Lounge 88kW (120CV) gasolina/GLP 5p.,2018,178319,GLP,Manual,Sabadell 1
+755,SEAT,Ibiza,12490,SC 1.8 TSI 192cv Cupra,2016,146891,Gasolina,Manual,Granollers
+756,Fiat,Tipo,7490,1.4 T-Jet 16v Lounge 88kW (120CV) GLP,2018,135541,GLP,Manual,Sabadell 1
+757,Hyundai,Tucson,15990,1.6 GDi BlueDrive Tecno 4x2,2015,57000,Gasolina,Manual,Granollers
+758,Audi,A3,10990,Sportback 1.6 TDI 105cv Ambition,2013,118988,Diésel,Manual,Sabadell 1
+759,Volkswagen,Polo,7990,1.6 TDI 90cv Advance,2013,133303,Diésel,Manual,Viladecans
+760,Mercedes,Benz Clase E,12130,E 220 CDI Blue Efficiency,2011,135604,Diésel,Manual,Sabadell 1
+761,Citroen,C3 Aircross,12990,PureTech 60kW (82CV) FEEL,2018,63534,Gasolina,Manual,Viladecans
+762,Mazda,CX-5,11580,2.2 150cv DE 2WD Style,2014,144100,Diésel,Manual,Sabadell 1
+763,Ford,Focus,17990,1.0 Ecoboost 92kW ST-Line,2019,64600,Gasolina,Manual,Granollers
+764,Fiat,500L,10990,1.4 16v 70kW (95CV) Lounge,2017,47804,Gasolina,Manual,Viladecans
+765,Audi,A1,10890,1.6 TDI 90cv Ambition,2014,130800,Diésel,Manual,Sabadell 2
+766,Alfa,Romeo Giulietta,11790,1.6 JTDm 120cv Collezione,2016,90300,Diésel,Automatica,Sabadell 2
+767,SEAT,Leon,11990,1.2 TSI 81kW (110CV) St&Sp Reference,2017,93000,Gasolina,Manual,Granollers
+768,Peugeot,308,16990,5p GT Line 1.2 PureTech 96KW (130CV),2019,73266,Gasolina,Manual,Hospitalet
+769,Fiat,500X,15490,"Lounge 1,0 Firefly T3 88KW (120 CV) S&S",2020,4863,Gasolina,Manual,Viladecans
+770,Ford,Kuga,13490,2.0 TDCi 163 4x4 Titanium Powershift,2014,147669,Diésel,Automatica,Hospitalet
+771,BMW,Serie 4,32990,420d Automática,2017,50300,Diésel,Automatica,Granollers
+772,Abarth,500,14990,1.4 16v T-Jet 595 103kW (140CV) E6,2016,38820,Gasolina,Automatica,Granollers
+773,Ford,Kuga,14990,1.5 EcoBoost 110kW A-S-S 4x2 Trend,2017,46350,Gasolina,Manual,Granollers
+774,Volkswagen,Golf,15490,VI 2.0 TSI 210cv DSG 6 vel GTI,2010,146000,Gasolina,Automatica,Mataró
+775,Peugeot,207,5490,Sport 1.6 VTi 16v 120,2007,87450,Gasolina,Manual,Sabadell 2
+776,Mercedes,Benz Vito,11490,111 CDI Vito L Compacta,2007,60700,Diésel,Manual,Hospitalet
+777,Jeep,Wrangler,37990,2.8 CRD Rubicon Auto,2008,142020,Diésel,Automatica,Sabadell 2
+778,Volkswagen,Golf,8860,VI 2.0 TDI 110cv DPF DSG Sport,2009,143843,Diésel,Automatica,Sabadell 1
+779,Citroen,C2,4990,1.4 HDI SX,2004,58000,Diésel,Manual,Granollers
+780,Volkswagen,Golf,6990,1.4 TSI 170cv GT Sport,2008,211296,Gasolina,Manual,Viladecans
+781,Renault,Captur,13990,Zen TCe 66kW (90CV) -18,2018,52590,Gasolina,Manual,Gavá
+782,Nissan,Qashqai+2,10990,"2.0 dCi TEKNA SPORT 4x2 17""",2011,147261,Diésel,Manual,Gavá
+783,Nissan,Qashqai+2,9990,2.0 ACENTA 4X2,2012,127342,Gasolina,Manual,Gavá
+784,SEAT,Ibiza,13990,1.0 EcoTSI 85kW (115CV) Style,2018,60257,Gasolina,Manual,Gavá
+785,Hyundai,Tucson,15990,1.7 CRDi BlueDrive Tecno 4x2,2015,159416,Diésel,Manual,Gavá
+786,Ford,Focus,15990,1.0 Ecoboost 92kW Titanium,2018,21404,Gasolina,Manual,Gavá
+787,Volkswagen,Golf,13990,Edition 1.6 TDI 110CV BMT,2016,84040,Diésel,Manual,Gavá
+788,Kia,Sportage,24990,1.6 GDi 97kW (132CV) Basic 4x2,2018,65872,Gasolina,Manual,Viladecans
+789,Abarth,500,17990,1.4 16v T-Jet 595 118kW (160CV) Pista E6,2019,28830,Gasolina,Manual,Mataró
+790,Volkswagen,Tiguan,14990,2.0 TDI 177cv DSG 4x4 Sport BMotion Tech,2014,162895,Diésel,Automatica,Mataró
+791,Dacia,Dokker,14390,SL Trotamundos dCi 66kW (90CV),2018,9800,Diésel,Manual,Badalona

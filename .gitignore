@@ -72,3 +72,8 @@ Self-Projects/Active-Donors-PM/donor_model.h5
 /Playground s3e7 reservation cancellation/sample_submission.csv
 /Playground s3e7 reservation cancellation/test.csv
 /Playground s3e7 reservation cancellation/train.csv
+Playground s3e7 reservation cancellation/hotel_model.h5
+Playground s3e7 reservation cancellation/adaboost_preds.csv
+Playground s3e7 reservation cancellation/catboost_preds.csv
+Playground s3e7 reservation cancellation/lgbm_preds.csv
+/Playground s3e7 reservation cancellation/catboost_info

@@ -77,3 +77,5 @@ Playground s3e7 reservation cancellation/adaboost_preds.csv
 Playground s3e7 reservation cancellation/catboost_preds.csv
 Playground s3e7 reservation cancellation/lgbm_preds.csv
 /Playground s3e7 reservation cancellation/catboost_info
+Playground s3e7 reservation cancellation/catboost_preds_fulldata.csv
+Playground s3e7 reservation cancellation/adaboost_preds_fulldata.csv

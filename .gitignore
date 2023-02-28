@@ -82,3 +82,12 @@ Playground s3e7 reservation cancellation/adaboost_preds_fulldata.csv
 Self-Projects/trial/rent_model.h5
 kaggle-house-price-prediction/catboost_preds.csv
 Playground s3e8 gemstone/gem_model.h5
+Playground s3e8 gemstone/xgb_solo_sub.csv
+Playground s3e8 gemstone/rf_solo_sub.csv
+.gitignore
+Playground s3e8 gemstone/final_ensemble.csv
+.gitignore
+.gitignore
+/Playground s3e8 gemstone/ann_solo_sub.csv
+Playground s3e8 gemstone/cat_solo_sub.csv
+Playground s3e8 gemstone/lgbm_solo_sub.csv

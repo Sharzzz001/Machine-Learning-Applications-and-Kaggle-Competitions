@@ -92,3 +92,5 @@ Playground s3e8 gemstone/final_ensemble.csv
 Playground s3e8 gemstone/cat_solo_sub.csv
 Playground s3e8 gemstone/lgbm_solo_sub.csv
 /Playground s3e9 concrete/sas_miner_poly+hpna_ensemble.csv
+Playground s3e9 concrete/ens_lgbm_xgb_sub.csv
+Playground s3e9 concrete/lgbm_solo_sub.csv

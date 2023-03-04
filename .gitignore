@@ -96,3 +96,14 @@ Playground s3e9 concrete/ens_lgbm_xgb_sub.csv
 Playground s3e9 concrete/lgbm_solo_sub.csv
 dma-project/cat_solo_sub.csv
 dma-project/ens_cat_xgb_sub.csv
+Titanic-MachineLearningFromDisaster/ens_xgb_lgbm_lr_fulldata_subs.csv
+Titanic-MachineLearningFromDisaster/ens_xgb_lgbm_lr_subs.csv
+Titanic-MachineLearningFromDisaster/gender_submission.csv
+Titanic-MachineLearningFromDisaster/sasminer_ens.csv
+.gitignore
+Titanic-MachineLearningFromDisaster/solo_xgb_subs.csv
+Titanic-MachineLearningFromDisaster/test.csv
+.gitignore
+Titanic-MachineLearningFromDisaster/train.csv
+Titanic-MachineLearningFromDisaster/titanic_model.h5
+Titanic-MachineLearningFromDisaster/solo_xgb_fulldata_subs.csv

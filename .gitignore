@@ -107,3 +107,5 @@ Titanic-MachineLearningFromDisaster/test.csv
 Titanic-MachineLearningFromDisaster/train.csv
 Titanic-MachineLearningFromDisaster/titanic_model.h5
 Titanic-MachineLearningFromDisaster/solo_xgb_fulldata_subs.csv
+Self-Projects/Airbnb price data/airbnb_model.h5
+/Self-Projects/Airbnb price data/data

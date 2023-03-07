@@ -110,3 +110,6 @@ Titanic-MachineLearningFromDisaster/solo_xgb_fulldata_subs.csv
 Self-Projects/Airbnb price data/airbnb_model.h5
 /Self-Projects/Airbnb price data/data
 /Self-Projects/ISP Churn/structured_data_classifier
+/kaggle-house-price-prediction/catboost_info
+/kaggle-house-price-prediction/structured_data_classifier
+/kaggle-house-price-prediction/structured_data_regressor

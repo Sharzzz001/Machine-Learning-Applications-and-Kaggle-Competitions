@@ -125,3 +125,4 @@ Pulsar Classification s3e10/test.csv
 /Pulsar Classification s3e10/pulsar_model.h5
 Pulsar Classification s3e10/Pulsar.csv
 /Pulsar Classification s3e10/catboost_info
+Pulsar Classification s3e10/only_comp_data_ens_ann_cat_rf_full.csv

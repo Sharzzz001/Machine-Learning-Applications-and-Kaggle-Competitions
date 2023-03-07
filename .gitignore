@@ -113,3 +113,8 @@ Self-Projects/Airbnb price data/airbnb_model.h5
 /kaggle-house-price-prediction/catboost_info
 /kaggle-house-price-prediction/structured_data_classifier
 /kaggle-house-price-prediction/structured_data_regressor
+/kaggle-house-price-prediction/catboost_preds_solo_fulldata.csv
+/kaggle-house-price-prediction/ensemble_preds_cat+xgb+lgbm_optuna_fulldata.csv
+/kaggle-house-price-prediction/lgbm_preds_solo_full.csv
+kaggle-house-price-prediction/lgbm_preds_solo.csv
+kaggle-house-price-prediction/lgbm_preds_solo.csv

@@ -118,3 +118,6 @@ Self-Projects/Airbnb price data/airbnb_model.h5
 /kaggle-house-price-prediction/lgbm_preds_solo_full.csv
 kaggle-house-price-prediction/lgbm_preds_solo.csv
 kaggle-house-price-prediction/lgbm_preds_solo.csv
+Pulsar Classification s3e10/sample_submission.csv
+Pulsar Classification s3e10/train.csv
+Pulsar Classification s3e10/test.csv

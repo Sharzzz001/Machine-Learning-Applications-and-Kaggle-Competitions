@@ -121,3 +121,7 @@ kaggle-house-price-prediction/lgbm_preds_solo.csv
 Pulsar Classification s3e10/sample_submission.csv
 Pulsar Classification s3e10/train.csv
 Pulsar Classification s3e10/test.csv
+/Pulsar Classification s3e10/structured_data_classifier
+/Pulsar Classification s3e10/pulsar_model.h5
+Pulsar Classification s3e10/Pulsar.csv
+/Pulsar Classification s3e10/catboost_info

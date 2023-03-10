@@ -129,3 +129,4 @@ Pulsar Classification s3e10/only_comp_data_ens_ann_cat_rf_full.csv
 Playground s3e9 concrete/concrete_model.h5
 /Playground s3e9 concrete/ens_lgbm_xgb_cat_fulldata_sub.csv
 /Playground s3e9 concrete/ens_lgbm_xgb_fulldata_sub.csv
+Self-Projects/kaggle products sold/book_model.h5

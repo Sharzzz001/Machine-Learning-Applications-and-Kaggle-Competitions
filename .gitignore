@@ -131,3 +131,8 @@ Playground s3e9 concrete/concrete_model.h5
 /Playground s3e9 concrete/ens_lgbm_xgb_fulldata_sub.csv
 Self-Projects/kaggle products sold/book_model.h5
 /Self-Projects/kaggle products sold/catboost_info
+Self-Projects/kaggle products sold/ann_solo_half_data.csv
+Self-Projects/kaggle products sold/ens_xgb_lgbm_cat_full_data.csv
+.gitignore
+Self-Projects/kaggle products sold/ens_xgb_lgbm_full_data.csv
+Self-Projects/kaggle products sold/lgbm_full_data.csv

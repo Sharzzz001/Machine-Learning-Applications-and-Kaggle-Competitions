@@ -137,3 +137,11 @@ Self-Projects/kaggle products sold/ens_xgb_lgbm_cat_full_data.csv
 Self-Projects/kaggle products sold/ens_xgb_lgbm_full_data.csv
 Self-Projects/kaggle products sold/lgbm_full_data.csv
 spaceship_titanic/spaceship_model.h5
+spaceship_titanic/update_xgb_solo.csv
+spaceship_titanic/update_lgbm_full.csv
+spaceship_titanic/update_cat_solo.csv
+.gitignore
+spaceship_titanic/full_data_ens_based_on_scores.csv
+spaceship_titanic/full_data_ens.csv
+spaceship_titanic/update_lgbm_solo.csv
+spaceship_titanic/update_xgb_full.csv

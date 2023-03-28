@@ -145,3 +145,13 @@ spaceship_titanic/full_data_ens_based_on_scores.csv
 spaceship_titanic/full_data_ens.csv
 spaceship_titanic/update_lgbm_solo.csv
 spaceship_titanic/update_xgb_full.csv
+PM-Competition/rfcv.pkl
+PM-Competition/telecom_model.h5
+PM-Competition/rfcv-923.pkl
+PM-Competition/cat_model_5cv_rmse_agegroup_2feat.pkl
+/PM-Competition/lgbm_model_5cv_rmse_agegroup_2feat.pkl
+PM-Competition/xgb_model_5cv_rmse_agegroup_2feat.pkl
+/Playground s3e11/train.csv
+/Playground s3e11/test.csv
+/Playground s3e11/sample_submission.csv
+/Playground s3e11/train_dataset.csv

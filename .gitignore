@@ -155,3 +155,4 @@ PM-Competition/xgb_model_5cv_rmse_agegroup_2feat.pkl
 /Playground s3e11/test.csv
 /Playground s3e11/sample_submission.csv
 /Playground s3e11/train_dataset.csv
+Playground s3e11/ensemble_base_halfdata_reg.csv

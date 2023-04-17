@@ -162,3 +162,5 @@ Playground s3e11/ensemble_base_halfdata_reg.csv
 /Plauyground s3e12 urea/test.csv
 /Plauyground s3e12 urea/sample_submission.csv
 Plauyground s3e12 urea/original.csv
+Plauyground s3e12 urea/submission_ensemble_cat_lgb_xgb_rf_with_weights.csv
+Plauyground s3e12 urea/submission_ensemble_xgb.csv

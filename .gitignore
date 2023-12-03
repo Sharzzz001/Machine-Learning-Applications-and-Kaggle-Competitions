@@ -169,3 +169,5 @@ Plauyground s3e12 urea/submission_ensemble_xgb.csv
 /s3e14 Blueberry yield/train.csv
 /s3e15 heatflux imputation/data.csv
 /s3e15 heatflux imputation/sample_submission.csv
+/s3e25 Mohs Hardness/catboost_info
+/s3e25 Mohs Hardness/lgbm_tuned.csv

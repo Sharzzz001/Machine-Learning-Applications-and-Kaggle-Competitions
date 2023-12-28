@@ -171,3 +171,8 @@ Plauyground s3e12 urea/submission_ensemble_xgb.csv
 /s3e15 heatflux imputation/sample_submission.csv
 /s3e25 Mohs Hardness/catboost_info
 /s3e25 Mohs Hardness/lgbm_tuned.csv
+/S3E26 Cirrhosis/test.csv
+/S3E26 Cirrhosis/catboost_info
+/S3E26 Cirrhosis/cirrhosis.csv
+/S3E26 Cirrhosis/train.csv
+S3E26 Cirrhosis/lgbm_sub.csv

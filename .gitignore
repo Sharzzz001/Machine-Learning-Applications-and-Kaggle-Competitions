@@ -180,3 +180,5 @@ S3E26 Cirrhosis/lgbm_sub.csv
 /S4E1 Bank Churn/test.csv
 /S4E1 Bank Churn/train.csv
 /S4E1 Bank Churn/AutogluonModels
+/House Price/AutogluonModels
+/DisasterTweetsNLP - AutoGluon/AutogluonModels

@@ -184,3 +184,12 @@ S3E26 Cirrhosis/lgbm_sub.csv
 /DisasterTweetsNLP - AutoGluon/AutogluonModels
 /S4E2 Obesity/AutogluonModels
 /Self-Projects/Loan Default/AutogluonModels
+/s4e3 steel plate/AutogluonModels
+/s4e3 steel plate/output-agPredictor_Bumps
+/s4e3 steel plate/output-agPredictor_Dirtiness
+/s4e3 steel plate/output-agPredictor_K_Scatch
+/s4e3 steel plate/output-agPredictor_Other_Faults
+/s4e3 steel plate/output-agPredictor_Stains
+/s4e3 steel plate/output-agPredictor_Pastry
+/s4e3 steel plate/output-agPredictor_Z_Scratch
+s4e3 steel plate/output-agmultilabel_predictor.pkl

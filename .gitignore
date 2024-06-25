@@ -193,3 +193,13 @@ S3E26 Cirrhosis/lgbm_sub.csv
 /s4e3 steel plate/output-agPredictor_Pastry
 /s4e3 steel plate/output-agPredictor_Z_Scratch
 s4e3 steel plate/output-agmultilabel_predictor.pkl
+/Playground s4e6/AutogluonModels
+/Playground s4e6/flaml-autog-ens.csv
+Playground s4e6/Autog-out.csv
+Playground s4e6/data.csv
+Playground s4e6/flaml-autog-ens-final.csv
+Playground s4e6/flaml-out.csv
+Playground s4e6/mylog.log
+Playground s4e6/sample_submission.csv
+Playground s4e6/train.csv
+Playground s4e6/test.csv

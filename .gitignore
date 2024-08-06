@@ -209,3 +209,7 @@ Playground s4e6/test.csv
 /S4E8 Mushrooms/sample_submission.csv
 /S4E8 Mushrooms/train.csv
 /S4E8 Mushrooms/test.csv
+/S4E8 Mushrooms/AutogluonModels
+S4E8 Mushrooms/test-AG.parquet
+S4E8 Mushrooms/__pycache__/mcc_func.cpython-310.pyc
+S4E8 Mushrooms/train-AG.parquet

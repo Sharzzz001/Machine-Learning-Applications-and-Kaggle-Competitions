@@ -213,3 +213,5 @@ Playground s4e6/test.csv
 S4E8 Mushrooms/test-AG.parquet
 S4E8 Mushrooms/__pycache__/mcc_func.cpython-310.pyc
 S4E8 Mushrooms/train-AG.parquet
+S4E8 Mushrooms/ag-ens.csv
+S4E8 Mushrooms/flaml_lgbm.csv

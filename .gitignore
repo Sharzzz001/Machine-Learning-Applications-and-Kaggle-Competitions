@@ -218,3 +218,27 @@ S4E8 Mushrooms/flaml_lgbm.csv
 /Self-Projects/Spotify Analysis/Spotify Account Data
 /Self-Projects/Spotify Analysis/autogluon-m4-hourly
 /Self-Projects/Spotify Analysis/AutogluonModels
+/Playground s4e9 Car Price/train.csv
+/Playground s4e9 Car Price/test.csv
+/Playground s4e9 Car Price/sample_submission.csv
+/Playground s4e9 Car Price/AutogluonModels
+/Playground s4e9 Car Price/samp_lgbm.csv
+/Playground s4e9 Car Price/test.parquet
+/Playground s4e9 Car Price/train.parquet
+/Playground s4e9 Car Price/used_cars.csv
+/Playground s4e9 Car Price/autog-ens7models.csv
+Playground s3e12 urea/original.csv
+Playground s3e12 urea/sample_submission.csv
+Playground s3e12 urea/submission_ensemble_bakwas_onlytrain.csv
+Playground s3e12 urea/submission_ensemble_bakwas.csv
+Playground s3e12 urea/submission_ensemble_cat_lgb_xgb_rf_with_weights.csv
+Playground s3e12 urea/submission_ensemble_og_data_merge.csv
+Playground s3e12 urea/submission_ensemble_xgb.csv
+Playground s3e12 urea/test.csv
+Playground s3e12 urea/train.csv
+Playground s3e12 urea/catboost_info/catboost_training.json
+Playground s3e12 urea/catboost_info/learn_error.tsv
+Playground s3e12 urea/catboost_info/test_error.tsv
+Playground s3e12 urea/catboost_info/time_left.tsv
+Playground s3e12 urea/catboost_info/learn/events.out.tfevents
+Playground s3e12 urea/catboost_info/test/events.out.tfevents

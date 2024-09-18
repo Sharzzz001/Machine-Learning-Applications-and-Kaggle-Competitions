@@ -1,55 +1,57 @@
 import pandas as pd
-import pdfplumber
 
-# Step 1: Group and sum the Excel data by ISIN and account type
-excel_data = pd.read_excel('your_excel_file.xlsx')
-grouped_data = excel_data.groupby(['ISIN', 'Account Type'])['Amount'].sum().reset_index()
+# Load the Excel file
+excel_file = 'your_isin_file.xlsx'
+df = pd.read_excel(excel_file)
 
-# Step 2: Function to extract data from PDF
-def extract_isin_data_from_pdf(pdf_path, isin):
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if isin in text:
-                # Check if 'cash' appears twice
-                cash_count = text.lower().count('cash')
-                account_type = 'cash' if cash_count >= 2 else 'share'
-                
-                # Extract table below ISIN
-                table = page.extract_table()  # Extract the table as a list of lists
-                if table:
-                    for row in table:
-                        # Assuming amount is in a specific column, e.g., the last column
-                        amount = row[-1]  # Adjust index based on the table structure
-                        return account_type, float(amount)
-    return None, None  # Return None if ISIN is not found
+# Initialize lists to store the extracted data
+isins = []
+trader_names_list = []
+usd_diffs = []
+percent_diffs = []
 
-# Step 3: Reconcile the data
-reconciliation_results = []
+# Loop through the DataFrame to group ISINs and extract necessary data
+current_isin = None
+trader_names = []
 
-for index, row in grouped_data.iterrows():
+for idx, row in df.iterrows():
     isin = row['ISIN']
-    excel_amount = row['Amount']
-    account_type_excel = row['Account Type']
     
-    account_type_pdf, pdf_amount = extract_isin_data_from_pdf('your_pdf_file.pdf', isin)
+    # Check if the current row is an ISIN group (not empty)
+    if pd.notna(isin):
+        if current_isin:  # If we're done with the previous group
+            # Append the data for the previous ISIN group
+            isins.append(current_isin)
+            trader_names_list.append(', '.join(trader_names))
+            usd_diffs.append(df.loc[idx - 1, 'Difference'])  # USD Difference from the blank row
+            percent_diffs.append(df.loc[idx - 1, '% diff'])  # % Difference from the blank row
+        
+        # Reset for the new ISIN group
+        current_isin = isin
+        trader_names = [row['Trader Name']]  # Start a new list of trader names
     
-    if account_type_pdf:
-        # Check if account types match
-        if account_type_pdf == account_type_excel:
-            difference = excel_amount - pdf_amount
-            percentage_diff = (difference / pdf_amount) * 100 if pdf_amount else None
-            reconciliation_results.append({
-                'ISIN': isin,
-                'Account Type': account_type_excel,
-                'Summed Excel Amount': excel_amount,
-                'Extracted PDF Amount': pdf_amount,
-                'Difference': difference,
-                'Percentage Difference': percentage_diff
-            })
+    # If the ISIN is NaN (meaning the row is a blank one), skip it
+    elif pd.isna(isin) and current_isin:
+        continue
+    else:
+        # Collect trader names for the current ISIN group
+        trader_names.append(row['Trader Name'])
 
-# Step 4: Create a DataFrame with the results
-reconciliation_df = pd.DataFrame(reconciliation_results)
+# Handle the last ISIN group after the loop ends
+if current_isin:
+    isins.append(current_isin)
+    trader_names_list.append(', '.join(trader_names))
+    usd_diffs.append(df.loc[len(df) - 1, 'Difference'])  # USD Difference from the last blank row
+    percent_diffs.append(df.loc[len(df) - 1, '% diff'])  # % Difference from the last blank row
 
-# Save the reconciliation to Excel
-reconciliation_df.to_excel('reconciliation_results.xlsx', index=False)
+# Create a new DataFrame with the extracted data
+result_df = pd.DataFrame({
+    'ISIN': isins,
+    'Trader Names': trader_names_list,
+    'USD Difference': usd_diffs,
+    '% Difference': percent_diffs
+})
+
+# Save the result to a new Excel file or display it
+result_df.to_excel('processed_isin_data.xlsx', index=False)
+print(result_df)

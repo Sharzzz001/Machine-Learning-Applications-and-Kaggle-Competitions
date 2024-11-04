@@ -1,51 +1,26 @@
-import pandas as pd
+import os
+import zipfile
 
-# Load the Excel file
-excel_file = 'your_isin_file.xlsx'
-df = pd.read_excel(excel_file)
+def extract_and_rename(zip_path, extraction_path, new_filename):
+    # Step 1: Extract files from the zip file
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        # Assume there is only one file in the zip file; get its name
+        original_file_name = zip_ref.namelist()[0]
+        zip_ref.extract(original_file_name, extraction_path)
 
-# Initialize lists to store the extracted data
-isins = []
-trader_names_list = []
-usd_diffs = []
-percent_diffs = []
-
-# Variables to hold current ISIN and trader names
-current_isin = None
-trader_names = []
-
-# Loop through the DataFrame to group ISINs and extract necessary data
-for idx, row in df.iterrows():
-    isin = row['ISIN']
-    trader = row['Trader name']
+    # Step 2: Rename the extracted file to the specified new filename
+    original_file_path = os.path.join(extraction_path, original_file_name)
+    new_file_path = os.path.join(extraction_path, new_filename)
     
-    # If ISIN is not NaN, this is part of the ISIN group
-    if pd.notna(isin):
-        if current_isin is None:  # Start a new ISIN group
-            current_isin = isin
-        trader_names.append(trader)
-    
-    # If ISIN is NaN, it indicates the blank row with difference data
-    elif pd.isna(isin) and pd.isna(trader):
-        if current_isin:  # Finalize the group for the current ISIN
-            # Append the data for the ISIN group
-            isins.append(current_isin)
-            trader_names_list.append(', '.join(trader_names))  # Concatenate trader names
-            usd_diffs.append(row['Diff'])  # Extract USD Difference
-            percent_diffs.append(row['%diff'])  # Extract % Difference
-            
-            # Reset for the next group
-            current_isin = None
-            trader_names = []
+    # Rename the file
+    os.rename(original_file_path, new_file_path)
 
-# Create a new DataFrame with the extracted data
-result_df = pd.DataFrame({
-    'ISIN': isins,
-    'Trader Names': trader_names_list,
-    'USD Difference': usd_diffs,
-    '% Difference': percent_diffs
-})
+    # Step 3: Delete the zip file
+    os.remove(zip_path)
 
-# Save the result to a new Excel file or display it
-result_df.to_excel('processed_isin_data.xlsx', index=False)
-print(result_df)
+# Example usage
+zip_path = 'path/to/your/downloaded.zip'       # Path to the downloaded zip file
+extraction_path = 'path/to/extracted/files/'   # Path to where files should be extracted
+new_filename = 'master.xlsx'                   # Desired filename for the extracted file
+
+extract_and_rename(zip_path, extraction_path, new_filename)

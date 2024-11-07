@@ -1,69 +1,31 @@
-import time
-from datetime import datetime
-import sys
-import traceback
-import psutil  # Requires `psutil` package for memory/CPU tracking
+import pandas as pd
 
-class Main:
-    def __init__(self, userid):
-        self.userid = userid
+# Sample data
+data = {
+    'client_name': ['Client A', 'Client A', 'Client A', 'Client B', 'Client B', 'Client B', 'Client C', 'Client C', 'Client C'],
+    'waived': ['Yes', 'Yes', 'Yes', 'No', 'No', 'No', 'Yes', 'Yes', 'Yes'],
+    'total_aum': [100, 105, 110, 150, 145, 155, 120, 125, 123],
+    'file_name': ['Jan 2024', 'Feb 2024', 'Mar 2024', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Jan 2024', 'Feb 2024', 'Mar 2024']
+}
 
-    # Logging decorator as a method in the class
-    def log_user_activity(func):
-        def wrapper(self, *args, **kwargs):
-            start_time = time.time()
-            execution_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            cpu_before = psutil.cpu_percent()
-            mem_before = psutil.virtual_memory().percent
+df = pd.DataFrame(data)
 
-            try:
-                # Execute the function
-                result = func(self, *args, **kwargs)
-                status = "Success"
-            except Exception as e:
-                result = None
-                status = f"Error: {str(e)}"
-                # Optional: log the traceback
-                error_trace = traceback.format_exc()
-            finally:
-                # Log after function completes or if an error occurs
-                end_time = time.time()
-                cpu_after = psutil.cpu_percent()
-                mem_after = psutil.virtual_memory().percent
-                with open("user_activity_log.txt", "a") as log_file:
-                    log_file.write(
-                        f"User: {self.userid}, Function: {func.__name__}, "
-                        f"Execution Time: {end_time - start_time:.2f} seconds, "
-                        f"Date and Time: {execution_time}, Status: {status}, "
-                        f"Args: {args}, Kwargs: {kwargs}, "
-                        f"Return Value: {result}, "
-                        f"CPU Usage (Before/After): {cpu_before}%/{cpu_after}%, "
-                        f"Memory Usage (Before/After): {mem_before}%/{mem_after}%\n"
-                    )
-                    if status != "Success":
-                        log_file.write(f"Error Traceback:\n{error_trace}\n")
+# Convert file_name to datetime to sort by month
+df['file_name'] = pd.to_datetime(df['file_name'], format='%b %Y')
+df = df.sort_values(by=['client_name', 'file_name'])
 
-            return result
-        return wrapper
+# Calculate AUM increase month to month for each client
+df['aum_increase'] = df.groupby('client_name')['total_aum'].diff().gt(0)
 
-    @log_user_activity
-    def process(self):
-        print("Running main process...")
-        # Call the subprocess
-        sub = self.SubProcess(self.userid)
-        sub.subprocess()
+# Aggregate the revenue-generating status for each client
+client_revenue_status = (
+    df[df['waived'] == 'Yes']  # Filter only clients with waiver as "Yes"
+    .groupby('client_name')['aum_increase']
+    .apply(lambda x: x.sum() >= 5)  # Check if majority of months have an increase
+)
 
-    class SubProcess:
-        def __init__(self, userid):
-            self.userid = userid
+# Count the number of revenue-generating clients with waiver "Yes"
+revenue_generating_clients_count = client_revenue_status.sum()
 
-        @Main.log_user_activity
-        def subprocess(self):
-            print("Running subprocess...")
-            # Simulate some work
-            time.sleep(1)
-            return "Subprocess result"
-
-# Usage
-user = Main("User123")
-user.process()
+# Output the result
+print("Number of revenue-generating clients with waiver 'Yes':", revenue_generating_clients_count)

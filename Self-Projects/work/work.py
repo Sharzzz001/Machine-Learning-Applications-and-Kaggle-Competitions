@@ -1,63 +1,39 @@
 import pandas as pd
-import numpy as np
 
-# Sample data
-data = {
-    'client_name': ['Client A', 'Client A', 'Client A', 'Client B', 'Client B', 'Client B', 'Client C', 'Client C', 'Client C'],
-    'waived': ['No', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes'],
-    'total_aum': [100, 105, 110, 150, 145, 155, 120, 125, 123],
-    'file_name': ['Jan 2024', 'Feb 2024', 'Mar 2024', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Jan 2024', 'Feb 2024', 'Mar 2024'],
-    'Fees': [0.00125, 0, 0, 0.001, 0, 0.0011, 0, 0, 0]
-}
+# Consolidate data from all sheets with a 'Year Month' column
+excel_file = "your_file.xlsx"
+sheets = pd.ExcelFile(excel_file).sheet_names
 
-df = pd.DataFrame(data)
+consolidated_df = pd.DataFrame()
+for sheet in sheets:
+    # Load each sheet
+    df = pd.read_excel(excel_file, sheet_name=sheet)
+    # Extract month and year from sheet name and add it as a column
+    year_month = f"2024-{sheet.split()[1]}"
+    df['Year Month'] = year_month
+    consolidated_df = pd.concat([consolidated_df, df], ignore_index=True)
 
-# Convert `file_name` to datetime and sort by `client_name` and `file_name`
-df['file_name'] = pd.to_datetime(df['file_name'], format='%b %Y')
-df = df.sort_values(by=['client_name', 'file_name'])
+# Calculate AUM growth by client and asset type month on month
+consolidated_df = consolidated_df.sort_values(['BPKey', 'Year Month'])
+aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other', 'Total AUM']
 
-# Step 1: Calculate the average fee for each client when waived = No
-client_avg_fee = df[df['waived'] == 'No'].groupby('client_name')['Fees'].mean().to_dict()
+# Calculate month-on-month differences for each asset type
+for col in aum_columns:
+    consolidated_df[f'{col}_growth'] = consolidated_df.groupby('BPKey')[col].diff()
 
-# Step 2: Define a function to calculate waived amount based on average fee and total_aum
-def calculate_waived_amount(row):
-    if row['waived'] == 'Yes':
-        avg_fee = client_avg_fee.get(row['client_name'], 0)  # Use 0 if no waived=No records for the client
-        return avg_fee * row['total_aum'] / 12
-    return 0
+# Filter for positive growth
+positive_growth_df = consolidated_df[(consolidated_df[aum_columns].gt(0)).any(axis=1)]
 
-df['waived_amount'] = df.apply(calculate_waived_amount, axis=1)
+# Summarize the total and percentage growth by asset type for each client
+summary_df = positive_growth_df.groupby('BPKey')[[f'{col}_growth' for col in aum_columns]].sum()
 
-# Step 3: Determine month-over-month AUM increase for each client
-df['aum_increase'] = df.groupby('client_name')['total_aum'].diff().gt(0)
+# Calculate percentage contribution by asset type
+summary_df_pct = summary_df.div(summary_df.sum(axis=1), axis=0) * 100
 
-# Step 4: Check if clients have a majority of months with AUM increases
-client_revenue_status = (
-    df.groupby('client_name')
-    .agg(
-        total_months=('aum_increase', 'size'),
-        increase_months=('aum_increase', 'sum')
-    )
-)
+# Output to a new Excel file for review
+with pd.ExcelWriter("consolidated_and_analyzed.xlsx") as writer:
+    consolidated_df.to_excel(writer, sheet_name="Consolidated Data", index=False)
+    summary_df.to_excel(writer, sheet_name="AUM Growth Summary")
+    summary_df_pct.to_excel(writer, sheet_name="Growth Contribution %")
 
-client_revenue_status['is_revenue_generating'] = client_revenue_status.apply(
-    lambda x: x['increase_months'] >= np.ceil(x['total_months'] / 2), axis=1
-)
-
-# Step 5: Filter for revenue-generating clients and sum waived amounts
-revenue_generating_clients = client_revenue_status[client_revenue_status['is_revenue_generating']].index
-
-revenue_clients_df = (
-    df[(df['client_name'].isin(revenue_generating_clients)) & (df['waived'] == 'Yes')]
-    .groupby('client_name', as_index=False)['waived_amount']
-    .sum()
-)
-
-# Rename columns for clarity
-revenue_clients_df.rename(columns={'waived_amount': 'total_waived_amount'}, inplace=True)
-
-# Add an estimate of total "lost" fees for revenue-generating clients if waiver was not applied
-revenue_clients_df['hypothetical_fees_without_waiver'] = revenue_clients_df['total_waived_amount']  # Assuming waived amount represents potential revenue
-
-# Output the resulting DataFrame
-print(revenue_clients_df)
+print("Consolidation and analysis complete. Check 'consolidated_and_analyzed.xlsx' for results.")

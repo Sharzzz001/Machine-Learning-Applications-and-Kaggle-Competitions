@@ -37,3 +37,20 @@ with pd.ExcelWriter("consolidated_and_analyzed.xlsx") as writer:
     summary_df_pct.to_excel(writer, sheet_name="Growth Contribution %")
 
 print("Consolidation and analysis complete. Check 'consolidated_and_analyzed.xlsx' for results.")
+
+
+# List of AUM asset type columns
+aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other']
+
+# Step 1: Calculate the total value for each asset type across all rows (clients)
+total_values = summary_df[aum_columns].sum()
+
+# Step 2: Calculate the overall Total AUM (sum of Total AUM column)
+total_aum = summary_df['Total AUM'].sum()
+
+# Step 3: Calculate the percentage contribution for each asset type
+aum_percentages = (total_values / total_aum) * 100
+
+# Step 4: Print out the results for each asset type
+for column in aum_columns:
+    print(f"{column} Contribution: {aum_percentages[column]:.2f}%")

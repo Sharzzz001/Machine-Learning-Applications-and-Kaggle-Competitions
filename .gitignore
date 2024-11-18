@@ -245,3 +245,5 @@ Playground s3e12 urea/catboost_info/test/events.out.tfevents
 Playground s4e9 Car Price/autog-ensfull.csv
 Self-Projects/12-san-francisco-pier-39-california-united-states.gpx
 Self-Projects/20-kyoto-1-honshu-japan.gpx
+Self-Projects/deploy.prototxt
+Self-Projects/res10_300x300_ssd_iter_140000.caffemodel

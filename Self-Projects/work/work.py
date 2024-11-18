@@ -1,51 +1,56 @@
 import pandas as pd
 
-# Load the Excel file
-excel_file = 'your_isin_file.xlsx'
-df = pd.read_excel(excel_file)
+# Consolidate data from all sheets with a 'Year Month' column
+excel_file = "your_file.xlsx"
+sheets = pd.ExcelFile(excel_file).sheet_names
 
-# Initialize lists to store the extracted data
-isins = []
-trader_names_list = []
-usd_diffs = []
-percent_diffs = []
+consolidated_df = pd.DataFrame()
+for sheet in sheets:
+    # Load each sheet
+    df = pd.read_excel(excel_file, sheet_name=sheet)
+    # Extract month and year from sheet name and add it as a column
+    year_month = f"2024-{sheet.split()[1]}"
+    df['Year Month'] = year_month
+    consolidated_df = pd.concat([consolidated_df, df], ignore_index=True)
 
-# Variables to hold current ISIN and trader names
-current_isin = None
-trader_names = []
+# Calculate AUM growth by client and asset type month on month
+consolidated_df = consolidated_df.sort_values(['BPKey', 'Year Month'])
+aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other', 'Total AUM']
 
-# Loop through the DataFrame to group ISINs and extract necessary data
-for idx, row in df.iterrows():
-    isin = row['ISIN']
-    trader = row['Trader name']
-    
-    # If ISIN is not NaN, this is part of the ISIN group
-    if pd.notna(isin):
-        if current_isin is None:  # Start a new ISIN group
-            current_isin = isin
-        trader_names.append(trader)
-    
-    # If ISIN is NaN, it indicates the blank row with difference data
-    elif pd.isna(isin) and pd.isna(trader):
-        if current_isin:  # Finalize the group for the current ISIN
-            # Append the data for the ISIN group
-            isins.append(current_isin)
-            trader_names_list.append(', '.join(trader_names))  # Concatenate trader names
-            usd_diffs.append(row['Diff'])  # Extract USD Difference
-            percent_diffs.append(row['%diff'])  # Extract % Difference
-            
-            # Reset for the next group
-            current_isin = None
-            trader_names = []
+# Calculate month-on-month differences for each asset type
+for col in aum_columns:
+    consolidated_df[f'{col}_growth'] = consolidated_df.groupby('BPKey')[col].diff()
 
-# Create a new DataFrame with the extracted data
-result_df = pd.DataFrame({
-    'ISIN': isins,
-    'Trader Names': trader_names_list,
-    'USD Difference': usd_diffs,
-    '% Difference': percent_diffs
-})
+# Filter for positive growth
+positive_growth_df = consolidated_df[(consolidated_df[aum_columns].gt(0)).any(axis=1)]
 
-# Save the result to a new Excel file or display it
-result_df.to_excel('processed_isin_data.xlsx', index=False)
-print(result_df)
+# Summarize the total and percentage growth by asset type for each client
+summary_df = positive_growth_df.groupby('BPKey')[[f'{col}_growth' for col in aum_columns]].sum()
+
+# Calculate percentage contribution by asset type
+summary_df_pct = summary_df.div(summary_df.sum(axis=1), axis=0) * 100
+
+# Output to a new Excel file for review
+with pd.ExcelWriter("consolidated_and_analyzed.xlsx") as writer:
+    consolidated_df.to_excel(writer, sheet_name="Consolidated Data", index=False)
+    summary_df.to_excel(writer, sheet_name="AUM Growth Summary")
+    summary_df_pct.to_excel(writer, sheet_name="Growth Contribution %")
+
+print("Consolidation and analysis complete. Check 'consolidated_and_analyzed.xlsx' for results.")
+
+
+# List of AUM asset type columns
+aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other']
+
+# Step 1: Calculate the total value for each asset type across all rows (clients)
+total_values = summary_df[aum_columns].sum()
+
+# Step 2: Calculate the overall Total AUM (sum of Total AUM column)
+total_aum = summary_df['Total AUM'].sum()
+
+# Step 3: Calculate the percentage contribution for each asset type
+aum_percentages = (total_values / total_aum) * 100
+
+# Step 4: Print out the results for each asset type
+for column in aum_columns:
+    print(f"{column} Contribution: {aum_percentages[column]:.2f}%")

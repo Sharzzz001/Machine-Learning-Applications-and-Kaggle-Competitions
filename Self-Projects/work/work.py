@@ -1,56 +1,49 @@
 import pandas as pd
 
-# Consolidate data from all sheets with a 'Year Month' column
-excel_file = "your_file.xlsx"
-sheets = pd.ExcelFile(excel_file).sheet_names
+# Load the datasets
+aum_df = pd.read_excel("monthly_client_aum.xlsx")  # File 1
+trade_df = pd.read_excel("trade_volume.xlsx")     # File 2
 
-consolidated_df = pd.DataFrame()
-for sheet in sheets:
-    # Load each sheet
-    df = pd.read_excel(excel_file, sheet_name=sheet)
-    # Extract month and year from sheet name and add it as a column
-    year_month = f"2024-{sheet.split()[1]}"
-    df['Year Month'] = year_month
-    consolidated_df = pd.concat([consolidated_df, df], ignore_index=True)
+# Preprocess AUM Data
+aum_df['Month'] = pd.to_datetime(aum_df['Month'], format='%b %Y')  # Convert month to datetime
+aum_df = aum_df.sort_values(['BP Key', 'Month'])  # Sort by client and month
 
-# Calculate AUM growth by client and asset type month on month
-consolidated_df = consolidated_df.sort_values(['BPKey', 'Year Month'])
-aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other', 'Total AUM']
+# Preprocess Trade Volume Data
+trade_df['Value Date'] = pd.to_datetime(trade_df['Value Date'], format='%d.%m.%Y')  # Convert to datetime
+trade_count = trade_df.groupby('BP Key')['Value Date'].count().reset_index()  # Count trades per client
+trade_count.rename(columns={'Value Date': 'Trade Count'}, inplace=True)
 
-# Calculate month-on-month differences for each asset type
-for col in aum_columns:
-    consolidated_df[f'{col}_growth'] = consolidated_df.groupby('BPKey')[col].diff()
+# Bin clients into High, Medium, and Low volume traders
+trade_count['Trade Volume Category'] = pd.qcut(trade_count['Trade Count'], q=3, labels=['Low', 'Medium', 'High'])
 
-# Filter for positive growth
-positive_growth_df = consolidated_df[(consolidated_df[aum_columns].gt(0)).any(axis=1)]
+# Merge Trade Volume Categories with AUM Data
+aum_with_trades = pd.merge(aum_df, trade_count, on='BP Key', how='left')
 
-# Summarize the total and percentage growth by asset type for each client
-summary_df = positive_growth_df.groupby('BPKey')[[f'{col}_growth' for col in aum_columns]].sum()
+# Check for consistent AUM growth month-on-month
+aum_with_trades['AUM Growth'] = aum_with_trades.groupby('BP Key')['AUM'].diff().gt(0)  # Check if AUM increased
+aum_growth_summary = (
+    aum_with_trades.groupby('BP Key')
+    .agg(
+        total_months=('AUM Growth', 'size'),
+        increasing_months=('AUM Growth', 'sum'),
+        trade_volume_category=('Trade Volume Category', 'first')
+    )
+    .reset_index()
+)
 
-# Calculate percentage contribution by asset type
-summary_df_pct = summary_df.div(summary_df.sum(axis=1), axis=0) * 100
+# Filter clients with consistent growth
+aum_growth_summary['Consistent Growth'] = aum_growth_summary['increasing_months'] == aum_growth_summary['total_months']
 
-# Output to a new Excel file for review
-with pd.ExcelWriter("consolidated_and_analyzed.xlsx") as writer:
-    consolidated_df.to_excel(writer, sheet_name="Consolidated Data", index=False)
-    summary_df.to_excel(writer, sheet_name="AUM Growth Summary")
-    summary_df_pct.to_excel(writer, sheet_name="Growth Contribution %")
+# Calculate the percentage of clients with consistent growth in each category
+growth_percentage = (
+    aum_growth_summary.groupby('trade_volume_category')['Consistent Growth']
+    .mean()
+    .mul(100)
+    .reset_index()
+)
 
-print("Consolidation and analysis complete. Check 'consolidated_and_analyzed.xlsx' for results.")
+# Rename columns for clarity
+growth_percentage.rename(columns={'Consistent Growth': 'Percentage of Clients with Consistent Growth'}, inplace=True)
 
-
-# List of AUM asset type columns
-aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other']
-
-# Step 1: Calculate the total value for each asset type across all rows (clients)
-total_values = summary_df[aum_columns].sum()
-
-# Step 2: Calculate the overall Total AUM (sum of Total AUM column)
-total_aum = summary_df['Total AUM'].sum()
-
-# Step 3: Calculate the percentage contribution for each asset type
-aum_percentages = (total_values / total_aum) * 100
-
-# Step 4: Print out the results for each asset type
-for column in aum_columns:
-    print(f"{column} Contribution: {aum_percentages[column]:.2f}%")
+# Output the results
+print(growth_percentage)

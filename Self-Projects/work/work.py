@@ -1,33 +1,39 @@
 import pandas as pd
 
-# Assuming your DataFrame is named `aum_df`
-# Columns: ['BP Key', 'Month', 'AUM', 'RM', 'Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other']
+# Sample data
+data = {
+    'RM Name': ['RM1', 'RM1', 'RM2', 'RM2', 'RM3', 'RM3'],
+    'Cash': [100, 0, 0, 0, 0, 200],
+    'Deposit': [0, 200, 0, 0, 0, 0],
+    'Share Bond': [0, 0, 300, 0, 0, 0],
+    'Struct. Prod.': [0, 0, 0, 400, 0, 0],
+    'Derivatives': [0, 0, 0, 0, 500, 0],
+    'Fund': [0, 0, 0, 0, 0, 0],
+    'Other': [0, 0, 0, 0, 0, 0],
+    'Loan': [0, 0, 0, 0, 0, 0],
+    'BPKey': ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'],
+    'Total_FEE': [0, 0, 100, 0, 0, 0]
+}
 
-# Group by RM and calculate required metrics
-summary_df = (
-    aum_df.groupby('RM')
-    .agg(
-        total_clients=('BP Key', 'nunique'),       # Count of unique clients per RM
-        total_aum=('AUM', 'sum'),                 # Total AUM per RM
-        total_cash=('Cash', 'sum'),               # Total Cash per RM
-        total_deposit=('Deposit', 'sum'),         # Total Deposit per RM
-        total_share_bond=('Share Bond', 'sum'),   # Total Share Bond per RM
-        total_struct_prod=('Struct. Prod.', 'sum'),# Total Structured Products per RM
-        total_derivatives=('Derivatives', 'sum'), # Total Derivatives per RM
-        total_fund=('Fund', 'sum'),               # Total Fund per RM
-        total_other=('Other', 'sum')              # Total Other per RM
-    )
-    .reset_index()
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# List of investment categories
+investment_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other', 'Loan']
+
+# Identify clients with waived fees
+waived_clients = df[df['Total_FEE'] == 0].copy()
+
+# Check exclusive investments
+waived_clients['exclusive_category'] = waived_clients[investment_columns].apply(
+    lambda row: row.idxmax() if (row > 0).sum() == 1 else None, axis=1
 )
 
-# Calculate percentage contributions for each component
-component_columns = [
-    'total_cash', 'total_deposit', 'total_share_bond', 
-    'total_struct_prod', 'total_derivatives', 'total_fund', 'total_other'
-]
+# Filter clients who invest exclusively in one category
+exclusive_waived_clients = waived_clients.dropna(subset=['exclusive_category'])
 
-for col in component_columns:
-    summary_df[f'{col}_pct'] = (summary_df[col] / summary_df['total_aum']) * 100
+# Group by RM Name and exclusive category to count
+result = exclusive_waived_clients.groupby(['RM Name', 'exclusive_category']).size().reset_index(name='count')
 
-# Final Summary DataFrame
-print(summary_df)
+# Output results
+print(result)

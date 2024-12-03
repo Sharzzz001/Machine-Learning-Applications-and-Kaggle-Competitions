@@ -1,10 +1,25 @@
 # Inputs: Product-specific data
 products = {
-    "bonds": {"makers": 4, "checkers": 3, "maker_time": 6, "checker_time": 4, "percentiles": {"75th": 50, "90th": 70, "95th": 90}},
-    "derivatives": {"makers": 3, "checkers": 2, "maker_time": 8, "checker_time": 5, "percentiles": {"75th": 40, "90th": 60, "95th": 80}},
-    "equities": {"makers": 5, "checkers": 4, "maker_time": 5, "checker_time": 3, "percentiles": {"75th": 60, "90th": 85, "95th": 100}},
-    "funds": {"makers": 2, "checkers": 2, "maker_time": 10, "checker_time": 6, "percentiles": {"75th": 30, "90th": 50, "95th": 70}},
-    "structured_products": {"makers": 3, "checkers": 3, "maker_time": 12, "checker_time": 8, "percentiles": {"75th": 20, "90th": 35, "95th": 50}}
+    "bonds": {
+        "makers": 4, "checkers": 3, "maker_time": 6, "checker_time": 4,
+        "trades": {"average": 60, "min": 40, "max": 100, "75th": 50, "90th": 70, "95th": 90}
+    },
+    "derivatives": {
+        "makers": 3, "checkers": 2, "maker_time": 8, "checker_time": 5,
+        "trades": {"average": 50, "min": 30, "max": 80, "75th": 40, "90th": 60, "95th": 80}
+    },
+    "equities": {
+        "makers": 5, "checkers": 4, "maker_time": 5, "checker_time": 3,
+        "trades": {"average": 70, "min": 50, "max": 120, "75th": 60, "90th": 85, "95th": 100}
+    },
+    "funds": {
+        "makers": 2, "checkers": 2, "maker_time": 10, "checker_time": 6,
+        "trades": {"average": 40, "min": 20, "max": 70, "75th": 30, "90th": 50, "95th": 70}
+    },
+    "structured_products": {
+        "makers": 3, "checkers": 3, "maker_time": 12, "checker_time": 8,
+        "trades": {"average": 30, "min": 10, "max": 50, "75th": 20, "90th": 35, "95th": 50}
+    }
 }
 
 work_hours_per_person = 8
@@ -19,10 +34,10 @@ for product, data in products.items():
     checkers_count = data["checkers"]
     maker_time_per_trade = data["maker_time"]
     checker_time_per_trade = data["checker_time"]
-    percentiles = data["percentiles"]
+    trade_values = data["trades"]
 
     product_results = {}
-    for key, trades in percentiles.items():
+    for key, trades in trade_values.items():
         total_maker_time = trades * maker_time_per_trade
         total_checker_time = trades * checker_time_per_trade
 

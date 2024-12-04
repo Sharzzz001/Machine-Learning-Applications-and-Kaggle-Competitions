@@ -17,16 +17,24 @@ checker_time = {'Bonds': 3, 'Derivatives': 4, 'Equities': 5, 'Funds': 6, 'Struct
 # Makers and Checkers Count
 makers_count = 5
 checkers_count = 3
-total_capacity = (makers_count + checkers_count) * 480  # Total daily capacity in minutes
+total_maker_capacity = makers_count * 480  # Total daily maker capacity in minutes
+total_checker_capacity = checkers_count * 480  # Total daily checker capacity in minutes
 
-# Calculate total workload
+# Calculate workload separately for makers and checkers
 for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']:
-    df[f'{product}_Time'] = df[product] * (maker_time[product] + checker_time[product])
+    df[f'{product}_Maker_Time'] = df[product] * maker_time[product]
+    df[f'{product}_Checker_Time'] = df[product] * checker_time[product]
 
-df['Total Time'] = df[[f'{product}_Time' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+# Sum up maker and checker times
+df['Total Maker Time'] = df[[f'{product}_Maker_Time' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+df['Total Checker Time'] = df[[f'{product}_Checker_Time' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+
+# Total time (makers + checkers)
+df['Total Time'] = df['Total Maker Time'] + df['Total Checker Time']
 
 # Identify capacity breaches
-df['Exceeds Capacity'] = df['Total Time'] > total_capacity
+df['Exceeds Maker Capacity'] = df['Total Maker Time'] > total_maker_capacity
+df['Exceeds Checker Capacity'] = df['Total Checker Time'] > total_checker_capacity
 
 # Forecast trade volumes
 forecast_dfs = []
@@ -40,11 +48,20 @@ for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Product
 forecast_df = pd.concat(forecast_dfs, axis=1)
 forecast_df = forecast_df.loc[:, ~forecast_df.columns.duplicated()]  # Remove duplicate Date columns
 
-# Calculate forecasted workload
+# Calculate forecasted workload separately for makers and checkers
 for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']:
-    forecast_df[f'{product}_Time_Forecast'] = forecast_df[f'{product}_Forecast'] * (maker_time[product] + checker_time[product])
+    forecast_df[f'{product}_Maker_Time_Forecast'] = forecast_df[f'{product}_Forecast'] * maker_time[product]
+    forecast_df[f'{product}_Checker_Time_Forecast'] = forecast_df[f'{product}_Forecast'] * checker_time[product]
 
-forecast_df['Total Forecast Time'] = forecast_df[[f'{product}_Time_Forecast' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+# Sum up forecasted times
+forecast_df['Total Maker Time Forecast'] = forecast_df[[f'{product}_Maker_Time_Forecast' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+forecast_df['Total Checker Time Forecast'] = forecast_df[[f'{product}_Checker_Time_Forecast' for product in ['Bonds', 'Derivatives', 'Equities', 'Funds', 'Structured Products']]].sum(axis=1)
+forecast_df['Total Time Forecast'] = forecast_df['Total Maker Time Forecast'] + forecast_df['Total Checker Time Forecast']
 
-# Identify future breaches
-forecast_df
+# Identify forecasted capacity breaches
+forecast_df['Exceeds Maker Capacity Forecast'] = forecast_df['Total Maker Time Forecast'] > total_maker_capacity
+forecast_df['Exceeds Checker Capacity Forecast'] = forecast_df['Total Checker Time Forecast'] > total_checker_capacity
+
+# Display results
+print(df[['Date', 'Total Maker Time', 'Total Checker Time', 'Total Time', 'Exceeds Maker Capacity', 'Exceeds Checker Capacity']])
+print(forecast_df[['Date', 'Total Maker Time Forecast', 'Total Checker Time Forecast', 'Total Time Forecast', 'Exceeds Maker Capacity Forecast', 'Exceeds Checker Capacity Forecast']])

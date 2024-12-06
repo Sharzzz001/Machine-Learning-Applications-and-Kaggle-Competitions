@@ -1,31 +1,27 @@
-# Step 1: Sort each DataFrame by Count and Proportion
-df1_sorted = df1.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
-df2_sorted = df2.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
-df3_sorted = df3.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
+def delete_all_csv_files(folder_path):
+    """
+    Deletes all CSV files in the specified folder.
 
-# Step 2: Merge the sorted DataFrames on ASSET_TYPE
-merged_df = (
-    df1_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
-    .rename(columns={'Count': 'Count_df1', 'Proportion': 'Proportion_df1'})
-    .merge(
-        df2_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
-        .rename(columns={'Count': 'Count_df2', 'Proportion': 'Proportion_df2'}),
-        on='ASSET_TYPE',
-        how='inner'
-    )
-    .merge(
-        df3_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
-        .rename(columns={'Count': 'Count_df3', 'Proportion': 'Proportion_df3'}),
-        on='ASSET_TYPE',
-        how='inner'
-    )
-)
+    Parameters:
+        folder_path (str): Path to the folder where CSV files should be deleted.
+    """
+    # Get all CSV files in the folder
+    csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
+    
+    # Check if there are any files to delete
+    if not csv_files:
+        print("No CSV files found in the folder.")
+        return
+    
+    # Delete each file
+    for file_path in csv_files:
+        try:
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
+    
+    print("All CSV files have been deleted.")
 
-# Step 3: Add a total count column for overall comparison
-merged_df['Total_Count'] = merged_df['Count_df1'] + merged_df['Count_df2'] + merged_df['Count_df3']
-
-# Step 4: Sort the merged DataFrame by Total_Count, Count, and Proportion
-merged_df = merged_df.sort_values(by=['Total_Count', 'Count_df1', 'Count_df2', 'Count_df3'], ascending=False)
-
-# Print the top common assets
-print(merged_df)
+# Example usage
+delete_all_csv_files(r"C:\Users\YourUsername\FolderWithCSVFiles")

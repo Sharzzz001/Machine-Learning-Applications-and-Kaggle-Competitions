@@ -1,32 +1,31 @@
-# Step 1: Count occurrences of each ASSET_TYPE in all three DataFrames
-count_df1 = df1['ASSET_TYPE'].value_counts().reset_index()
-count_df1.columns = ['ASSET_TYPE', 'Count_df1']
+# Step 1: Sort each DataFrame by Count and Proportion
+df1_sorted = df1.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
+df2_sorted = df2.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
+df3_sorted = df3.sort_values(by=['Count', 'Proportion'], ascending=[False, False])
 
-count_df2 = df2['ASSET_TYPE'].value_counts().reset_index()
-count_df2.columns = ['ASSET_TYPE', 'Count_df2']
-
-count_df3 = df3['ASSET_TYPE'].value_counts().reset_index()
-count_df3.columns = ['ASSET_TYPE', 'Count_df3']
-
-# Step 2: Merge the counts from all three DataFrames
-merged_counts = (
-    count_df1
-    .merge(count_df2, on='ASSET_TYPE', how='inner')  # Inner join keeps only common ASSET_TYPEs
-    .merge(count_df3, on='ASSET_TYPE', how='inner')
+# Step 2: Merge the sorted DataFrames on ASSET_TYPE
+merged_df = (
+    df1_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
+    .rename(columns={'Count': 'Count_df1', 'Proportion': 'Proportion_df1'})
+    .merge(
+        df2_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
+        .rename(columns={'Count': 'Count_df2', 'Proportion': 'Proportion_df2'}),
+        on='ASSET_TYPE',
+        how='inner'
+    )
+    .merge(
+        df3_sorted[['ASSET_TYPE', 'Count', 'Proportion']]
+        .rename(columns={'Count': 'Count_df3', 'Proportion': 'Proportion_df3'}),
+        on='ASSET_TYPE',
+        how='inner'
+    )
 )
 
-# Step 3: Calculate the total count across all three DataFrames
-merged_counts['Total_Count'] = (
-    merged_counts['Count_df1'] + 
-    merged_counts['Count_df2'] + 
-    merged_counts['Count_df3']
-)
+# Step 3: Add a total count column for overall comparison
+merged_df['Total_Count'] = merged_df['Count_df1'] + merged_df['Count_df2'] + merged_df['Count_df3']
 
-# Step 4: Sort by Total_Count in descending order
-merged_counts = merged_counts.sort_values(by='Total_Count', ascending=False)
+# Step 4: Sort the merged DataFrame by Total_Count, Count, and Proportion
+merged_df = merged_df.sort_values(by=['Total_Count', 'Count_df1', 'Count_df2', 'Count_df3'], ascending=False)
 
-# Step 5: Get the top common ASSET_TYPEs
-top_common_assets = merged_counts.head()  # Adjust head(n) for desired number of top assets
-
-# Print result
-print(top_common_assets)
+# Print the top common assets
+print(merged_df)

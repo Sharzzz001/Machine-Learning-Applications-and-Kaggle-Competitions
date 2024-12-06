@@ -1,32 +1,32 @@
-import numpy as np
-from datetime import datetime, timedelta
+# Step 1: Count occurrences of each ASSET_TYPE in all three DataFrames
+count_df1 = df1['ASSET_TYPE'].value_counts().reset_index()
+count_df1.columns = ['ASSET_TYPE', 'Count_df1']
 
-def calculate_time_diff(row):
-    """Calculate time difference excluding weekend window."""
-    start_time = row['CONFIRM_EXECUTION_TIME']
-    end_time = row['VERIFICATION_TIME']
-    
-    if pd.isna(start_time) or pd.isna(end_time):
-        return np.nan  # Return NaN if either timestamp is missing
-    
-    total_diff = (end_time - start_time).total_seconds() / 3600  # Calculate initial time difference in hours
-    
-    # Define weekend window (Saturday 5 AM to Monday 8 AM)
-    weekend_start = start_time.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta((5 - start_time.weekday()) % 7)
-    weekend_end = weekend_start + timedelta(days=2, hours=3)
-    
-    # Calculate overlap with the weekend window
-    overlap_start = max(start_time, weekend_start)
-    overlap_end = min(end_time, weekend_end)
-    
-    if overlap_start < overlap_end:  # If overlap exists
-        weekend_overlap = (overlap_end - overlap_start).total_seconds() / 3600
-    else:
-        weekend_overlap = 0  # No overlap
-    
-    # Subtract weekend overlap from total time difference
-    adjusted_diff = total_diff - weekend_overlap
-    return adjusted_diff
+count_df2 = df2['ASSET_TYPE'].value_counts().reset_index()
+count_df2.columns = ['ASSET_TYPE', 'Count_df2']
 
-# Apply the function to calculate adjusted time differences
-df['TIME_DIFF_HOURS'] = df.apply(calculate_time_diff, axis=1)
+count_df3 = df3['ASSET_TYPE'].value_counts().reset_index()
+count_df3.columns = ['ASSET_TYPE', 'Count_df3']
+
+# Step 2: Merge the counts from all three DataFrames
+merged_counts = (
+    count_df1
+    .merge(count_df2, on='ASSET_TYPE', how='inner')  # Inner join keeps only common ASSET_TYPEs
+    .merge(count_df3, on='ASSET_TYPE', how='inner')
+)
+
+# Step 3: Calculate the total count across all three DataFrames
+merged_counts['Total_Count'] = (
+    merged_counts['Count_df1'] + 
+    merged_counts['Count_df2'] + 
+    merged_counts['Count_df3']
+)
+
+# Step 4: Sort by Total_Count in descending order
+merged_counts = merged_counts.sort_values(by='Total_Count', ascending=False)
+
+# Step 5: Get the top common ASSET_TYPEs
+top_common_assets = merged_counts.head()  # Adjust head(n) for desired number of top assets
+
+# Print result
+print(top_common_assets)

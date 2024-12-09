@@ -1,27 +1,13 @@
-def delete_all_csv_files(folder_path):
-    """
-    Deletes all CSV files in the specified folder.
+# Convert TRADE_DATE to datetime
+df['TRADE_DATE'] = pd.to_datetime(df['TRADE_DATE'], format='%d-%b-%y')
 
-    Parameters:
-        folder_path (str): Path to the folder where CSV files should be deleted.
-    """
-    # Get all CSV files in the folder
-    csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
-    
-    # Check if there are any files to delete
-    if not csv_files:
-        print("No CSV files found in the folder.")
-        return
-    
-    # Delete each file
-    for file_path in csv_files:
-        try:
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
-        except Exception as e:
-            print(f"Failed to delete {file_path}: {e}")
-    
-    print("All CSV files have been deleted.")
+# Convert VERIFICATION_TIME to datetime and extract the date part
+df['VERIFICATION_DATE'] = pd.to_datetime(df['VERIFICATION_TIME'], format='%d-%b-%y %I.%M.%S.%f %p').dt.date
 
-# Example usage
-delete_all_csv_files(r"C:\Users\YourUsername\FolderWithCSVFiles")
+# Calculate the difference in days
+df['DAYS_DIFF'] = (df['VERIFICATION_DATE'] - df['TRADE_DATE'].dt.date).dt.days
+
+# Create the flag for Days >= 2
+df['FLAG_DAYS_GTE_2'] = df['DAYS_DIFF'] >= 2
+
+print(df)

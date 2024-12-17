@@ -6,10 +6,12 @@ import win32com.client
 outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
 
 inbox = outlook.GetDefaultFolder(6)  
+folder1 = inbox.Folders("Folder1")   
+folder2 = folder1.Folders("Folder2") 
 
 output_folder = r"C:\Path\To\Save\Attachments"  
-start_date = datetime.datetime(2024, 1, 1)  
-end_date = datetime.datetime(2024, 10, 31)  
+start_date = datetime.datetime(2024, 1, 1)     
+end_date = datetime.datetime(2024, 10, 31)     
 
 data = []
 

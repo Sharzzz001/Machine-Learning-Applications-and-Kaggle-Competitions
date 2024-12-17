@@ -1,19 +1,44 @@
-import hashlib
+import os
+import pandas as pd
+import datetime
+import win32com.client
 
-def calculate_md5(file_path):
-    """Calculate and return the MD5 hash of a file."""
-    hash_md5 = hashlib.md5()
+outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+
+inbox = outlook.GetDefaultFolder(6)  
+
+output_folder = r"C:\Path\To\Save\Attachments"  
+start_date = datetime.datetime(2024, 1, 1)  
+end_date = datetime.datetime(2024, 10, 31)  
+
+data = []
+
+messages = inbox.Items
+messages = messages.Restrict("[ReceivedTime] >= '" + start_date.strftime('%m/%d/%Y') + "' AND [ReceivedTime] <= '" + end_date.strftime('%m/%d/%Y') + "'")
+
+for message in messages:
     try:
-        with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):  # Read the file in chunks to handle large files
-                hash_md5.update(chunk)
-        return hash_md5.hexdigest()
-    except FileNotFoundError:
-        return "File not found."
-    except Exception as e:
-        return f"An error occurred: {e}"
 
-# Example usage
-file_path = "path/to/your/file.txt"  # Replace with the actual file path
-md5_hash = calculate_md5(file_path)
-print(f"MD5 hash of the file: {md5_hash}")
+        if message.Subject.startswith("Re:"):
+            continue
+
+        if "FI Blot" in message.Subject and ("AM" in message.Subject or "PM" in message.Subject):
+
+            if message.Attachments:
+                for attachment in message.Attachments:
+                    attachment_path = os.path.join(output_folder, attachment.FileName)
+                    attachment.SaveAsFile(attachment_path)
+
+            data.append({
+                "Subject": message.Subject,
+                "ReceivedTime": message.ReceivedTime.strftime("%Y-%m-%d %H:%M:%S")
+            })
+    except Exception as e:
+        print(f"Error processing email: {e}")
+
+df = pd.DataFrame(data)
+
+df.to_csv("email_log.csv", index=False)
+
+print("Processed Emails:")
+print(df)

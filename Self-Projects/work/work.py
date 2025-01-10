@@ -1,46 +1,21 @@
-import os
 import pandas as pd
-import datetime
-import win32com.client
 
-outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+# Load the Excel file
+file_path = "your_excel_file.xlsx"  # Replace with your actual file path
+df = pd.read_excel(file_path)
 
-inbox = outlook.GetDefaultFolder(6)  
-folder1 = inbox.Folders("Folder1")   
-folder2 = folder1.Folders("Folder2") 
+# Calculate 'Total fees'
+df['Total fees'] = df['FEE_BASE_CALC'] * df['TOTAL_AMOUNT_CONT'] / 12
 
-output_folder = r"C:\Path\To\Save\Attachments"  
-start_date = datetime.datetime(2024, 1, 1)     
-end_date = datetime.datetime(2024, 10, 31)     
+# Calculate 'Hypothetical fees'
+df['Hypothetical fees'] = df.apply(
+    lambda row: 0.00125 * row['TOTAL_AMOUNT_CONT'] / 12 if row['FEE_BASE_CALC'] == 0
+    else 0,
+    axis=1
+)
 
-data = []
+# Save the updated DataFrame back to an Excel file
+output_file = "updated_excel_file.xlsx"  # Replace with your desired output file name
+df.to_excel(output_file, index=False)
 
-messages = inbox.Items
-messages = messages.Restrict("[ReceivedTime] >= '" + start_date.strftime('%m/%d/%Y') + "' AND [ReceivedTime] <= '" + end_date.strftime('%m/%d/%Y') + "'")
-
-for message in messages:
-    try:
-
-        if message.Subject.startswith("Re:"):
-            continue
-
-        if "FI Blot" in message.Subject and ("AM" in message.Subject or "PM" in message.Subject):
-
-            if message.Attachments:
-                for attachment in message.Attachments:
-                    attachment_path = os.path.join(output_folder, attachment.FileName)
-                    attachment.SaveAsFile(attachment_path)
-
-            data.append({
-                "Subject": message.Subject,
-                "ReceivedTime": message.ReceivedTime.strftime("%Y-%m-%d %H:%M:%S")
-            })
-    except Exception as e:
-        print(f"Error processing email: {e}")
-
-df = pd.DataFrame(data)
-
-df.to_csv("email_log.csv", index=False)
-
-print("Processed Emails:")
-print(df)
+print(f"Updated Excel file saved to {output_file}")

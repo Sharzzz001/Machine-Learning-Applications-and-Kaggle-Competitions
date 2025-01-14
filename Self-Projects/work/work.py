@@ -1,51 +1,35 @@
+import win32com.client
 import pandas as pd
-from datetime import datetime
 
-# Load the dataframes
-df = pd.read_excel("df.xlsx")
-df1 = pd.read_excel("df1.xlsx")
+# Connect to Outlook
+outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
 
-# Merge dataframes on BPKey
-merged_df = pd.merge(df, df1, left_on="BPKey", right_on="Account Number", how="left")
+# Access the inbox folder
+inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
 
-# Convert 'Year Month' and 'Account Close Date' to datetime for analysis
-merged_df['Year Month'] = pd.to_datetime(merged_df['Year Month'], format='%Y-%m')
-merged_df['Account Close Date'] = pd.to_datetime(merged_df['Account Close Date'])
+# Retrieve all emails
+messages = inbox.Items
+messages = messages.Restrict("[MessageClass]='IPM.Note'")  # Filter standard emails
 
-# Get today's date for comparison
-today = pd.Timestamp(datetime.now().date())
+# List to store email data
+email_data = []
 
-# Filter clients who have left (Account Close Date < today)
-left_clients_df = merged_df[merged_df['Account Close Date'].notna() & (merged_df['Account Close Date'] < today)]
+# Loop through emails
+for message in messages:
+    try:
+        subject = message.Subject
+        received_time = message.ReceivedTime
+        sender = message.SenderName
+        
+        email_data.append({"Subject": subject, "Received Time": received_time, "From": sender})
+    except Exception as e:
+        print(f"Error reading an email: {e}")
 
-# Analyze trends for clients who have left
-def analyze_trends(sub_df):
-    # Check if TOTAL_AMOUNT_CONT is decreasing
-    is_total_amt_decreasing = sub_df['TOTAL_AMOUNT_CONT'].is_monotonic_decreasing
-    
-    # Check if Total fees are increasing
-    is_total_fees_increasing = sub_df['Total fees'].is_monotonic_increasing
-    
-    # Check if Waiver Granted frequency is decreasing
-    waiver_granted_count = sub_df['Waiver Granted'].sum()
-    is_waiver_granted_decreasing = waiver_granted_count < len(sub_df) / 2  # Compare to 50% threshold
+# Convert email data to a DataFrame
+df = pd.DataFrame(email_data)
 
-    # Determine reason for leaving
-    reason = []
-    if is_total_amt_decreasing:
-        reason.append("Decreasing TOTAL_AMOUNT_CONT")
-    if is_total_fees_increasing:
-        reason.append("Increasing Total fees")
-    if is_waiver_granted_decreasing:
-        reason.append("Decreasing Waivers")
-    
-    return ", ".join(reason) if reason else "Unknown"
+# Display the DataFrame
+print(df)
 
-# Apply trend analysis to each BPKey group for clients who have left
-left_clients_df['Reason for Leaving'] = left_clients_df.groupby('BPKey').apply(lambda group: analyze_trends(group)).reset_index(drop=True)
-
-# Save the analysis results to an Excel file
-output_file = "bp_leaving_analysis_with_close_date.xlsx"
-left_clients_df.to_excel(output_file, index=False)
-
-print(f"Analysis complete. Results saved to {output_file}")
+# Save to a CSV file if needed
+df.to_csv("emails.csv", index=False)

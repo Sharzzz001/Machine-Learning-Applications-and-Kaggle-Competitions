@@ -1,35 +1,26 @@
-import win32com.client
+import os
 import pandas as pd
+from datetime import datetime
 
-# Connect to Outlook
-outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+# Specify the folder to scan
+folder_path = "path_to_your_folder"
 
-# Access the inbox folder
-inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
+# List to store file data
+file_data = []
 
-# Retrieve all emails
-messages = inbox.Items
-messages = messages.Restrict("[MessageClass]='IPM.Note'")  # Filter standard emails
+# Scan the folder for .xlsx files
+for file in os.listdir(folder_path):
+    if file.endswith(".xlsx"):
+        file_path = os.path.join(folder_path, file)
+        created_time = os.path.getctime(file_path)  # Get the creation time
+        created_time = datetime.fromtimestamp(created_time)  # Convert to datetime
+        file_data.append({"Filename": file, "Created Time": created_time})
 
-# List to store email data
-email_data = []
-
-# Loop through emails
-for message in messages:
-    try:
-        subject = message.Subject
-        received_time = message.ReceivedTime
-        sender = message.SenderName
-        
-        email_data.append({"Subject": subject, "Received Time": received_time, "From": sender})
-    except Exception as e:
-        print(f"Error reading an email: {e}")
-
-# Convert email data to a DataFrame
-df = pd.DataFrame(email_data)
+# Create a DataFrame
+df = pd.DataFrame(file_data)
 
 # Display the DataFrame
 print(df)
 
 # Save to a CSV file if needed
-df.to_csv("emails.csv", index=False)
+df.to_csv("file_details.csv", index=False)

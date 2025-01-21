@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 from tkinter import Tk, filedialog
-from datetime import datetime
 
 def process_excel_files():
     # Open file picker dialog
@@ -16,7 +15,7 @@ def process_excel_files():
         print("No files selected.")
         return
     
-    # Initialize data storage for the summary
+    # Initialize data storage for summaries
     sheet1_data = []
     sheet2_data = []
 
@@ -33,16 +32,21 @@ def process_excel_files():
                 if sheet_name in excel_data.sheet_names:
                     df = pd.read_excel(file_path, sheet_name=sheet_name)
                     
-                    # Count blank comments and get unique owners
-                    blank_comments = df['Comment'].isna().sum()
-                    unique_owners = df['Owner'].dropna().unique()
+                    # Group by 'Owner' and count blank comments
+                    user_counts = (
+                        df[df['Comment'].isna()]
+                        .groupby('Owner')
+                        .size()
+                        .reset_index(name='Count')
+                    )
                     
-                    # Add data to the summary
-                    storage.append({
-                        "Date": date,
-                        "Total Users": len(unique_owners),
-                        "Blank Comments": blank_comments
-                    })
+                    # Add the date and user data to the summary
+                    for _, row in user_counts.iterrows():
+                        storage.append({
+                            "Date": date,
+                            "User": row['Owner'],
+                            "Count": row['Count']
+                        })
         except Exception as e:
             print(f"Error processing {file_name}: {e}")
     

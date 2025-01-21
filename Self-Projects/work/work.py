@@ -1,38 +1,62 @@
+import os
 import pandas as pd
+from tkinter import Tk, filedialog
+from datetime import datetime
 
-# Load the files
-aum_file = "aum_file.xlsx"  # Replace with the actual AUM file path
-joining_file = "joining_file.xlsx"  # Replace with the actual Joining Date file path
+def process_excel_files():
+    # Open file picker dialog
+    root = Tk()
+    root.withdraw()  # Hide the main Tkinter window
+    file_paths = filedialog.askopenfilenames(
+        title="Select Excel Files",
+        filetypes=[("Excel Files", "*.xlsx")]
+    )
+    
+    if not file_paths:
+        print("No files selected.")
+        return
+    
+    # Initialize data storage for the summary
+    sheet1_data = []
+    sheet2_data = []
 
-aum_df = pd.read_excel(aum_file)
-joining_df = pd.read_excel(joining_file)
+    # Process each selected file
+    for file_path in file_paths:
+        file_name = os.path.basename(file_path)
+        date = file_name[:11]  # Extract date from file name
+        
+        try:
+            # Read Excel file
+            excel_data = pd.ExcelFile(file_path)
+            
+            for sheet_name, storage in [("Sheet1", sheet1_data), ("Sheet2", sheet2_data)]:
+                if sheet_name in excel_data.sheet_names:
+                    df = pd.read_excel(file_path, sheet_name=sheet_name)
+                    
+                    # Count blank comments and get unique owners
+                    blank_comments = df['Comment'].isna().sum()
+                    unique_owners = df['Owner'].dropna().unique()
+                    
+                    # Add data to the summary
+                    storage.append({
+                        "Date": date,
+                        "Total Users": len(unique_owners),
+                        "Blank Comments": blank_comments
+                    })
+        except Exception as e:
+            print(f"Error processing {file_name}: {e}")
+    
+    # Create summary DataFrames
+    sheet1_summary = pd.DataFrame(sheet1_data)
+    sheet2_summary = pd.DataFrame(sheet2_data)
 
-# Convert 'Year Month' and 'Joining Date' to datetime for calculations
-aum_df['Year Month'] = pd.to_datetime(aum_df['Year Month'], format='%Y-%m')
-joining_df['Joining Date'] = pd.to_datetime(joining_df['Joining Date'])
+    # Save summary to an output Excel file
+    output_file = "Summary_Output.xlsx"
+    with pd.ExcelWriter(output_file) as writer:
+        sheet1_summary.to_excel(writer, index=False, sheet_name="Sheet1 Summary")
+        sheet2_summary.to_excel(writer, index=False, sheet_name="Sheet2 Summary")
 
-# Merge the data on BPKey
-merged_df = pd.merge(joining_df, aum_df, on='BPKey', how='left')
+    print(f"Summary saved to {output_file}")
 
-# Group by BPKey and calculate the months to first AUM
-def calculate_months_to_aum(sub_df):
-    joining_date = sub_df['Joining Date'].iloc[0]
-    aum_dates = sub_df['Year Month'].dropna().sort_values()
-
-    if aum_dates.empty:
-        # No AUM data for this BPKey
-        return None
-
-    first_aum_date = aum_dates.iloc[0]
-    months_to_aum = (first_aum_date.year - joining_date.year) * 12 + (first_aum_date.month - joining_date.month)
-
-    return max(0, months_to_aum)  # Ensure non-negative
-
-# Apply the calculation
-joining_df['Months Without AUM'] = merged_df.groupby('BPKey').apply(calculate_months_to_aum).reset_index(drop=True)
-
-# Save the results to an Excel file
-output_file = "months_without_aum.xlsx"
-joining_df.to_excel(output_file, index=False)
-
-print(f"Analysis complete. Results saved to {output_file}")
+# Call the function to execute the workflow
+process_excel_files()

@@ -1,66 +1,26 @@
 import os
-import pandas as pd
-from tkinter import Tk, filedialog
 
-def process_excel_files():
-    # Open file picker dialog
-    root = Tk()
-    root.withdraw()  # Hide the main Tkinter window
-    file_paths = filedialog.askopenfilenames(
-        title="Select Excel Files",
-        filetypes=[("Excel Files", "*.xlsx")]
-    )
-    
-    if not file_paths:
-        print("No files selected.")
-        return
-    
-    # Initialize data storage for summaries
-    sheet1_data = []
-    sheet2_data = []
+def replace_january_with_jan(folder_path):
+    try:
+        # List all files in the folder
+        for file_name in os.listdir(folder_path):
+            # Check if "January" exists in the file name
+            if "January" in file_name:
+                # Create the new file name
+                new_file_name = file_name.replace("January", "Jan")
+                
+                # Get full paths
+                old_file_path = os.path.join(folder_path, file_name)
+                new_file_path = os.path.join(folder_path, new_file_name)
+                
+                # Rename the file
+                os.rename(old_file_path, new_file_path)
+                print(f'Renamed: "{file_name}" -> "{new_file_name}"')
+    except Exception as e:
+        print(f"Error: {e}")
 
-    # Process each selected file
-    for file_path in file_paths:
-        file_name = os.path.basename(file_path)
-        date = file_name[:11]  # Extract date from file name
-        
-        try:
-            # Read Excel file
-            excel_data = pd.ExcelFile(file_path)
-            
-            for sheet_name, storage in [("Sheet1", sheet1_data), ("Sheet2", sheet2_data)]:
-                if sheet_name in excel_data.sheet_names:
-                    df = pd.read_excel(file_path, sheet_name=sheet_name)
-                    
-                    # Group by 'Owner' and count blank comments
-                    user_counts = (
-                        df[df['Comment'].isna()]
-                        .groupby('Owner')
-                        .size()
-                        .reset_index(name='Count')
-                    )
-                    
-                    # Add the date and user data to the summary
-                    for _, row in user_counts.iterrows():
-                        storage.append({
-                            "Date": date,
-                            "User": row['Owner'],
-                            "Count": row['Count']
-                        })
-        except Exception as e:
-            print(f"Error processing {file_name}: {e}")
-    
-    # Create summary DataFrames
-    sheet1_summary = pd.DataFrame(sheet1_data)
-    sheet2_summary = pd.DataFrame(sheet2_data)
+# Specify the folder path
+folder_path = r"C:\path\to\your\folder"
 
-    # Save summary to an output Excel file
-    output_file = "Summary_Output.xlsx"
-    with pd.ExcelWriter(output_file) as writer:
-        sheet1_summary.to_excel(writer, index=False, sheet_name="Sheet1 Summary")
-        sheet2_summary.to_excel(writer, index=False, sheet_name="Sheet2 Summary")
-
-    print(f"Summary saved to {output_file}")
-
-# Call the function to execute the workflow
-process_excel_files()
+# Call the function
+replace_january_with_jan(folder_path)

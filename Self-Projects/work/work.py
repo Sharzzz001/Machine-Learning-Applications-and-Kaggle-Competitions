@@ -3,6 +3,7 @@ import os
 import time
 import psutil
 import pandas as pd
+import traceback
 from datetime import datetime
 from autogluon.tabular import TabularPredictor
 import logging
@@ -15,7 +16,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-# Performance Logger Wrapper Class
+# Performance Logger Wrapper Class with Error Handling
 class FunctionLogger:
     def __init__(self, func):
         self.func = func
@@ -24,27 +25,34 @@ class FunctionLogger:
         start_time = time.time()
         process = psutil.Process(os.getpid())
 
-        # Capture CPU & Memory usage before function call
         cpu_before = psutil.cpu_percent(interval=None)
         mem_before = process.memory_info().rss / (1024 * 1024)  # Convert to MB
 
-        result = self.func(*args, **kwargs)
+        try:
+            result = self.func(*args, **kwargs)
+        except Exception as e:
+            error_message = (
+                f"Error in function: {self.func.__name__}\n"
+                f"Exception: {str(e)}\n"
+                f"Traceback:\n{traceback.format_exc()}"
+            )
+            logging.error(error_message)
+            print(error_message)
+            result = None  # Return None if the function fails
+        finally:
+            cpu_after = psutil.cpu_percent(interval=None)
+            mem_after = process.memory_info().rss / (1024 * 1024)  # Convert to MB
+            execution_time = time.time() - start_time
 
-        # Capture CPU & Memory usage after function call
-        cpu_after = psutil.cpu_percent(interval=None)
-        mem_after = process.memory_info().rss / (1024 * 1024)  # Convert to MB
+            log_message = (
+                f"Function: {self.func.__name__} | "
+                f"Execution Time: {execution_time:.2f}s | "
+                f"CPU: {cpu_before:.2f}% → {cpu_after:.2f}% | "
+                f"Memory: {mem_before:.2f}MB → {mem_after:.2f}MB"
+            )
 
-        execution_time = time.time() - start_time
-
-        log_message = (
-            f"Function: {self.func.__name__} | "
-            f"Execution Time: {execution_time:.2f}s | "
-            f"CPU: {cpu_before:.2f}% → {cpu_after:.2f}% | "
-            f"Memory: {mem_before:.2f}MB → {mem_after:.2f}MB"
-        )
-
-        logging.info(log_message)
-        print(log_message)
+            logging.info(log_message)
+            print(log_message)
 
         return result
 
@@ -54,7 +62,7 @@ def merge_training_data(existing_train_path, new_train_path, data2_path, data3_p
     if os.path.exists(existing_train_path):
         existing_train = pd.read_csv(existing_train_path)
     else:
-        existing_train = pd.DataFrame()  # If no existing data, start fresh
+        existing_train = pd.DataFrame()
 
     new_train = pd.read_csv(new_train_path)
     data2 = pd.read_csv(data2_path)
@@ -99,11 +107,12 @@ def main(args):
         args.existing_train, args.new_train1, args.new_train2, args.new_train3, args.new_train4
     )
 
-    new_train_path = save_training_data(final_train_data, args.existing_train)
-    print(f"Updated training data saved to {new_train_path}")
+    if final_train_data is not None:
+        new_train_path = save_training_data(final_train_data, args.existing_train)
+        print(f"Updated training data saved to {new_train_path}")
 
-    predictor = train_autogluon_model(final_train_data, args.model_path)
-    print(f"Updated Autogluon model saved at {args.model_path}")
+        predictor = train_autogluon_model(final_train_data, args.model_path)
+        print(f"Updated Autogluon model saved at {args.model_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Retrain an Autogluon model with new data.")

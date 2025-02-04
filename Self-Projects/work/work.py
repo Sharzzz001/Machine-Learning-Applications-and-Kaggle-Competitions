@@ -58,33 +58,34 @@ class FunctionLogger:
 
 
 @FunctionLogger
-def merge_training_data(existing_train_path, new_train_path):
-    """Merges old training data with new training data."""
+def preprocess_new_data(new_train_path, data2_path, data3_path, data4_path):
+    """Processes new training data and creates target columns before merging."""
+    new_train = pd.read_csv(new_train_path)
+    data2 = pd.read_csv(data2_path)
+    data3 = pd.read_csv(data3_path)
+    data4 = pd.read_csv(data4_path)
+
+    # Ensure merging on the right keys (modify as needed)
+    new_train = new_train.merge(data2, on="BPKey", how="left").merge(data3, on="BPKey", how="left")
+    new_train = new_train.merge(data4, on="BPKey", how="left")
+
+    # Create target columns
+    new_train["target_model1"] = new_train["col1"] + new_train["col2"]  # Adjust logic as needed
+    new_train["target_model2"] = new_train["col3"]  # Adjust logic as needed
+
+    return new_train
+
+
+@FunctionLogger
+def merge_training_data(existing_train_path, preprocessed_new_data):
+    """Merges existing training data with preprocessed new data."""
     if os.path.exists(existing_train_path):
         existing_train = pd.read_csv(existing_train_path)
     else:
         existing_train = pd.DataFrame()
 
-    new_train = pd.read_csv(new_train_path)
-
-    final_train = pd.concat([existing_train, new_train], ignore_index=True)
+    final_train = pd.concat([existing_train, preprocessed_new_data], ignore_index=True)
     return final_train
-
-
-@FunctionLogger
-def process_target_columns(train_df, data2_path, data3_path, data4_path):
-    """Creates two target columns using Data2 & Data3 for Model1 and Data4 for Model2."""
-    data2 = pd.read_csv(data2_path)
-    data3 = pd.read_csv(data3_path)
-    data4 = pd.read_csv(data4_path)
-
-    # Create Target for Model1
-    train_df["target_model1"] = data2["col1"] + data3["col2"]  # Modify logic as per requirement
-
-    # Create Target for Model2
-    train_df["target_model2"] = data4["col3"]  # Modify logic as per requirement
-
-    return train_df
 
 
 @FunctionLogger
@@ -122,17 +123,17 @@ def train_autogluon_model2(train_data, model_path):
 @FunctionLogger
 def main(args):
     """Main function to execute data processing and model retraining."""
-    # Merge old and new training data
-    merged_train_data = merge_training_data(args.existing_train, args.new_train1)
+    # Step 1: Preprocess new data to create target columns
+    preprocessed_new_data = preprocess_new_data(args.new_train1, args.new_train2, args.new_train3, args.new_train4)
 
-    # Add target columns
-    final_train_data = process_target_columns(merged_train_data, args.new_train2, args.new_train3, args.new_train4)
+    # Step 2: Merge with existing training data
+    final_train_data = merge_training_data(args.existing_train, preprocessed_new_data)
 
-    # Save new training data with a timestamp
+    # Step 3: Save new training data with a timestamp
     new_train_path = save_training_data(final_train_data, args.existing_train)
     print(f"Updated training data saved to {new_train_path}")
 
-    # Train Model 1 and Model 2
+    # Step 4: Train Model 1 and Model 2
     train_autogluon_model1(final_train_data, args.model_path)
     train_autogluon_model2(final_train_data, args.model_path)
 

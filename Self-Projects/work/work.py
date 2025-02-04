@@ -16,7 +16,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
-# Performance Logger Wrapper Class with Error Handling
+# Performance Logger with Error Handling
 class FunctionLogger:
     def __init__(self, func):
         self.func = func
@@ -38,7 +38,7 @@ class FunctionLogger:
             )
             logging.error(error_message)
             print(error_message)
-            result = None  # Return None if the function fails
+            result = None
         finally:
             cpu_after = psutil.cpu_percent(interval=None)
             mem_after = process.memory_info().rss / (1024 * 1024)  # Convert to MB
@@ -56,38 +56,36 @@ class FunctionLogger:
 
         return result
 
+
 @FunctionLogger
-def merge_training_data(existing_train_path, new_train_path, data2_path, data3_path, data4_path):
-    """Merges old training data with new training data and processes Data2-4 to create the target column."""
+def merge_training_data(existing_train_path, new_train_path):
+    """Merges old training data with new training data."""
     if os.path.exists(existing_train_path):
         existing_train = pd.read_csv(existing_train_path)
     else:
         existing_train = pd.DataFrame()
 
     new_train = pd.read_csv(new_train_path)
+
+    final_train = pd.concat([existing_train, new_train], ignore_index=True)
+    return final_train
+
+
+@FunctionLogger
+def process_target_columns(train_df, data2_path, data3_path, data4_path):
+    """Creates two target columns using Data2 & Data3 for Model1 and Data4 for Model2."""
     data2 = pd.read_csv(data2_path)
     data3 = pd.read_csv(data3_path)
     data4 = pd.read_csv(data4_path)
 
-    new_train["target"] = process_target_column(new_train, data2, data3, data4)
-    final_train = pd.concat([existing_train, new_train], ignore_index=True)
+    # Create Target for Model1
+    train_df["target_model1"] = data2["col1"] + data3["col2"]  # Modify logic as per requirement
 
-    return final_train
+    # Create Target for Model2
+    train_df["target_model2"] = data4["col3"]  # Modify logic as per requirement
 
-@FunctionLogger
-def process_target_column(train_df, data2, data3, data4):
-    """Process Data2, Data3, and Data4 to generate the target column."""
-    target = data2['col1'] + data3['col2'] - data4['col3']  # Modify logic as per requirement
-    return target
+    return train_df
 
-@FunctionLogger
-def train_autogluon_model(train_data, save_path):
-    """Trains an Autogluon model on the provided dataset and saves it."""
-    os.makedirs(save_path, exist_ok=True)
-    target_col = "target"
-
-    predictor = TabularPredictor(label=target_col, path=save_path).fit(train_data)
-    return predictor
 
 @FunctionLogger
 def save_training_data(final_train_data, existing_train_path):
@@ -100,29 +98,56 @@ def save_training_data(final_train_data, existing_train_path):
     final_train_data.to_csv(new_train_path, index=False)
     return new_train_path
 
+
+@FunctionLogger
+def train_autogluon_model1(train_data, model_path):
+    """Trains Model 1 using 'target_model1' and saves it in the Model1 folder."""
+    model1_path = os.path.join(model_path, "Model1")
+    os.makedirs(model1_path, exist_ok=True)
+
+    predictor = TabularPredictor(label="target_model1", path=model1_path).fit(train_data)
+    return predictor
+
+
+@FunctionLogger
+def train_autogluon_model2(train_data, model_path):
+    """Trains Model 2 using 'target_model2' and saves it in the Model2 folder."""
+    model2_path = os.path.join(model_path, "Model2")
+    os.makedirs(model2_path, exist_ok=True)
+
+    predictor = TabularPredictor(label="target_model2", path=model2_path).fit(train_data)
+    return predictor
+
+
 @FunctionLogger
 def main(args):
     """Main function to execute data processing and model retraining."""
-    final_train_data = merge_training_data(
-        args.existing_train, args.new_train1, args.new_train2, args.new_train3, args.new_train4
-    )
+    # Merge old and new training data
+    merged_train_data = merge_training_data(args.existing_train, args.new_train1)
 
-    if final_train_data is not None:
-        new_train_path = save_training_data(final_train_data, args.existing_train)
-        print(f"Updated training data saved to {new_train_path}")
+    # Add target columns
+    final_train_data = process_target_columns(merged_train_data, args.new_train2, args.new_train3, args.new_train4)
 
-        predictor = train_autogluon_model(final_train_data, args.model_path)
-        print(f"Updated Autogluon model saved at {args.model_path}")
+    # Save new training data with a timestamp
+    new_train_path = save_training_data(final_train_data, args.existing_train)
+    print(f"Updated training data saved to {new_train_path}")
+
+    # Train Model 1 and Model 2
+    train_autogluon_model1(final_train_data, args.model_path)
+    train_autogluon_model2(final_train_data, args.model_path)
+
+    print(f"Models saved in {args.model_path}/Model1 and {args.model_path}/Model2")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Retrain an Autogluon model with new data.")
+    parser = argparse.ArgumentParser(description="Retrain two Autogluon models with new data.")
 
-    parser.add_argument("--model_path", type=str, required=True, help="Path to store the updated Autogluon model.")
+    parser.add_argument("--model_path", type=str, required=True, help="Path to store the updated models.")
     parser.add_argument("--existing_train", type=str, required=True, help="Path to the existing training data file.")
     parser.add_argument("--new_train1", type=str, required=True, help="Path to new main training data file.")
-    parser.add_argument("--new_train2", type=str, required=True, help="Path to Data 2 (used for target column).")
-    parser.add_argument("--new_train3", type=str, required=True, help="Path to Data 3 (used for target column).")
-    parser.add_argument("--new_train4", type=str, required=True, help="Path to Data 4 (used for target column).")
+    parser.add_argument("--new_train2", type=str, required=True, help="Path to Data 2 (used for Model1's target).")
+    parser.add_argument("--new_train3", type=str, required=True, help="Path to Data 3 (used for Model1's target).")
+    parser.add_argument("--new_train4", type=str, required=True, help="Path to Data 4 (used for Model2's target).")
 
     args = parser.parse_args()
 

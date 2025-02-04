@@ -1,83 +1,120 @@
+import argparse
 import os
+import time
+import psutil
 import pandas as pd
 from datetime import datetime
-from pandas.tseries.offsets import BDay  # Business Day offset
+from autogluon.tabular import TabularPredictor
+import logging
 
-def process_files(folder_path):
-    # Initialize storage for final results
-    results = []
+# Setup logging
+log_filename = f"training_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+logging.basicConfig(
+    filename=log_filename,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
-    # Loop through all files in the folder
-    for file_name in os.listdir(folder_path):
-        # Process only Excel files
-        if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
-            # Extract the file date from the file name (assumes date is at position Dec 4 2024)
-            try:
-                file_date_str = " ".join(file_name.split()[-3:])  # Extract "Dec 4 2024"
-                file_date = datetime.strptime(file_date_str, "%b %d %Y").date()
-            except Exception as e:
-                print(f"Error parsing date for file {file_name}: {e}")
-                continue
+# Performance Logger Wrapper Class
+class FunctionLogger:
+    def __init__(self, func):
+        self.func = func
 
-            # Get the full file path
-            file_path = os.path.join(folder_path, file_name)
-            
-            try:
-                # Load the Excel file and check its sheet names
-                excel_data = pd.ExcelFile(file_path)
-                for sheet_name in excel_data.sheet_names:
-                    # Determine if sheet is "Blotter" or "Bloomberg"
-                    if sheet_name == "Blotter":
-                        trade_date_col = "Trade Dt"
-                    elif sheet_name == "Bloomberg":
-                        trade_date_col = "Trade Date"
-                    else:
-                        continue  # Skip other sheets
+    def __call__(self, *args, **kwargs):
+        start_time = time.time()
+        process = psutil.Process(os.getpid())
 
-                    # Load the relevant sheet into a DataFrame
-                    df = pd.read_excel(file_path, sheet_name=sheet_name)
+        # Capture CPU & Memory usage before function call
+        cpu_before = psutil.cpu_percent(interval=None)
+        mem_before = process.memory_info().rss / (1024 * 1024)  # Convert to MB
 
-                    # Ensure the required column exists
-                    if trade_date_col not in df.columns:
-                        print(f"Column {trade_date_col} not found in sheet {sheet_name} of {file_name}, skipping...")
-                        continue
+        result = self.func(*args, **kwargs)
 
-                    # Parse the Trade Date column as datetime
-                    df[trade_date_col] = pd.to_datetime(df[trade_date_col]).dt.date
+        # Capture CPU & Memory usage after function call
+        cpu_after = psutil.cpu_percent(interval=None)
+        mem_after = process.memory_info().rss / (1024 * 1024)  # Convert to MB
 
-                    # Calculate business day offsets
-                    minus_1_bday = file_date - BDay(1)  # -1 business day
-                    plus_1_bday = file_date + BDay(1)   # +1 business day
+        execution_time = time.time() - start_time
 
-                    # Classify Trade Dates
-                    counts = {
-                        "Date": file_date,
-                        "Sheet Name": sheet_name,
-                        "Older than -1 days": sum(df[trade_date_col] < minus_1_bday.date()),
-                        "-1 days": sum(df[trade_date_col] == minus_1_bday.date()),
-                        "Same day": sum(df[trade_date_col] == file_date),
-                        "+1 days": sum(df[trade_date_col] == plus_1_bday.date()),
-                        "More than +1 days": sum(df[trade_date_col] > plus_1_bday.date())
-                    }
+        log_message = (
+            f"Function: {self.func.__name__} | "
+            f"Execution Time: {execution_time:.2f}s | "
+            f"CPU: {cpu_before:.2f}% → {cpu_after:.2f}% | "
+            f"Memory: {mem_before:.2f}MB → {mem_after:.2f}MB"
+        )
 
-                    # Append results
-                    results.append(counts)
+        logging.info(log_message)
+        print(log_message)
 
-            except Exception as e:
-                print(f"Error processing file {file_name}: {e}")
+        return result
 
-    # Create final summary DataFrame
-    summary_df = pd.DataFrame(results)
-    return summary_df
+@FunctionLogger
+def merge_training_data(existing_train_path, new_train_path, data2_path, data3_path, data4_path):
+    """Merges old training data with new training data and processes Data2-4 to create the target column."""
+    if os.path.exists(existing_train_path):
+        existing_train = pd.read_csv(existing_train_path)
+    else:
+        existing_train = pd.DataFrame()  # If no existing data, start fresh
 
-# Specify the folder path
-folder_path = r"C:\path\to\your\folder"
+    new_train = pd.read_csv(new_train_path)
+    data2 = pd.read_csv(data2_path)
+    data3 = pd.read_csv(data3_path)
+    data4 = pd.read_csv(data4_path)
 
-# Call the function and get the summary dataframe
-final_df = process_files(folder_path)
+    new_train["target"] = process_target_column(new_train, data2, data3, data4)
+    final_train = pd.concat([existing_train, new_train], ignore_index=True)
 
-# Save the summary to an Excel file
-output_file = "Final_Summary.xlsx"
-final_df.to_excel(output_file, index=False)
+    return final_train
 
-print(f"Summary saved to {output_file}")
+@FunctionLogger
+def process_target_column(train_df, data2, data3, data4):
+    """Process Data2, Data3, and Data4 to generate the target column."""
+    target = data2['col1'] + data3['col2'] - data4['col3']  # Modify logic as per requirement
+    return target
+
+@FunctionLogger
+def train_autogluon_model(train_data, save_path):
+    """Trains an Autogluon model on the provided dataset and saves it."""
+    os.makedirs(save_path, exist_ok=True)
+    target_col = "target"
+
+    predictor = TabularPredictor(label=target_col, path=save_path).fit(train_data)
+    return predictor
+
+@FunctionLogger
+def save_training_data(final_train_data, existing_train_path):
+    """Saves the final training dataset in the same folder as the existing training file."""
+    existing_dir = os.path.dirname(existing_train_path)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_train_filename = f"training_data_{timestamp}.csv"
+    new_train_path = os.path.join(existing_dir, new_train_filename)
+
+    final_train_data.to_csv(new_train_path, index=False)
+    return new_train_path
+
+@FunctionLogger
+def main(args):
+    """Main function to execute data processing and model retraining."""
+    final_train_data = merge_training_data(
+        args.existing_train, args.new_train1, args.new_train2, args.new_train3, args.new_train4
+    )
+
+    new_train_path = save_training_data(final_train_data, args.existing_train)
+    print(f"Updated training data saved to {new_train_path}")
+
+    predictor = train_autogluon_model(final_train_data, args.model_path)
+    print(f"Updated Autogluon model saved at {args.model_path}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Retrain an Autogluon model with new data.")
+
+    parser.add_argument("--model_path", type=str, required=True, help="Path to store the updated Autogluon model.")
+    parser.add_argument("--existing_train", type=str, required=True, help="Path to the existing training data file.")
+    parser.add_argument("--new_train1", type=str, required=True, help="Path to new main training data file.")
+    parser.add_argument("--new_train2", type=str, required=True, help="Path to Data 2 (used for target column).")
+    parser.add_argument("--new_train3", type=str, required=True, help="Path to Data 3 (used for target column).")
+    parser.add_argument("--new_train4", type=str, required=True, help="Path to Data 4 (used for target column).")
+
+    args = parser.parse_args()
+
+    main(args)

@@ -153,3 +153,23 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(args)
+    
+    
+@FunctionLogger
+def preprocess_new_data(new_train_path, data2_path, data3_path, data4_path):
+    """Processes new training data and creates target columns before merging."""
+    new_train = pd.read_csv(new_train_path)
+    data2 = pd.read_csv(data2_path)
+    data3 = pd.read_csv(data3_path)
+    data4 = pd.read_csv(data4_path)
+
+    # Extract glossref values from Data 2 and Data 3
+    glossref_set = set(pd.concat([data2["glossref"], data3["glossref"]], ignore_index=True).dropna().unique())
+
+    # Create target_model1 based on glossref matching
+    new_train["target_model1"] = new_train["glossref"].apply(lambda x: "Failure" if x in glossref_set else "Success")
+
+    # Create target_model2 (logic needs to be defined based on Data 4)
+    new_train["target_model2"] = new_train["col3"]  # Adjust logic as needed
+
+    return new_train

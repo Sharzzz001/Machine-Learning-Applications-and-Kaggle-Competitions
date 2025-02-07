@@ -173,3 +173,45 @@ def preprocess_new_data(new_train_path, data2_path, data3_path, data4_path):
     new_train["target_model2"] = new_train["col3"]  # Adjust logic as needed
 
     return new_train
+
+
+import os
+from tqdm import tqdm
+
+def get_folder_size(folder):
+    """Calculate total size of a folder, including all subfiles and subfolders."""
+    total_size = 0
+    for dirpath, _, filenames in os.walk(folder):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.exists(fp):  # Avoid broken symlinks
+                total_size += os.path.getsize(fp)
+    return total_size
+
+def scan_drive_or_folder(path):
+    """Scans the given path and lists subfolders with their sizes."""
+    if not os.path.exists(path):
+        print(f"Path '{path}' does not exist!")
+        return
+
+    folder_sizes = []
+    subfolders = [os.path.join(path, d) for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+
+    with tqdm(total=len(subfolders), desc="Scanning folders", unit="folder") as pbar:
+        for folder in subfolders:
+            size = get_folder_size(folder)
+            folder_sizes.append((folder, size))
+            pbar.update(1)
+
+    # Sort by size in descending order
+    folder_sizes.sort(key=lambda x: x[1], reverse=True)
+
+    print("\nTop folders by size:")
+    for folder, size in folder_sizes:
+        print(f"{folder} - {size / (1024**3):.2f} GB")
+
+if __name__ == "__main__":
+    folder_path = input("Enter the drive or folder path to scan: ")
+    scan_drive_or_folder(folder_path)
+
+

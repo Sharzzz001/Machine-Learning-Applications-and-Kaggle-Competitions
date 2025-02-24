@@ -61,7 +61,10 @@ def save_results(region_patterns, output_path="error_sequence_analysis.xlsx"):
     """Save the results to an Excel file"""
     with pd.ExcelWriter(output_path) as writer:
         for region, sequences in region_patterns.items():
-            df = pd.DataFrame(sequences.items(), columns=['Error Sequence', 'Nack Sequence', 'Count'])
+            # Unpack the sequences and count
+            sequence_data = [(error_seq, nack_seq, count) for (error_seq, nack_seq), count in sequences.items()]
+            
+            df = pd.DataFrame(sequence_data, columns=['Error Sequence', 'Nack Sequence', 'Count'])
             df = df.sort_values(by='Count', ascending=False)
             df.to_excel(writer, sheet_name=f"{region}_Sequences", index=False)
 
@@ -88,6 +91,7 @@ def main(file_path, sequence_length=3):
 
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
 
 if __name__ == "__main__":
     file_path = input("Enter the path to the Excel file: ")

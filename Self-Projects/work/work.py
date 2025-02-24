@@ -7,6 +7,10 @@ import logging
 logging.basicConfig(filename="error_sequence_analysis.log", level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
+def clean_sequence(sequence):
+    """Clean and normalize the sequence"""
+    return ' -> '.join(item.strip() for item in sequence if pd.notnull(item))
+
 def extract_full_sequences(df, region):
     """Extract full error and nack sequences for a given region"""
     region_df = df[df['Region'] == region].sort_values(by='UTI ref')
@@ -23,8 +27,8 @@ def extract_full_sequences(df, region):
 
         # Capture full sequences
         if len(error_descriptions) > 0:
-            error_seq = ' -> '.join(error_descriptions)
-            nack_seq = ' -> '.join(nack_types)
+            error_seq = clean_sequence(error_descriptions)
+            nack_seq = clean_sequence(nack_types)
             sequences.append((error_seq, nack_seq))
     
     return sequences
@@ -42,6 +46,10 @@ def analyze_full_sequences(df):
             sequence_counts = Counter(sequences)
             region_patterns[region] = sequence_counts
 
+            # Debugging: Log top sequences
+            top_sequences = sequence_counts.most_common(5)
+            logging.info(f"Top sequences in {region}: {top_sequences}")
+
             pbar.set_postfix({"Region": region, "Full Sequences": len(sequence_counts)})
             logging.info(f"Analyzed {region}: {len(sequence_counts)} full sequences")
         
@@ -54,10 +62,19 @@ def save_results(region_patterns, output_path="error_sequence_analysis.xlsx"):
     """Save the results to an Excel file"""
     with pd.ExcelWriter(output_path) as writer:
         for region, sequences in region_patterns.items():
-            sequence_data = [(error_seq, nack_seq, count) for (error_seq, nack_seq), count in sequences.items()]
+            sequence_data = []
             
-            df = pd.DataFrame(sequence_data, columns=['Full Error Sequence', 'Full Nack Sequence', 'Count'])
-            df = df.sort_values(by='Count', ascending=False)
+            for (error_seq, nack_seq), count in sequences.items():
+                num_errors = len(error_seq.split(' -> '))
+                total_errors = num_errors * count
+                
+                sequence_data.append((error_seq, nack_seq, count, num_errors, total_errors))
+
+            # Create a DataFrame
+            df = pd.DataFrame(sequence_data, 
+                              columns=['Full Error Sequence', 'Full Nack Sequence', 'Count', 
+                                       'Errors per Sequence', 'Total Errors'])
+            df = df.sort_values(by='Total Errors', ascending=False)
             df.to_excel(writer, sheet_name=f"{region}_Full_Sequences", index=False)
 
     logging.info(f"Results saved to {output_path}")

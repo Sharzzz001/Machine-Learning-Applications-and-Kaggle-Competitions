@@ -3,7 +3,6 @@ from tqdm import tqdm
 from collections import Counter
 from itertools import tee, islice
 import logging
-import os
 
 # Set up logging
 logging.basicConfig(filename="error_sequence_analysis.log", level=logging.INFO, 
@@ -17,21 +16,28 @@ def sliding_window(iterable, n):
     return zip(*iterables)
 
 def extract_sequences(df, region, sequence_length=3):
-    """Extract error sequences for a given region"""
+    """Extract error and nack type sequences for a given region"""
     region_df = df[df['Region'] == region].sort_values(by='UTI ref')
     sequences = []
 
-    grouped = region_df.groupby('UTI ref')['Error description'].apply(list).reset_index()
+    # Group by UTI ref to get sequences of errors and nack types
+    grouped = region_df.groupby('UTI ref')[['Error description', 'Nack Type']].apply(lambda x: x.values.tolist()).reset_index()
 
     for _, row in grouped.iterrows():
-        error_descriptions = row['Error description']
+        error_descriptions = [desc for desc, _ in row[0]]
+        nack_types = [nack for _, nack in row[0]]
+
+        # Capture sliding window sequences
         if len(error_descriptions) >= sequence_length:
-            sequences.extend([' -> '.join(seq) for seq in sliding_window(error_descriptions, sequence_length)])
+            error_seqs = [' -> '.join(seq) for seq in sliding_window(error_descriptions, sequence_length)]
+            nack_seqs = [' -> '.join(seq) for seq in sliding_window(nack_types, sequence_length)]
+
+            sequences.extend(zip(error_seqs, nack_seqs))
     
     return sequences
 
 def analyze_error_sequences(df, sequence_length=3):
-    """Analyze error sequences for all regions"""
+    """Analyze error and nack type sequences for all regions"""
     regions = df['Region'].unique()
     region_patterns = {}
 
@@ -67,17 +73,18 @@ def save_results(region_patterns, common_sequences, unique_sequences, output_pat
     """Save the results to an Excel file"""
     with pd.ExcelWriter(output_path) as writer:
         for region, sequences in region_patterns.items():
-            df = pd.DataFrame(sequences.items(), columns=['Error Sequence', 'Count'])
+            df = pd.DataFrame(sequences.items(), columns=['Error Sequence', 'Nack Sequence', 'Count'])
             df = df.sort_values(by='Count', ascending=False)
             df.to_excel(writer, sheet_name=f"{region}_Sequences", index=False)
 
         # Save common sequences
-        common_df = pd.DataFrame({'Common Sequences': list(common_sequences)})
+        common_df = pd.DataFrame({'Common Error Sequences': [seq[0] for seq in common_sequences],
+                                  'Common Nack Sequences': [seq[1] for seq in common_sequences]})
         common_df.to_excel(writer, sheet_name="Common Sequences", index=False)
 
         # Save unique sequences per region
-        unique_df = pd.DataFrame([(region, seq) for region, seqs in unique_sequences.items() for seq in seqs], 
-                                 columns=['Region', 'Unique Sequence'])
+        unique_rows = [(region, seq[0], seq[1]) for region, seqs in unique_sequences.items() for seq in seqs]
+        unique_df = pd.DataFrame(unique_rows, columns=['Region', 'Unique Error Sequence', 'Unique Nack Sequence'])
         unique_df.to_excel(writer, sheet_name="Unique Sequences", index=False)
 
     logging.info(f"Results saved to {output_path}")
@@ -88,7 +95,7 @@ def main(file_path, sequence_length=3):
         df = pd.read_excel(file_path)
 
         # Validate necessary columns
-        required_columns = {'Region', 'UTI ref', 'Error description'}
+        required_columns = {'Region', 'UTI ref', 'Error description', 'Nack Type'}
         if not required_columns.issubset(df.columns):
             raise ValueError(f"Missing required columns: {required_columns - set(df.columns)}")
 

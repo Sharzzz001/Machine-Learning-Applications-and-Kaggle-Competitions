@@ -1,15 +1,32 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Convert descriptions to vectors
-vectorizer = TfidfVectorizer()
-error_vectors = vectorizer.fit_transform(df1['Error description'])
-jira_vectors = vectorizer.transform(df2['JIRA description'])
+# Load a pre-trained BERT model for embeddings
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Calculate similarity scores
-similarity_matrix = cosine_similarity(error_vectors, jira_vectors)
+# Example DataFrames
+df1 = pd.DataFrame({'Error description': [
+    "Trade failed due to missing field",
+    "Invalid date format in trade",
+    "Collateral amount not provided"
+]})
 
-# Map errors to the most similar JIRA description
+df2 = pd.DataFrame({'JIRA ID': ['JIRA-101', 'JIRA-102', 'JIRA-103'],
+                    'JIRA description': [
+    "Trade failed due to missing field. User tried to re-input.",
+    "Wrong date format. System rejected the trade.",
+    "Collateral value missing — failed at validation."
+]})
+
+# Embed the error descriptions and JIRA descriptions using BERT
+error_embeddings = model.encode(df1['Error description'].tolist(), convert_to_tensor=True)
+jira_embeddings = model.encode(df2['JIRA description'].tolist(), convert_to_tensor=True)
+
+# Calculate cosine similarity
+similarity_matrix = cosine_similarity(error_embeddings.cpu().numpy(), jira_embeddings.cpu().numpy())
+
+# Match each error with the most similar JIRA description
 matches = []
 
 for i, error_desc in enumerate(df1['Error description']):

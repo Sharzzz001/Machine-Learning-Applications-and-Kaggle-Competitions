@@ -1,45 +1,66 @@
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
+from tqdm import tqdm
 
-# Load a pre-trained BERT model for embeddings
-model = SentenceTransformer('all-MiniLM-L6-v2')
+def get_error_sequences(df):
+    """ Group NACK data by UTI ID and return error sequences """
+    sequences = defaultdict(list)
+    grouped = df.sort_values(by='Date').groupby('UTI ID')
 
-# Example DataFrames
-df1 = pd.DataFrame({'Error description': [
-    "Trade failed due to missing field",
-    "Invalid date format in trade",
-    "Collateral amount not provided"
-]})
+    for uti, group in grouped:
+        sequences[uti] = list(group['Error description'])
+        
+    return sequences
 
-df2 = pd.DataFrame({'JIRA ID': ['JIRA-101', 'JIRA-102', 'JIRA-103'],
-                    'JIRA description': [
-    "Trade failed due to missing field. User tried to re-input.",
-    "Wrong date format. System rejected the trade.",
-    "Collateral value missing — failed at validation."
-]})
+def analyze_jira_impact(df1, df2):
+    """ Analyze sequences to check if JIRA release fixed the errors """
+    results = []
 
-# Embed the error descriptions and JIRA descriptions using BERT
-error_embeddings = model.encode(df1['Error description'].tolist(), convert_to_tensor=True)
-jira_embeddings = model.encode(df2['JIRA description'].tolist(), convert_to_tensor=True)
+    # Parse dates
+    df1['Release date'] = pd.to_datetime(df1['Release date'])
+    df2['Date'] = pd.to_datetime(df2['Date'])
 
-# Calculate cosine similarity
-similarity_matrix = cosine_similarity(error_embeddings.cpu().numpy(), jira_embeddings.cpu().numpy())
+    # Get sequences
+    error_sequences = get_error_sequences(df2)
 
-# Match each error with the most similar JIRA description
-matches = []
+    for _, jira_row in tqdm(df1.iterrows(), total=len(df1)):
+        jira_error = jira_row['Error description']
+        release_date = jira_row['Release date']
+        
+        for uti, sequence in error_sequences.items():
+            try:
+                # Split sequence into before/after release date
+                before_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] < release_date)]
+                after_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] >= release_date)]
 
-for i, error_desc in enumerate(df1['Error description']):
-    best_match_idx = similarity_matrix[i].argmax()
-    best_match_score = similarity_matrix[i][best_match_idx]
+                before_sequence = list(before_release['Error description'])
+                after_sequence = list(after_release['Error description'])
 
-    matches.append({
-        'Error description': error_desc,
-        'Closest JIRA': df2['JIRA description'].iloc[best_match_idx],
-        'JIRA ID': df2['JIRA ID'].iloc[best_match_idx],
-        'Similarity Score': best_match_score
-    })
+                # Check if the JIRA error is the **first error** in the sequence
+                if before_sequence and before_sequence[0] == jira_error:
+                    # If the error disappears **after release**, tag it as fixed
+                    fixed = jira_error not in after_sequence
 
-# Create a DataFrame with the results
-mapped_df = pd.DataFrame(matches)
-print(mapped_df)
+                    results.append({
+                        'UTI ID': uti,
+                        'JIRA Error': jira_error,
+                        'Release Date': release_date,
+                        'Before Sequence': " -> ".join(before_sequence),
+                        'After Sequence': " -> ".join(after_sequence) if after_sequence else "None",
+                        'Fixed After Release': 'Yes' if fixed else 'No'
+                    })
+            except Exception as e:
+                print(f"Error processing UTI {uti}: {e}")
+
+    return pd.DataFrame(results)
+
+# Load your data
+jira_df = pd.read_excel("jira_data.xlsx")
+nack_df = pd.read_excel("nack_data.xlsx")
+
+# Run the analysis
+result_df = analyze_jira_impact(jira_df, nack_df)
+
+# Save results
+result_df.to_excel("jira_error_fix_analysis.xlsx", index=False)
+print("Analysis complete! Results saved to 'jira_error_fix_analysis.xlsx'")

@@ -1,56 +1,66 @@
 import pandas as pd
+from collections import defaultdict
+from tqdm import tqdm
 
-# Consolidate data from all sheets with a 'Year Month' column
-excel_file = "your_file.xlsx"
-sheets = pd.ExcelFile(excel_file).sheet_names
+def get_error_sequences(df):
+    """ Group NACK data by UTI ID and return error sequences """
+    sequences = defaultdict(list)
+    grouped = df.sort_values(by='Date').groupby('UTI ID')
 
-consolidated_df = pd.DataFrame()
-for sheet in sheets:
-    # Load each sheet
-    df = pd.read_excel(excel_file, sheet_name=sheet)
-    # Extract month and year from sheet name and add it as a column
-    year_month = f"2024-{sheet.split()[1]}"
-    df['Year Month'] = year_month
-    consolidated_df = pd.concat([consolidated_df, df], ignore_index=True)
+    for uti, group in grouped:
+        sequences[uti] = list(group['Error description'])
+        
+    return sequences
 
-# Calculate AUM growth by client and asset type month on month
-consolidated_df = consolidated_df.sort_values(['BPKey', 'Year Month'])
-aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other', 'Total AUM']
+def analyze_jira_impact(df1, df2):
+    """ Analyze sequences to check if JIRA release fixed the errors """
+    results = []
 
-# Calculate month-on-month differences for each asset type
-for col in aum_columns:
-    consolidated_df[f'{col}_growth'] = consolidated_df.groupby('BPKey')[col].diff()
+    # Parse dates
+    df1['Release date'] = pd.to_datetime(df1['Release date'])
+    df2['Date'] = pd.to_datetime(df2['Date'])
 
-# Filter for positive growth
-positive_growth_df = consolidated_df[(consolidated_df[aum_columns].gt(0)).any(axis=1)]
+    # Get sequences
+    error_sequences = get_error_sequences(df2)
 
-# Summarize the total and percentage growth by asset type for each client
-summary_df = positive_growth_df.groupby('BPKey')[[f'{col}_growth' for col in aum_columns]].sum()
+    for _, jira_row in tqdm(df1.iterrows(), total=len(df1)):
+        jira_error = jira_row['Error description']
+        release_date = jira_row['Release date']
+        
+        for uti, sequence in error_sequences.items():
+            try:
+                # Split sequence into before/after release date
+                before_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] < release_date)]
+                after_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] >= release_date)]
 
-# Calculate percentage contribution by asset type
-summary_df_pct = summary_df.div(summary_df.sum(axis=1), axis=0) * 100
+                before_sequence = list(before_release['Error description'])
+                after_sequence = list(after_release['Error description'])
 
-# Output to a new Excel file for review
-with pd.ExcelWriter("consolidated_and_analyzed.xlsx") as writer:
-    consolidated_df.to_excel(writer, sheet_name="Consolidated Data", index=False)
-    summary_df.to_excel(writer, sheet_name="AUM Growth Summary")
-    summary_df_pct.to_excel(writer, sheet_name="Growth Contribution %")
+                # Check if the JIRA error is the **first error** in the sequence
+                if before_sequence and before_sequence[0] == jira_error:
+                    # If the error disappears **after release**, tag it as fixed
+                    fixed = jira_error not in after_sequence
 
-print("Consolidation and analysis complete. Check 'consolidated_and_analyzed.xlsx' for results.")
+                    results.append({
+                        'UTI ID': uti,
+                        'JIRA Error': jira_error,
+                        'Release Date': release_date,
+                        'Before Sequence': " -> ".join(before_sequence),
+                        'After Sequence': " -> ".join(after_sequence) if after_sequence else "None",
+                        'Fixed After Release': 'Yes' if fixed else 'No'
+                    })
+            except Exception as e:
+                print(f"Error processing UTI {uti}: {e}")
 
+    return pd.DataFrame(results)
 
-# List of AUM asset type columns
-aum_columns = ['Cash', 'Deposit', 'Share Bond', 'Struct. Prod.', 'Derivatives', 'Fund', 'Other']
+# Load your data
+jira_df = pd.read_excel("jira_data.xlsx")
+nack_df = pd.read_excel("nack_data.xlsx")
 
-# Step 1: Calculate the total value for each asset type across all rows (clients)
-total_values = summary_df[aum_columns].sum()
+# Run the analysis
+result_df = analyze_jira_impact(jira_df, nack_df)
 
-# Step 2: Calculate the overall Total AUM (sum of Total AUM column)
-total_aum = summary_df['Total AUM'].sum()
-
-# Step 3: Calculate the percentage contribution for each asset type
-aum_percentages = (total_values / total_aum) * 100
-
-# Step 4: Print out the results for each asset type
-for column in aum_columns:
-    print(f"{column} Contribution: {aum_percentages[column]:.2f}%")
+# Save results
+result_df.to_excel("jira_error_fix_analysis.xlsx", index=False)
+print("Analysis complete! Results saved to 'jira_error_fix_analysis.xlsx'")

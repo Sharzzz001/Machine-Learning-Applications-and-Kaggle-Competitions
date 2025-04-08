@@ -1,85 +1,97 @@
-1. Understanding Work Distribution
-Activity, Sub-Activity, and Sub-Process Analysis:
+Slide 3: The Problem
+Wide variance in revenue even for clients with similar onboarding durations.
 
-Identify high-effort activities consuming the most time.
+Examples:
 
-Look for activities with low complexity but high effort, as these may be automated or optimized.
+Client A: 200 days to deposit | Revenue: $500
 
-Identify repetitive or redundant work across multiple sub-processes.
+Client B: 200 days to deposit | Revenue: $1M
 
-Categorization by Effort & Volume:
+No current visibility on whether clients are exceeding cost-to-serve.
 
-Categorize work based on time spent per task.
+Slide 4: Proposed Approach
+Calculate per-day cost of servicing a client.
 
-Rank tasks by frequency and total time impact.
+Tag clients based on delay in first deposit.
 
-Identify tasks with long completion times and potential bottlenecks.
+Compare revenue vs cost to flag unprofitable clients.
 
-2. Identifying Automation & Efficiency Gains
-Standardization Opportunities:
+Analyze cost differentiators (region, client type, etc.).
 
-Are some processes performed inconsistently across team members?
+Build dashboard for monitoring.
 
-Can processes be streamlined or standardized to improve efficiency?
+Slide 5: Step 1 – Estimate Cost Per Day
+Work with Finance/Operations to determine:
 
-Automation Scope:
+Fixed costs (platform, RM salaries, tech).
 
-Are there manual data entry tasks that can be automated?
+Variable costs (client interactions, compliance checks).
 
-Are there decision-based but rule-driven tasks suitable for automation?
+Calculate:
 
-Work Duplication:
+Cost per client per day (Avg across segments or customized by segment).
 
-Are different teams handling similar tasks that can be centralized?
+Slide 6: Step 2 – Revenue vs Cost Analysis
+Join client revenue with onboarding-to-deposit timelines.
 
-Are there unnecessary approval layers slowing down processes?
+Calculate:
 
-3. Workload Balancing & Role Optimization
-Workload Distribution:
+Total cost incurred until first deposit.
 
-Are some employees overloaded while others have bandwidth?
+Net contribution (Revenue – Cost).
 
-Are there peaks and troughs in workload across months or weeks?
+Define thresholds (e.g., negative net contribution after X days).
 
-Skill-Based Allocation:
+Slide 7: Step 3 – Identify Cost Drivers
+Explore:
 
-Are high-skilled employees performing low-value tasks?
+Region/Nationality
 
-Can some tasks be shifted to lower-cost resources?
+Client segment/type (HNI, NRI, etc.)
 
-4. Measuring FTE Efficiency
-FTE per Activity:
+Relationship manager
 
-Calculate FTE effort per activity and compare against benchmarks.
+Product mix
 
-Identify tasks consuming high FTEs but producing low-value outputs.
+Use statistical analysis / segmentation to identify trends.
 
-Cycle Time & Turnaround Analysis:
+Slide 8: Step 4 – Dashboard Design
+Dashboard KPIs:
 
-Identify processes with long turnaround times.
+Days since onboarding
 
-Compare actual effort vs. estimated effort.
+Revenue generated
 
-5. Additional Data Required
-To refine the analysis, you may need:
+Cost accrued
 
-Time Tracking Data – Hours logged per activity/sub-activity.
+Profitability status (Red/Amber/Green)
 
-Process SLA Metrics – Expected vs. actual completion time.
+Filters: Region, RM, Client Type, Time Bucket
 
-Error Rates & Rework Efforts – Identify inefficiencies causing repeat work.
+Auto-alert for red zone clients
 
-System Logs & Manual Inputs – To assess automation potential.
+Slide 9: Sample Dashboard (Mockup)
+Include a simple mockup:
 
-Work Volume Trends – Identify seasonal spikes affecting FTEs.
+Table or bar chart
 
-6. Expected Outcomes
-By analyzing the dataset with the above approach, you can:
+Profitability flag
 
-Reduce FTE efforts by eliminating unnecessary/repetitive tasks.
+Breakdown of costs and revenue
 
-Improve efficiency by automating rule-based processes.
+Slide 10: Next Steps
+Finalize cost estimation with Finance.
 
-Optimize workforce allocation by balancing workload effectively.
+Gather additional dimensions (region, RM, etc.).
 
-Enhance process turnaround times by removing bottlenecks.
+Create and test dashboard prototype.
+
+Roll out to IWM business team.
+
+Slide 11: Appendix (Optional)
+Definitions
+
+Data sources
+
+Assumptions
+

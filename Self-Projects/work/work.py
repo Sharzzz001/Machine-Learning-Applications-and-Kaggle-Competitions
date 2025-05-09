@@ -4,33 +4,37 @@ import pytesseract
 from PIL import Image
 import io
 
+# If Tesseract is not in your system PATH, set its full path
+# Example: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Path\To\tesseract.exe"
+
 # Define rules: {filename: (keyword, page_number)}
 PDF_RENAME_RULES = {
     "AAF.pdf": ("account opening form", 0),  # 0-based index
     "KYC.pdf": ("kyc documentation", 1),
-    "POA.pdf": ("power of attorney", 0),
     # Add more rules as needed
 }
 
 def extract_text_from_page(pdf_path, page_number):
-    with fitz.open(pdf_path) as doc:
-        if page_number >= len(doc):
-            return ""
-        page = doc.load_page(page_number)
-        pix = page.get_pixmap(dpi=300)
-        img_bytes = pix.tobytes("png")
-        image = Image.open(io.BytesIO(img_bytes))
-        text = pytesseract.image_to_string(image).lower()
-        return text
+    try:
+        with fitz.open(pdf_path) as doc:
+            if page_number >= len(doc):
+                return ""
+            page = doc.load_page(page_number)
+            pix = page.get_pixmap(dpi=300)
+            img_data = pix.tobytes("png")
+            image = Image.open(io.BytesIO(img_data)).convert("RGB")
+            text = pytesseract.image_to_string(image)
+            return text.lower()
+    except Exception as e:
+        print(f"Error extracting text from {pdf_path} page {page_number + 1}: {e}")
+        return ""
 
 def determine_new_filename(pdf_path):
     for new_filename, (keyword, page_num) in PDF_RENAME_RULES.items():
-        try:
-            text = extract_text_from_page(pdf_path, page_num)
-            if keyword.lower() in text:
-                return new_filename
-        except Exception as e:
-            print(f"Error reading {pdf_path} page {page_num + 1}: {e}")
+        text = extract_text_from_page(pdf_path, page_num)
+        if keyword in text:
+            return new_filename
     return None
 
 def process_pdf(pdf_path, output_dir):
@@ -40,7 +44,7 @@ def process_pdf(pdf_path, output_dir):
         os.rename(pdf_path, new_path)
         print(f"Renamed: {os.path.basename(pdf_path)} → {new_filename}")
     else:
-        print(f"No match for {os.path.basename(pdf_path)}")
+        print(f"No match found for: {os.path.basename(pdf_path)}")
 
 def process_all_pdfs(folder_path):
     for file in os.listdir(folder_path):
@@ -49,5 +53,5 @@ def process_all_pdfs(folder_path):
 
 # Example usage
 if __name__ == "__main__":
-    input_folder = "your/folder/with/pdfs"
+    input_folder = r"C:\Path\To\Your\PDFs"
     process_all_pdfs(input_folder)

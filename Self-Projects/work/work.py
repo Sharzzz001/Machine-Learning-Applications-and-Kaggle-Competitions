@@ -55,3 +55,46 @@ def process_all_pdfs(folder_path):
 if __name__ == "__main__":
     input_folder = r"C:\Path\To\Your\PDFs"
     process_all_pdfs(input_folder)
+
+
+import fitz  # PyMuPDF
+from PIL import Image
+import pytesseract
+import io
+import matplotlib.pyplot as plt
+
+# Optional: set Tesseract path if it's not in your system PATH
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Path\To\tesseract.exe"
+
+def extract_text_and_image(pdf_path, page_number):
+    with fitz.open(pdf_path) as doc:
+        if page_number >= len(doc):
+            print(f"Page {page_number + 1} out of range.")
+            return None, None
+        page = doc.load_page(page_number)
+        pix = page.get_pixmap(dpi=300)
+        img_bytes = pix.tobytes("png")
+        image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        text = pytesseract.image_to_string(image)
+        return image, text
+
+def test_pdf_page():
+    pdf_path = input("Enter full path to PDF: ").strip()
+    page_input = input("Enter page number to test (1-based): ").strip()
+
+    try:
+        page_number = int(page_input) - 1
+        image, text = extract_text_and_image(pdf_path, page_number)
+        if image:
+            print("\n--- OCR Extracted Text ---\n")
+            print(text.strip())
+            print("\n--- Displaying Image ---")
+            plt.imshow(image)
+            plt.axis("off")
+            plt.show()
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    test_pdf_page()
+

@@ -98,3 +98,34 @@ def test_pdf_page():
 if __name__ == "__main__":
     test_pdf_page()
 
+
+import os
+import random
+import string
+
+def generate_random_filename(existing_names, length=8):
+    while True:
+        rand_name = "file_" + ''.join(random.choices(string.digits, k=length)) + ".pdf"
+        if rand_name not in existing_names:
+            return rand_name
+
+def rename_pdfs_randomly(folder_path):
+    if not os.path.isdir(folder_path):
+        print("Invalid folder path.")
+        return
+
+    existing_files = set(os.listdir(folder_path))
+    pdf_files = [f for f in existing_files if f.lower().endswith(".pdf")]
+
+    for old_name in pdf_files:
+        old_path = os.path.join(folder_path, old_name)
+        new_name = generate_random_filename(existing_files)
+        new_path = os.path.join(folder_path, new_name)
+        os.rename(old_path, new_path)
+        print(f"Renamed: {old_name} → {new_name}")
+        existing_files.add(new_name)  # update to avoid collisions
+
+# Example usage
+if __name__ == "__main__":
+    folder = input("Enter folder path: ").strip()
+    rename_pdfs_randomly(folder)

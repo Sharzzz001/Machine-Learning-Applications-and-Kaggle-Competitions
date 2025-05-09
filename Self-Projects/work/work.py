@@ -1,66 +1,51 @@
-import pandas as pd
-from collections import defaultdict
-from tqdm import tqdm
+import os
+import pytesseract
+from pdf2image import convert_from_path
 
-def get_error_sequences(df):
-    """ Group NACK data by UTI ID and return error sequences """
-    sequences = defaultdict(list)
-    grouped = df.sort_values(by='Date').groupby('UTI ID')
+# Optional: Specify path to tesseract executable if needed
+# pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
 
-    for uti, group in grouped:
-        sequences[uti] = list(group['Error description'])
-        
-    return sequences
+# Define your rules here: {output_filename: (keyword, page_number)}
+PDF_RENAME_RULES = {
+    "AAF.pdf": ("account opening form", 1),
+    "KYC.pdf": ("kyc documentation", 2),
+    "POA.pdf": ("power of attorney", 1),
+    "PAN.pdf": ("permanent account number", 1),
+    # Add more rules here...
+}
 
-def analyze_jira_impact(df1, df2):
-    """ Analyze sequences to check if JIRA release fixed the errors """
-    results = []
+def extract_text_from_page(pdf_path, page_number):
+    images = convert_from_path(pdf_path, first_page=page_number, last_page=page_number)
+    if not images:
+        return ""
+    return pytesseract.image_to_string(images[0]).lower()
 
-    # Parse dates
-    df1['Release date'] = pd.to_datetime(df1['Release date'])
-    df2['Date'] = pd.to_datetime(df2['Date'])
+def determine_new_filename(pdf_path):
+    for new_filename, (keyword, page_number) in PDF_RENAME_RULES.items():
+        try:
+            text = extract_text_from_page(pdf_path, page_number)
+            if keyword.lower() in text:
+                return new_filename
+        except Exception as e:
+            print(f"Error processing {pdf_path} on page {page_number}: {e}")
+    return None  # If no match found
 
-    # Get sequences
-    error_sequences = get_error_sequences(df2)
+def process_pdf(pdf_path, output_dir):
+    new_filename = determine_new_filename(pdf_path)
+    if new_filename:
+        new_path = os.path.join(output_dir, new_filename)
+        os.rename(pdf_path, new_path)
+        print(f"Renamed '{pdf_path}' → '{new_path}'")
+    else:
+        print(f"No match found for '{pdf_path}'")
 
-    for _, jira_row in tqdm(df1.iterrows(), total=len(df1)):
-        jira_error = jira_row['Error description']
-        release_date = jira_row['Release date']
-        
-        for uti, sequence in error_sequences.items():
-            try:
-                # Split sequence into before/after release date
-                before_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] < release_date)]
-                after_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] >= release_date)]
+# Run this on a folder
+def process_all_pdfs(folder_path):
+    for file in os.listdir(folder_path):
+        if file.lower().endswith(".pdf"):
+            process_pdf(os.path.join(folder_path, file), folder_path)
 
-                before_sequence = list(before_release['Error description'])
-                after_sequence = list(after_release['Error description'])
-
-                # Check if the JIRA error is the **first error** in the sequence
-                if before_sequence and before_sequence[0] == jira_error:
-                    # If the error disappears **after release**, tag it as fixed
-                    fixed = jira_error not in after_sequence
-
-                    results.append({
-                        'UTI ID': uti,
-                        'JIRA Error': jira_error,
-                        'Release Date': release_date,
-                        'Before Sequence': " -> ".join(before_sequence),
-                        'After Sequence': " -> ".join(after_sequence) if after_sequence else "None",
-                        'Fixed After Release': 'Yes' if fixed else 'No'
-                    })
-            except Exception as e:
-                print(f"Error processing UTI {uti}: {e}")
-
-    return pd.DataFrame(results)
-
-# Load your data
-jira_df = pd.read_excel("jira_data.xlsx")
-nack_df = pd.read_excel("nack_data.xlsx")
-
-# Run the analysis
-result_df = analyze_jira_impact(jira_df, nack_df)
-
-# Save results
-result_df.to_excel("jira_error_fix_analysis.xlsx", index=False)
-print("Analysis complete! Results saved to 'jira_error_fix_analysis.xlsx'")
+# Example usage
+if __name__ == "__main__":
+    input_folder = "your/folder/with/pdfs"
+    process_all_pdfs(input_folder)

@@ -1,45 +1,47 @@
 import os
+import fitz  # PyMuPDF
 import pytesseract
-from pdf2image import convert_from_path
+from PIL import Image
+import io
 
-# Optional: Specify path to tesseract executable if needed
-# pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
-
-# Define your rules here: {output_filename: (keyword, page_number)}
+# Define rules: {filename: (keyword, page_number)}
 PDF_RENAME_RULES = {
-    "AAF.pdf": ("account opening form", 1),
-    "KYC.pdf": ("kyc documentation", 2),
-    "POA.pdf": ("power of attorney", 1),
-    "PAN.pdf": ("permanent account number", 1),
-    # Add more rules here...
+    "AAF.pdf": ("account opening form", 0),  # 0-based index
+    "KYC.pdf": ("kyc documentation", 1),
+    "POA.pdf": ("power of attorney", 0),
+    # Add more rules as needed
 }
 
 def extract_text_from_page(pdf_path, page_number):
-    images = convert_from_path(pdf_path, first_page=page_number, last_page=page_number)
-    if not images:
-        return ""
-    return pytesseract.image_to_string(images[0]).lower()
+    with fitz.open(pdf_path) as doc:
+        if page_number >= len(doc):
+            return ""
+        page = doc.load_page(page_number)
+        pix = page.get_pixmap(dpi=300)
+        img_bytes = pix.tobytes("png")
+        image = Image.open(io.BytesIO(img_bytes))
+        text = pytesseract.image_to_string(image).lower()
+        return text
 
 def determine_new_filename(pdf_path):
-    for new_filename, (keyword, page_number) in PDF_RENAME_RULES.items():
+    for new_filename, (keyword, page_num) in PDF_RENAME_RULES.items():
         try:
-            text = extract_text_from_page(pdf_path, page_number)
+            text = extract_text_from_page(pdf_path, page_num)
             if keyword.lower() in text:
                 return new_filename
         except Exception as e:
-            print(f"Error processing {pdf_path} on page {page_number}: {e}")
-    return None  # If no match found
+            print(f"Error reading {pdf_path} page {page_num + 1}: {e}")
+    return None
 
 def process_pdf(pdf_path, output_dir):
     new_filename = determine_new_filename(pdf_path)
     if new_filename:
         new_path = os.path.join(output_dir, new_filename)
         os.rename(pdf_path, new_path)
-        print(f"Renamed '{pdf_path}' → '{new_path}'")
+        print(f"Renamed: {os.path.basename(pdf_path)} → {new_filename}")
     else:
-        print(f"No match found for '{pdf_path}'")
+        print(f"No match for {os.path.basename(pdf_path)}")
 
-# Run this on a folder
 def process_all_pdfs(folder_path):
     for file in os.listdir(folder_path):
         if file.lower().endswith(".pdf"):

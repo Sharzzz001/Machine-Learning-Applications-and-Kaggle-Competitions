@@ -1,131 +1,46 @@
-import os
-import fitz  # PyMuPDF
-import pytesseract
-from PIL import Image
-import io
+import cv2
 
-# If Tesseract is not in your system PATH, set its full path
-# Example: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-pytesseract.pytesseract.tesseract_cmd = r"C:\Path\To\tesseract.exe"
+# Load your image
+image = cv2.imread("your_image.jpg")
+clone = image.copy()
 
-# Define rules: {filename: (keyword, page_number)}
-PDF_RENAME_RULES = {
-    "AAF.pdf": ("account opening form", 0),  # 0-based index
-    "KYC.pdf": ("kyc documentation", 1),
-    # Add more rules as needed
-}
+# Global variables for cropping
+refPt = []
+cropping = False
 
-def extract_text_from_page(pdf_path, page_number):
-    try:
-        with fitz.open(pdf_path) as doc:
-            if page_number >= len(doc):
-                return ""
-            page = doc.load_page(page_number)
-            pix = page.get_pixmap(dpi=300)
-            img_data = pix.tobytes("png")
-            image = Image.open(io.BytesIO(img_data)).convert("RGB")
-            text = pytesseract.image_to_string(image)
-            return text.lower()
-    except Exception as e:
-        print(f"Error extracting text from {pdf_path} page {page_number + 1}: {e}")
-        return ""
+def click_and_crop(event, x, y, flags, param):
+    global refPt, cropping, image
 
-def determine_new_filename(pdf_path):
-    for new_filename, (keyword, page_num) in PDF_RENAME_RULES.items():
-        text = extract_text_from_page(pdf_path, page_num)
-        if keyword in text:
-            return new_filename
-    return None
+    if event == cv2.EVENT_LBUTTONDOWN:
+        refPt = [(x, y)]
+        cropping = True
 
-def process_pdf(pdf_path, output_dir):
-    new_filename = determine_new_filename(pdf_path)
-    if new_filename:
-        new_path = os.path.join(output_dir, new_filename)
-        os.rename(pdf_path, new_path)
-        print(f"Renamed: {os.path.basename(pdf_path)} → {new_filename}")
-    else:
-        print(f"No match found for: {os.path.basename(pdf_path)}")
+    elif event == cv2.EVENT_LBUTTONUP:
+        refPt.append((x, y))
+        cropping = False
 
-def process_all_pdfs(folder_path):
-    for file in os.listdir(folder_path):
-        if file.lower().endswith(".pdf"):
-            process_pdf(os.path.join(folder_path, file), folder_path)
+        # Draw rectangle
+        cv2.rectangle(image, refPt[0], refPt[1], (0, 255, 0), 2)
+        cv2.imshow("image", image)
 
-# Example usage
-if __name__ == "__main__":
-    input_folder = r"C:\Path\To\Your\PDFs"
-    process_all_pdfs(input_folder)
+        x1, y1 = refPt[0]
+        x2, y2 = refPt[1]
+        print(f"Crop box: ({x1}, {y1}, {x2}, {y2})")
 
+# Set up the window and mouse callback
+cv2.namedWindow("image")
+cv2.setMouseCallback("image", click_and_crop)
 
-import fitz  # PyMuPDF
-from PIL import Image
-import pytesseract
-import io
-import matplotlib.pyplot as plt
+while True:
+    cv2.imshow("image", image)
+    key = cv2.waitKey(1) & 0xFF
 
-# Optional: set Tesseract path if it's not in your system PATH
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Path\To\tesseract.exe"
+    # Press 'r' to reset
+    if key == ord("r"):
+        image = clone.copy()
 
-def extract_text_and_image(pdf_path, page_number):
-    with fitz.open(pdf_path) as doc:
-        if page_number >= len(doc):
-            print(f"Page {page_number + 1} out of range.")
-            return None, None
-        page = doc.load_page(page_number)
-        pix = page.get_pixmap(dpi=300)
-        img_bytes = pix.tobytes("png")
-        image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-        text = pytesseract.image_to_string(image)
-        return image, text
+    # Press 'q' to quit
+    elif key == ord("q"):
+        break
 
-def test_pdf_page():
-    pdf_path = input("Enter full path to PDF: ").strip()
-    page_input = input("Enter page number to test (1-based): ").strip()
-
-    try:
-        page_number = int(page_input) - 1
-        image, text = extract_text_and_image(pdf_path, page_number)
-        if image:
-            print("\n--- OCR Extracted Text ---\n")
-            print(text.strip())
-            print("\n--- Displaying Image ---")
-            plt.imshow(image)
-            plt.axis("off")
-            plt.show()
-    except Exception as e:
-        print(f"Error: {e}")
-
-if __name__ == "__main__":
-    test_pdf_page()
-
-
-import os
-import random
-import string
-
-def generate_random_filename(existing_names, length=8):
-    while True:
-        rand_name = "file_" + ''.join(random.choices(string.digits, k=length)) + ".pdf"
-        if rand_name not in existing_names:
-            return rand_name
-
-def rename_pdfs_randomly(folder_path):
-    if not os.path.isdir(folder_path):
-        print("Invalid folder path.")
-        return
-
-    existing_files = set(os.listdir(folder_path))
-    pdf_files = [f for f in existing_files if f.lower().endswith(".pdf")]
-
-    for old_name in pdf_files:
-        old_path = os.path.join(folder_path, old_name)
-        new_name = generate_random_filename(existing_files)
-        new_path = os.path.join(folder_path, new_name)
-        os.rename(old_path, new_path)
-        print(f"Renamed: {old_name} → {new_name}")
-        existing_files.add(new_name)  # update to avoid collisions
-
-# Example usage
-if __name__ == "__main__":
-    folder = input("Enter folder path: ").strip()
-    rename_pdfs_randomly(folder)
+cv2.destroyAllWindows()

@@ -1,50 +1,55 @@
 import fitz  # PyMuPDF
 from PIL import Image
-import torch
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-import os
+import cv2
+import numpy as np
 
-def load_pdf_page_as_image(pdf_path, page_number, dpi=300):
-    doc = fitz.open(pdf_path)
-    page = doc.load_page(page_number)
-    mat = fitz.Matrix(dpi / 72, dpi / 72)
-    pix = page.get_pixmap(matrix=mat)
-    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-    return img
+# --- Constants ---
+PDF_PATH = "scanned.pdf"
+PAGE_NUMBER = 0
+ZOOM = 3  # High DPI: 3 = 216 DPI
+DISPLAY_SCALE = 0.3  # Resize for screen preview
 
-def crop_image(image, left, upper, right, lower):
-    return image.crop((left, upper, right, lower))
+# --- Step 1: Load high-res image ---
+doc = fitz.open(PDF_PATH)
+page = doc.load_page(PAGE_NUMBER)
+mat = fitz.Matrix(ZOOM, ZOOM)
+pix = page.get_pixmap(matrix=mat)
+image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-def run_tr_ocr(model_path, image):
-    processor = TrOCRProcessor.from_pretrained(model_path)
-    model = VisionEncoderDecoderModel.from_pretrained(model_path)
-    model.eval()
+# Convert PIL to OpenCV
+image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+height, width = image_cv.shape[:2]
 
-    pixel_values = processor(images=image, return_tensors="pt").pixel_values
+# Resize image for display
+display_img = cv2.resize(image_cv, (int(width * DISPLAY_SCALE), int(height * DISPLAY_SCALE)))
 
-    with torch.no_grad():
-        generated_ids = model.generate(pixel_values)
-        generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+# --- Step 2: Interactive Crop Box Selection ---
+refPt = []
+cropping = False
 
-    return generated_text
+def click_and_crop(event, x, y, flags, param):
+    global refPt, cropping
 
-def main():
-    # === Configuration ===
-    pdf_path = "your_file.pdf"
-    page_number = 0  # 0-indexed
-    crop_box = (100, 200, 600, 400)  # (left, upper, right, lower)
-    trocr_model_path = "./trocr-handwritten"  # Local path to downloaded TrOCR
+    if event == cv2.EVENT_LBUTTONDOWN:
+        refPt = [(x, y)]
+        cropping = True
 
-    # === Load and Crop Image ===
-    full_image = load_pdf_page_as_image(pdf_path, page_number)
-    cropped_image = crop_image(full_image, *crop_box)
-    
-    # Optional: View the cropped image
-    # cropped_image.show()
+    elif event == cv2.EVENT_LBUTTONUP:
+        refPt.append((x, y))
+        cropping = False
 
-    # === Run OCR ===
-    text = run_tr_ocr(trocr_model_path, cropped_image)
-    print("OCR Output:", text)
+        cv2.rectangle(display_img, refPt[0], refPt[1], (0, 255, 0), 2)
+        cv2.imshow("Image", display_img)
 
-if __name__ == "__main__":
-    main()
+        # Scale back to original DPI
+        x1, y1 = int(refPt[0][0] / DISPLAY_SCALE), int(refPt[0][1] / DISPLAY_SCALE)
+        x2, y2 = int(refPt[1][0] / DISPLAY_SCALE), int(refPt[1][1] / DISPLAY_SCALE)
+        crop_box = (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
+        print("Crop box for high-res image:", crop_box)
+
+# Setup window
+cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+cv2.setMouseCallback("Image", click_and_crop)
+cv2.imshow("Image", display_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

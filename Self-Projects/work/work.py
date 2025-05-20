@@ -1,61 +1,50 @@
 import fitz  # PyMuPDF
 from PIL import Image
-import numpy as np
-import cv2
+import torch
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+import os
 
-def get_crop_box_from_pdf(pdf_path, page_number):
-    # Load PDF and page
+def load_pdf_page_as_image(pdf_path, page_number, dpi=300):
     doc = fitz.open(pdf_path)
-    page = doc.load_page(page_number)  # 0-indexed
-    pix = page.get_pixmap(dpi=150)  # Higher DPI = better resolution
-    img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    page = doc.load_page(page_number)
+    mat = fitz.Matrix(dpi / 72, dpi / 72)
+    pix = page.get_pixmap(matrix=mat)
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    return img
 
-    # Convert PIL image to OpenCV
-    img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
-    clone = img_cv.copy()
-    refPt = []
-    cropping = [False]  # use list for mutability in nested func
+def crop_image(image, left, upper, right, lower):
+    return image.crop((left, upper, right, lower))
 
-    def click_and_crop(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            refPt.clear()
-            refPt.append((x, y))
-            cropping[0] = True
+def run_tr_ocr(model_path, image):
+    processor = TrOCRProcessor.from_pretrained(model_path)
+    model = VisionEncoderDecoderModel.from_pretrained(model_path)
+    model.eval()
 
-        elif event == cv2.EVENT_LBUTTONUP:
-            refPt.append((x, y))
-            cropping[0] = False
-            cv2.rectangle(img_cv, refPt[0], refPt[1], (0, 255, 0), 2)
-            cv2.imshow("Select Region", img_cv)
+    pixel_values = processor(images=image, return_tensors="pt").pixel_values
 
-    cv2.namedWindow("Select Region")
-    cv2.setMouseCallback("Select Region", click_and_crop)
+    with torch.no_grad():
+        generated_ids = model.generate(pixel_values)
+        generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-    while True:
-        cv2.imshow("Select Region", img_cv)
-        key = cv2.waitKey(1) & 0xFF
+    return generated_text
 
-        if key == ord("c") and len(refPt) == 2:
-            break
-        elif key == 27:  # ESC to exit
-            refPt = []
-            break
+def main():
+    # === Configuration ===
+    pdf_path = "your_file.pdf"
+    page_number = 0  # 0-indexed
+    crop_box = (100, 200, 600, 400)  # (left, upper, right, lower)
+    trocr_model_path = "./trocr-handwritten"  # Local path to downloaded TrOCR
 
-    cv2.destroyAllWindows()
+    # === Load and Crop Image ===
+    full_image = load_pdf_page_as_image(pdf_path, page_number)
+    cropped_image = crop_image(full_image, *crop_box)
+    
+    # Optional: View the cropped image
+    # cropped_image.show()
 
-    if len(refPt) == 2:
-        (x1, y1), (x2, y2) = refPt
-        left, top, right, bottom = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
-        cropped = img_pil.crop((left, top, right, bottom))
-        cropped.show()
-        print(f"Crop box for PIL.crop(): ({left}, {top}, {right}, {bottom})")
-        return (left, top, right, bottom)
+    # === Run OCR ===
+    text = run_tr_ocr(trocr_model_path, cropped_image)
+    print("OCR Output:", text)
 
-    else:
-        print("No region selected.")
-        return None
-
-# === Usage ===
-pdf_path = "your_file.pdf"
-page_number = 0  # Zero-based index (0 = first page)
-get_crop_box_from_pdf(pdf_path, page_number)
+if __name__ == "__main__":
+    main()

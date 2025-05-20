@@ -1,54 +1,49 @@
 import fitz  # PyMuPDF
 from PIL import Image
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-import torch
+import easyocr
 
-def extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path):
+def extract_text_from_pdf(pdf_path, page_num=0, crop_coords=(100, 300, 100, 300)):
     """
-    Extract cropped region from a scanned PDF and apply handwritten OCR using TrOCR.
+    Extract handwritten/printed text from a cropped area of a PDF page.
 
-    Args:
-        pdf_path (str): Path to PDF file.
-        page_number (int): Page number to extract (0-based index).
-        crop_box (tuple): (left, upper, right, lower) pixel coordinates.
-        model_path (str): Local directory with TrOCR handwritten model.
-
-    Returns:
-        str: Extracted handwritten text.
+    :param pdf_path: Path to the PDF file.
+    :param page_num: Page number (0-indexed).
+    :param crop_coords: Tuple of (left, right, top, bottom) pixels for cropping.
+    :return: OCR extracted text.
     """
-
-    # Step 1: Open PDF and convert to image
+    # Open PDF and select page
     doc = fitz.open(pdf_path)
-    page = doc.load_page(page_number)
+    page = doc.load_page(page_num)
 
-    # Increase resolution (DPI) for better OCR accuracy
-    zoom = 2  # 2 = 144 DPI, 3 = 216 DPI, etc.
+    # Render high-resolution image (e.g. 3x zoom ~ 216 DPI)
+    zoom = 3
     mat = fitz.Matrix(zoom, zoom)
     pix = page.get_pixmap(matrix=mat)
+
+    # Convert to PIL Image
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-    # Step 2: Crop the region
-    cropped_img = img.crop(crop_box)
+    # Unpack cropping coordinates
+    left, right, top, bottom = crop_coords
 
-    # Step 3: Load TrOCR model and processor from local path
-    processor = TrOCRProcessor.from_pretrained(model_path, local_files_only=True)
-    model = VisionEncoderDecoderModel.from_pretrained(model_path, local_files_only=True)
-    model.eval()
+    # Crop the image
+    cropped_img = img.crop((left, top, right, bottom))
 
-    # Step 4: Run OCR
-    inputs = processor(images=cropped_img, return_tensors="pt")
-    with torch.no_grad():
-        generated_ids = model.generate(inputs["pixel_values"])
-    text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    # OCR using EasyOCR
+    reader = easyocr.Reader(['en'], gpu=False)
+    results = reader.readtext(np.array(cropped_img), detail=0)  # detail=0 returns only text
 
-    return text.strip()
+    # Print the recognized text
+    print("OCR Output:")
+    for line in results:
+        print(line)
 
-# === USAGE ===
+    return results
+
+# Example usage
 if __name__ == "__main__":
-    pdf_path = "scanned_handwritten.pdf"
-    page_number = 0  # First page
-    crop_box = (100, 200, 600, 300)  # Adjust this (left, upper, right, lower)
-    model_path = "./trocr-handwritten"  # Local folder with trocr-base-handwritten
+    pdf_path = "your_scanned_doc.pdf"
+    page_num = 0  # First page
+    crop_coords = (100, 600, 150, 300)  # (left, right, top, bottom)
 
-    result = extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path)
-    print("Extracted Text:", result)
+    extract_text_from_pdf(pdf_path, page_num, crop_coords)

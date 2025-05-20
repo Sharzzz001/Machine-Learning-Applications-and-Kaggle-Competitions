@@ -1,55 +1,54 @@
 import fitz  # PyMuPDF
 from PIL import Image
-import cv2
-import numpy as np
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+import torch
 
-# --- Constants ---
-PDF_PATH = "scanned.pdf"
-PAGE_NUMBER = 0
-ZOOM = 3  # High DPI: 3 = 216 DPI
-DISPLAY_SCALE = 0.3  # Resize for screen preview
+def extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path):
+    """
+    Extract cropped region from a scanned PDF and apply handwritten OCR using TrOCR.
 
-# --- Step 1: Load high-res image ---
-doc = fitz.open(PDF_PATH)
-page = doc.load_page(PAGE_NUMBER)
-mat = fitz.Matrix(ZOOM, ZOOM)
-pix = page.get_pixmap(matrix=mat)
-image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    Args:
+        pdf_path (str): Path to PDF file.
+        page_number (int): Page number to extract (0-based index).
+        crop_box (tuple): (left, upper, right, lower) pixel coordinates.
+        model_path (str): Local directory with TrOCR handwritten model.
 
-# Convert PIL to OpenCV
-image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-height, width = image_cv.shape[:2]
+    Returns:
+        str: Extracted handwritten text.
+    """
 
-# Resize image for display
-display_img = cv2.resize(image_cv, (int(width * DISPLAY_SCALE), int(height * DISPLAY_SCALE)))
+    # Step 1: Open PDF and convert to image
+    doc = fitz.open(pdf_path)
+    page = doc.load_page(page_number)
 
-# --- Step 2: Interactive Crop Box Selection ---
-refPt = []
-cropping = False
+    # Increase resolution (DPI) for better OCR accuracy
+    zoom = 2  # 2 = 144 DPI, 3 = 216 DPI, etc.
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat)
+    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-def click_and_crop(event, x, y, flags, param):
-    global refPt, cropping
+    # Step 2: Crop the region
+    cropped_img = img.crop(crop_box)
 
-    if event == cv2.EVENT_LBUTTONDOWN:
-        refPt = [(x, y)]
-        cropping = True
+    # Step 3: Load TrOCR model and processor from local path
+    processor = TrOCRProcessor.from_pretrained(model_path, local_files_only=True)
+    model = VisionEncoderDecoderModel.from_pretrained(model_path, local_files_only=True)
+    model.eval()
 
-    elif event == cv2.EVENT_LBUTTONUP:
-        refPt.append((x, y))
-        cropping = False
+    # Step 4: Run OCR
+    inputs = processor(images=cropped_img, return_tensors="pt")
+    with torch.no_grad():
+        generated_ids = model.generate(inputs["pixel_values"])
+    text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        cv2.rectangle(display_img, refPt[0], refPt[1], (0, 255, 0), 2)
-        cv2.imshow("Image", display_img)
+    return text.strip()
 
-        # Scale back to original DPI
-        x1, y1 = int(refPt[0][0] / DISPLAY_SCALE), int(refPt[0][1] / DISPLAY_SCALE)
-        x2, y2 = int(refPt[1][0] / DISPLAY_SCALE), int(refPt[1][1] / DISPLAY_SCALE)
-        crop_box = (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
-        print("Crop box for high-res image:", crop_box)
+# === USAGE ===
+if __name__ == "__main__":
+    pdf_path = "scanned_handwritten.pdf"
+    page_number = 0  # First page
+    crop_box = (100, 200, 600, 300)  # Adjust this (left, upper, right, lower)
+    model_path = "./trocr-handwritten"  # Local folder with trocr-base-handwritten
 
-# Setup window
-cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-cv2.setMouseCallback("Image", click_and_crop)
-cv2.imshow("Image", display_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    result = extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path)
+    print("Extracted Text:", result)

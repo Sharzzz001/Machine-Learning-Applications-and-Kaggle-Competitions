@@ -10,30 +10,45 @@ ZOOM = 3  # High DPI: 3 = 216 DPI
 DISPLAY_SCALE = 0.3  # Resize for screen preview
 
 # --- Step 0: Deskewing Function ---
-def deskew_image(img):
+def deskew_image(img, max_skew=15):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.bitwise_not(gray)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    thresh = cv2.threshold(gray, 0, 255,
-                           cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    # Use adaptive threshold to isolate handwriting/text
+    thresh = cv2.adaptiveThreshold(
+        blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY_INV, 15, 10
+    )
 
+    # Get coordinates of non-zero pixels
     coords = np.column_stack(np.where(thresh > 0))
+
+    # Handle case: no text detected
+    if len(coords) == 0:
+        print("⚠️ No text detected — skipping deskew.")
+        return img
+
     angle = cv2.minAreaRect(coords)[-1]
 
-    # Correct the angle
+    # Fix angle range
     if angle < -45:
-        angle = -(90 + angle)
+        angle = 90 + angle
     else:
-        angle = -angle
+        angle = angle
 
-    # Rotate the image to deskew it
-    (h, w) = img.shape[:2]
-    center = (w // 2, h // 2)
+    # Only correct small skews
+    if abs(angle) < max_skew:
+        (h, w) = img.shape[:2]
+        center = (w // 2, h // 2)
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        img = cv2.warpAffine(img, M, (w, h),
+                             flags=cv2.INTER_CUBIC,
+                             borderMode=cv2.BORDER_REPLICATE)
+        print(f"✅ Deskewed by {angle:.2f} degrees.")
+    else:
+        print(f"⛔ Detected skew too large ({angle:.2f}°) — skipping.")
 
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    deskewed = cv2.warpAffine(img, M, (w, h),
-                              flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-    return deskewed
+    return img
 
 # --- Step 1: Load high-res image from PDF ---
 doc = fitz.open(PDF_PATH)

@@ -1,99 +1,98 @@
 import fitz  # PyMuPDF
 from PIL import Image
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
+import torch
 import cv2
 import numpy as np
 
-# --- Constants ---
-PDF_PATH = "scanned.pdf"
-PAGE_NUMBER = 0
-ZOOM = 3  # High DPI: 3 = 216 DPI
-DISPLAY_SCALE = 0.3  # Resize for screen preview
-
-# --- Step 0: Deskewing Function ---
 def deskew_image(img, max_skew=15):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    """
+    Deskew an image by detecting skew angle from text-like regions.
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    # Use adaptive threshold to isolate handwriting/text
+    # Use adaptive threshold to detect handwriting/printed text
     thresh = cv2.adaptiveThreshold(
         blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
         cv2.THRESH_BINARY_INV, 15, 10
     )
 
-    # Get coordinates of non-zero pixels
     coords = np.column_stack(np.where(thresh > 0))
 
-    # Handle case: no text detected
     if len(coords) == 0:
-        print("⚠️ No text detected — skipping deskew.")
+        print("⚠️ No foreground detected — skipping deskew.")
         return img
 
     angle = cv2.minAreaRect(coords)[-1]
 
-    # Fix angle range
     if angle < -45:
-        angle = 90 + angle
-    else:
-        angle = angle
+        angle += 90
 
-    # Only correct small skews
     if abs(angle) < max_skew:
         (h, w) = img.shape[:2]
         center = (w // 2, h // 2)
         M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        img = cv2.warpAffine(img, M, (w, h),
-                             flags=cv2.INTER_CUBIC,
-                             borderMode=cv2.BORDER_REPLICATE)
+        rotated = cv2.warpAffine(img, M, (w, h),
+                                 flags=cv2.INTER_CUBIC,
+                                 borderMode=cv2.BORDER_REPLICATE)
         print(f"✅ Deskewed by {angle:.2f} degrees.")
+        return rotated
     else:
-        print(f"⛔ Detected skew too large ({angle:.2f}°) — skipping.")
+        print(f"⛔ Skew angle too large ({angle:.2f}°) — skipping.")
+        return img
 
-    return img
+def extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path):
+    """
+    Extract cropped region from a scanned PDF and apply handwritten OCR using TrOCR.
 
-# --- Step 1: Load high-res image from PDF ---
-doc = fitz.open(PDF_PATH)
-page = doc.load_page(PAGE_NUMBER)
-mat = fitz.Matrix(ZOOM, ZOOM)
-pix = page.get_pixmap(matrix=mat)
-image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    Args:
+        pdf_path (str): Path to PDF file.
+        page_number (int): Page number to extract (0-based index).
+        crop_box (tuple): (left, upper, right, lower) pixel coordinates.
+        model_path (str): Local directory with TrOCR handwritten model.
 
-# Convert PIL to OpenCV
-image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    Returns:
+        str: Extracted handwritten text.
+    """
+    # Step 1: Open PDF and convert to high-res image
+    doc = fitz.open(pdf_path)
+    page = doc.load_page(page_number)
 
-# --- Step 2: Deskew image before anything else ---
-image_cv = deskew_image(image_cv)
+    zoom = 2  # 144 DPI
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat)
+    img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-# Resize image for display
-height, width = image_cv.shape[:2]
-display_img = cv2.resize(image_cv, (int(width * DISPLAY_SCALE), int(height * DISPLAY_SCALE)))
+    # Step 2: Convert to OpenCV format and deskew
+    img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+    img_deskewed = deskew_image(img_cv)
 
-# --- Step 3: Interactive Crop Box Selection ---
-refPt = []
-cropping = False
+    # Convert back to PIL for cropping
+    img_pil_deskewed = Image.fromarray(cv2.cvtColor(img_deskewed, cv2.COLOR_BGR2RGB))
 
-def click_and_crop(event, x, y, flags, param):
-    global refPt, cropping
+    # Step 3: Crop region of interest
+    cropped_img = img_pil_deskewed.crop(crop_box)
 
-    if event == cv2.EVENT_LBUTTONDOWN:
-        refPt = [(x, y)]
-        cropping = True
+    # Step 4: Load TrOCR
+    processor = TrOCRProcessor.from_pretrained(model_path, local_files_only=True)
+    model = VisionEncoderDecoderModel.from_pretrained(model_path, local_files_only=True)
+    model.eval()
 
-    elif event == cv2.EVENT_LBUTTONUP:
-        refPt.append((x, y))
-        cropping = False
+    # Step 5: OCR inference
+    inputs = processor(images=cropped_img, return_tensors="pt")
+    with torch.no_grad():
+        generated_ids = model.generate(inputs["pixel_values"])
+    text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        cv2.rectangle(display_img, refPt[0], refPt[1], (0, 255, 0), 2)
-        cv2.imshow("Image", display_img)
+    return text.strip()
 
-        # Scale back to original DPI
-        x1, y1 = int(refPt[0][0] / DISPLAY_SCALE), int(refPt[0][1] / DISPLAY_SCALE)
-        x2, y2 = int(refPt[1][0] / DISPLAY_SCALE), int(refPt[1][1] / DISPLAY_SCALE)
-        crop_box = (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
-        print("Crop box for high-res image:", crop_box)
+# === USAGE ===
+if __name__ == "__main__":
+    pdf_path = "scanned_handwritten.pdf"
+    page_number = 0
+    crop_box = (100, 200, 600, 300)  # Adjust this based on your need
+    model_path = "./trocr-handwritten"
 
-# --- Step 4: Setup display window ---
-cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-cv2.setMouseCallback("Image", click_and_crop)
-cv2.imshow("Image", display_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    result = extract_crop_from_pdf(pdf_path, page_number, crop_box, model_path)
+    print("Extracted Text:", result)

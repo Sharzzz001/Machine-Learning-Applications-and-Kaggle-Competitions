@@ -1,49 +1,84 @@
 import fitz  # PyMuPDF
 from PIL import Image
-import easyocr
+import cv2
+import numpy as np
 
-def extract_text_from_pdf(pdf_path, page_num=0, crop_coords=(100, 300, 100, 300)):
-    """
-    Extract handwritten/printed text from a cropped area of a PDF page.
+# --- Constants ---
+PDF_PATH = "scanned.pdf"
+PAGE_NUMBER = 0
+ZOOM = 3  # High DPI: 3 = 216 DPI
+DISPLAY_SCALE = 0.3  # Resize for screen preview
 
-    :param pdf_path: Path to the PDF file.
-    :param page_num: Page number (0-indexed).
-    :param crop_coords: Tuple of (left, right, top, bottom) pixels for cropping.
-    :return: OCR extracted text.
-    """
-    # Open PDF and select page
-    doc = fitz.open(pdf_path)
-    page = doc.load_page(page_num)
+# --- Step 0: Deskewing Function ---
+def deskew_image(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.bitwise_not(gray)
 
-    # Render high-resolution image (e.g. 3x zoom ~ 216 DPI)
-    zoom = 3
-    mat = fitz.Matrix(zoom, zoom)
-    pix = page.get_pixmap(matrix=mat)
+    thresh = cv2.threshold(gray, 0, 255,
+                           cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
-    # Convert to PIL Image
-    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+    coords = np.column_stack(np.where(thresh > 0))
+    angle = cv2.minAreaRect(coords)[-1]
 
-    # Unpack cropping coordinates
-    left, right, top, bottom = crop_coords
+    # Correct the angle
+    if angle < -45:
+        angle = -(90 + angle)
+    else:
+        angle = -angle
 
-    # Crop the image
-    cropped_img = img.crop((left, top, right, bottom))
+    # Rotate the image to deskew it
+    (h, w) = img.shape[:2]
+    center = (w // 2, h // 2)
 
-    # OCR using EasyOCR
-    reader = easyocr.Reader(['en'], gpu=False)
-    results = reader.readtext(np.array(cropped_img), detail=0)  # detail=0 returns only text
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    deskewed = cv2.warpAffine(img, M, (w, h),
+                              flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return deskewed
 
-    # Print the recognized text
-    print("OCR Output:")
-    for line in results:
-        print(line)
+# --- Step 1: Load high-res image from PDF ---
+doc = fitz.open(PDF_PATH)
+page = doc.load_page(PAGE_NUMBER)
+mat = fitz.Matrix(ZOOM, ZOOM)
+pix = page.get_pixmap(matrix=mat)
+image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
-    return results
+# Convert PIL to OpenCV
+image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-# Example usage
-if __name__ == "__main__":
-    pdf_path = "your_scanned_doc.pdf"
-    page_num = 0  # First page
-    crop_coords = (100, 600, 150, 300)  # (left, right, top, bottom)
+# --- Step 2: Deskew image before anything else ---
+image_cv = deskew_image(image_cv)
 
-    extract_text_from_pdf(pdf_path, page_num, crop_coords)
+# Resize image for display
+height, width = image_cv.shape[:2]
+display_img = cv2.resize(image_cv, (int(width * DISPLAY_SCALE), int(height * DISPLAY_SCALE)))
+
+# --- Step 3: Interactive Crop Box Selection ---
+refPt = []
+cropping = False
+
+def click_and_crop(event, x, y, flags, param):
+    global refPt, cropping
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        refPt = [(x, y)]
+        cropping = True
+
+    elif event == cv2.EVENT_LBUTTONUP:
+        refPt.append((x, y))
+        cropping = False
+
+        cv2.rectangle(display_img, refPt[0], refPt[1], (0, 255, 0), 2)
+        cv2.imshow("Image", display_img)
+
+        # Scale back to original DPI
+        x1, y1 = int(refPt[0][0] / DISPLAY_SCALE), int(refPt[0][1] / DISPLAY_SCALE)
+        x2, y2 = int(refPt[1][0] / DISPLAY_SCALE), int(refPt[1][1] / DISPLAY_SCALE)
+        crop_box = (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
+        print("Crop box for high-res image:", crop_box)
+
+# --- Step 4: Setup display window ---
+cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+cv2.setMouseCallback("Image", click_and_crop)
+cv2.imshow("Image", display_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

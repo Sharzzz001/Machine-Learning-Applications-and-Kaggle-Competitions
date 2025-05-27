@@ -1,68 +1,116 @@
 import os
+import sys
+import argparse
 import pandas as pd
 import pyodbc
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# === Configuration ===
-input_folder = r'C:\path\to\input_folder'
-access_db_path = r'C:\path\to\Database.accdb'
-table_name = 'DailyOutput'
-file_prefix = 'Output1_'
+# === CONFIGURABLE SETTINGS ===
+INPUT_FOLDER = r"C:\path\to\input_folder"
+ACCESS_DB_PATH = r"C:\path\to\Database.accdb"
+TABLE_NAME = "DailyOutput"
+FILE_PREFIX = "Output1_"
 
-# === Today's Date Info ===
-today = datetime.today()
-today_str_file = today.strftime('%Y-%m-%d')
-today_str_access = today.strftime('%m/%d/%Y')
+# === FUNCTIONS ===
 
-# === Build filename and path ===
-expected_filename = f'{file_prefix}{today_str_file}.xlsx'
-expected_filepath = os.path.join(input_folder, expected_filename)
+def parse_dates(date_input):
+    date_input = date_input.replace(' ', '')
+    dates = []
+    for part in date_input.split(','):
+        if '-' in part:
+            start_str, end_str = part.split('-')
+            start = datetime.strptime(start_str, "%Y-%m-%d").date()
+            end = datetime.strptime(end_str, "%Y-%m-%d").date()
+            dates.extend([start + timedelta(days=i) for i in range((end - start).days + 1)])
+        else:
+            dates.append(datetime.strptime(part, "%Y-%m-%d").date())
+    return dates
 
-if not os.path.exists(expected_filepath):
-    print(f"❌ No file found: {expected_filename}")
-    exit()
+def connect_to_access(db_path):
+    conn_str = (
+        r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
+        rf'DBQ={db_path};'
+    )
+    return pyodbc.connect(conn_str)
 
-# === Read today's Excel file ===
-df = pd.read_excel(expected_filepath)
+def process_file_for_date(date, conn):
+    file_date_str = date.strftime('%Y-%m-%d')
+    access_date_str = date.strftime('%m/%d/%Y')
+    filename = f"{FILE_PREFIX}{file_date_str}.xlsx"
+    filepath = os.path.join(INPUT_FOLDER, filename)
 
-# === Add 'Date' column ===
-df['Date'] = today_str_access
+    if not os.path.exists(filepath):
+        print(f"⚠️ File not found: {filename}")
+        return
 
-# === Connect to Access DB ===
-conn_str = (
-    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
-    rf'DBQ={access_db_path};'
-)
-conn = pyodbc.connect(conn_str)
-cursor = conn.cursor()
+    print(f"📄 Processing file: {filename}")
 
-# === Check if today's data already exists ===
-check_sql = f"SELECT COUNT(*) FROM {table_name} WHERE Date = ?"
-cursor.execute(check_sql, (today_str_access,))
-count = cursor.fetchone()[0]
+    df = pd.read_excel(filepath)
+    df["Date"] = access_date_str
 
-if count > 0:
-    confirm = input(f"⚠️ Data for {today_str_file} already exists. Overwrite? (y/n): ").lower()
-    if confirm != 'y':
-        print("❌ Operation cancelled.")
-        conn.close()
-        exit()
-    # Delete existing rows for today
-    delete_sql = f"DELETE FROM {table_name} WHERE Date = ?"
-    cursor.execute(delete_sql, (today_str_access,))
+    # Convert NaT to None in datetime columns
+    datetime_cols = df.select_dtypes(include=['datetime']).columns
+    for col in datetime_cols:
+        df[col] = df[col].astype("object")
+        df[col] = df[col].where(df[col].notna(), None)
+
+    cursor = conn.cursor()
+
+    # Check for existing data
+    cursor.execute(f"SELECT COUNT(*) FROM {TABLE_NAME} WHERE Date = ?", (access_date_str,))
+    count = cursor.fetchone()[0]
+
+    if count > 0:
+        choice = input(f"⚠️ Data for {file_date_str} exists. Overwrite? (y/n): ").strip().lower()
+        if choice != 'y':
+            print(f"⏭️ Skipped {file_date_str}")
+            return
+        cursor.execute(f"DELETE FROM {TABLE_NAME} WHERE Date = ?", (access_date_str,))
+        conn.commit()
+        print(f"🗑️ Existing data for {file_date_str} deleted.")
+
+    # Insert new data
+    columns = list(df.columns)
+    col_names_str = ', '.join(f'[{col}]' for col in columns)
+    placeholders = ', '.join(['?'] * len(columns))
+    insert_sql = f"INSERT INTO {TABLE_NAME} ({col_names_str}) VALUES ({placeholders})"
+
+    for _, row in df.iterrows():
+        cursor.execute(insert_sql, tuple(row))
+    
     conn.commit()
-    print(f"✅ Existing data for {today_str_file} deleted.")
+    print(f"✅ Inserted data for {file_date_str}.")
 
-# === Prepare Insert ===
-columns = list(df.columns)  # Ensure this matches Access table columns
-col_placeholder = ', '.join(['?'] * len(columns))
-col_names_str = ', '.join(columns)
-insert_sql = f"INSERT INTO {table_name} ({col_names_str}) VALUES ({col_placeholder})"
+# === MAIN ===
+def main():
+    parser = argparse.ArgumentParser(description="Import Excel files to Access DB by date")
+    parser.add_argument(
+        "--dates",
+        required=True,
+        help="Date(s) to import. Example: 2025-05-25 or 2025-05-25,2025-05-27 or 2025-05-25 - 2025-05-28"
+    )
+    args = parser.parse_args()
 
-# === Insert Data Row-by-Row ===
-for _, row in df.iterrows():
-    cursor.execute(insert_sql, tuple(row))
+    try:
+        dates = parse_dates(args.dates)
+    except ValueError:
+        print("❌ Invalid date format. Use YYYY-MM-DD or comma-separated/range.")
+        sys.exit(1)
 
-conn.commit()
-conn.close()
-print(f"✅ Data from {expected_filename} successfully inserted into Access table '{table_name}'.")
+    try:
+        conn = connect_to_access(ACCESS_DB_PATH)
+    except Exception as e:
+        print(f"❌ Could not connect to Access DB: {e}")
+        sys.exit(1)
+
+    for date in dates:
+        try:
+            process_file_for_date(date, conn)
+        except Exception as e:
+            print(f"❌ Error processing {date}: {e}")
+
+    conn.close()
+    print("🎉 All done.")
+
+if __name__ == "__main__":
+    main()

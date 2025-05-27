@@ -1,11 +1,9 @@
 import os
-import sys
-import argparse
 import pandas as pd
 import pyodbc
 from datetime import datetime, timedelta
 
-# === CONFIGURABLE SETTINGS ===
+# === CONFIG ===
 INPUT_FOLDER = r"C:\path\to\input_folder"
 ACCESS_DB_PATH = r"C:\path\to\Database.accdb"
 TABLE_NAME = "DailyOutput"
@@ -16,14 +14,16 @@ FILE_PREFIX = "Output1_"
 def parse_dates(date_input):
     date_input = date_input.replace(' ', '')
     dates = []
+
     for part in date_input.split(','):
         if '-' in part:
             start_str, end_str = part.split('-')
-            start = datetime.strptime(start_str, "%Y-%m-%d").date()
-            end = datetime.strptime(end_str, "%Y-%m-%d").date()
+            start = datetime.strptime(start_str, "%Y%m%d").date()
+            end = datetime.strptime(end_str, "%Y%m%d").date()
             dates.extend([start + timedelta(days=i) for i in range((end - start).days + 1)])
         else:
-            dates.append(datetime.strptime(part, "%Y-%m-%d").date())
+            dates.append(datetime.strptime(part, "%Y%m%d").date())
+
     return dates
 
 def connect_to_access(db_path):
@@ -35,7 +35,7 @@ def connect_to_access(db_path):
 
 def process_file_for_date(date, conn):
     file_date_str = date.strftime('%Y-%m-%d')
-    access_date_str = date.strftime('%m/%d/%Y')
+    access_date_str = date.strftime('%m/%d/%Y')  # Needed for Access match
     filename = f"{FILE_PREFIX}{file_date_str}.xlsx"
     filepath = os.path.join(INPUT_FOLDER, filename)
 
@@ -43,33 +43,33 @@ def process_file_for_date(date, conn):
         print(f"⚠️ File not found: {filename}")
         return
 
-    print(f"📄 Processing file: {filename}")
+    print(f"\n📄 Processing: {filename}")
 
     df = pd.read_excel(filepath)
     df["Date"] = access_date_str
 
-    # Convert NaT to None in datetime columns
+    # Replace NaT with None in datetime columns
     datetime_cols = df.select_dtypes(include=['datetime']).columns
     for col in datetime_cols:
-        df[col] = df[col].astype("object")
+        df[col] = df[col].astype('object')
         df[col] = df[col].where(df[col].notna(), None)
 
     cursor = conn.cursor()
 
-    # Check for existing data
+    # Check if date already exists
     cursor.execute(f"SELECT COUNT(*) FROM {TABLE_NAME} WHERE Date = ?", (access_date_str,))
     count = cursor.fetchone()[0]
 
     if count > 0:
-        choice = input(f"⚠️ Data for {file_date_str} exists. Overwrite? (y/n): ").strip().lower()
+        choice = input(f"⚠️ Data for {file_date_str} already exists. Overwrite? (y/n): ").strip().lower()
         if choice != 'y':
-            print(f"⏭️ Skipped {file_date_str}")
+            print("⏭️ Skipping...")
             return
         cursor.execute(f"DELETE FROM {TABLE_NAME} WHERE Date = ?", (access_date_str,))
         conn.commit()
-        print(f"🗑️ Existing data for {file_date_str} deleted.")
+        print("🗑️ Old data deleted.")
 
-    # Insert new data
+    # Prepare insert
     columns = list(df.columns)
     col_names_str = ', '.join(f'[{col}]' for col in columns)
     placeholders = ', '.join(['?'] * len(columns))
@@ -77,31 +77,26 @@ def process_file_for_date(date, conn):
 
     for _, row in df.iterrows():
         cursor.execute(insert_sql, tuple(row))
-    
-    conn.commit()
-    print(f"✅ Inserted data for {file_date_str}.")
 
-# === MAIN ===
+    conn.commit()
+    print(f"✅ Data inserted for {file_date_str}.")
+
+# === MAIN EXECUTION ===
+
 def main():
-    parser = argparse.ArgumentParser(description="Import Excel files to Access DB by date")
-    parser.add_argument(
-        "--dates",
-        required=True,
-        help="Date(s) to import. Example: 2025-05-25 or 2025-05-25,2025-05-27 or 2025-05-25 - 2025-05-28"
-    )
-    args = parser.parse_args()
+    user_input = input("📅 Enter date(s) to import (YYYYMMDD, comma-separated or range): ").strip()
 
     try:
-        dates = parse_dates(args.dates)
+        dates = parse_dates(user_input)
     except ValueError:
-        print("❌ Invalid date format. Use YYYY-MM-DD or comma-separated/range.")
-        sys.exit(1)
+        print("❌ Invalid format. Use YYYYMMDD or YYYYMMDD-YYYYMMDD or comma-separated values.")
+        return
 
     try:
         conn = connect_to_access(ACCESS_DB_PATH)
     except Exception as e:
-        print(f"❌ Could not connect to Access DB: {e}")
-        sys.exit(1)
+        print(f"❌ Failed to connect to Access DB: {e}")
+        return
 
     for date in dates:
         try:
@@ -110,7 +105,7 @@ def main():
             print(f"❌ Error processing {date}: {e}")
 
     conn.close()
-    print("🎉 All done.")
+    print("\n🎉 All done.")
 
 if __name__ == "__main__":
     main()

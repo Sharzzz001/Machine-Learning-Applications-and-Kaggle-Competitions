@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import pyodbc
+import time
 
 
 def count_workdays(start_date, end_date):
@@ -38,6 +39,15 @@ def generate_current_status(aging_df):
 
     one_month_ago = today - pd.DateOffset(months=1)
 
+    skipped = latest[
+        latest['Status'].isin([
+            "Cancelled", "KYC Completed", "KYC Completed with Doc Deficiency",
+            "On Hold", "Pending EAM/Introducer Agreement"
+        ]) |
+        ~latest['Priority'].isin(["Focus", "VIP"]) |
+        (latest['Latest Focus Week'] < one_month_ago)
+    ].copy()
+
     latest = latest[
         ~latest['Status'].isin([
             "Cancelled", "KYC Completed", "KYC Completed with Doc Deficiency",
@@ -47,7 +57,7 @@ def generate_current_status(aging_df):
         (latest['Latest Focus Week'] >= one_month_ago)
     ]
 
-    return latest
+    return latest, skipped
 
 
 def generate_doc_pivot(aging_df, doc_bin):
@@ -87,10 +97,12 @@ def load_data_from_access(db_path):
     return aging_df, doc_bin, ns_bin
 
 
-def generate_aging_report(db_path, output_file):
+def generate_aging_report(db_path, output_file, skipped_output_file):
+    start_time = time.time()
+
     aging_df, doc_bin, ns_bin = load_data_from_access(db_path)
 
-    current_status = generate_current_status(aging_df)
+    current_status, skipped_accounts = generate_current_status(aging_df)
     doc_pivot = generate_doc_pivot(aging_df, doc_bin)
     ns_pivot = generate_ns_pivot(aging_df, ns_bin)
 
@@ -115,10 +127,16 @@ def generate_aging_report(db_path, output_file):
     })
 
     final_df.to_excel(output_file, index=False)
+    skipped_accounts.to_excel(skipped_output_file, index=False)
+
+    end_time = time.time()
+    print(f"Execution time: {end_time - start_time:.2f} seconds")
+    print(f"Skipped accounts exported to {skipped_output_file}")
 
 
 if __name__ == "__main__":
     generate_aging_report(
         db_path="client_onboarding.accdb",
-        output_file="Aging_Report.xlsx"
+        output_file="Aging_Report.xlsx",
+        skipped_output_file="Skipped_Accounts.xlsx"
     )

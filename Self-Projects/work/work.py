@@ -1,15 +1,34 @@
+Calendar = 
+ADDCOLUMNS (
+    CALENDAR (DATE(2023, 1, 1), DATE(2026, 12, 31)),
+    "DayOfWeek", WEEKDAY([Date], 2),
+    "IsBusinessDay", IF(WEEKDAY([Date], 2) < 6, TRUE(), FALSE())
+)
+
+
 AdjustedRequestDate = 
-VAR ReqDate = 'YourTable'[Request Date]
+VAR RequestDate = 'Table'[Request Date]
+VAR Shift = IF('Table'[RequestTime] = TRUE(), 1, 0)
 RETURN
-    IF (
-        'YourTable'[RequestTime] = TRUE(),
-        CALCULATE (
-            MIN('Calendar'[Date]),
-            FILTER (
-                'Calendar',
-                'Calendar'[Date] > ReqDate
-                && 'Calendar'[IsWorkingDay] = TRUE()
-            )
+    CALCULATE (
+        MIN('Calendar'[Date]),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] >= RequestDate &&
+            'Calendar'[IsBusinessDay] = TRUE()
         ),
-        ReqDate
+        OFFSET(Shift)
     )
+    
+    
+BusinessDaysToComplete = 
+CALCULATE (
+    COUNTROWS('Calendar'),
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= 'Table'[AdjustedRequestDate]
+            && 'Calendar'[Date] <= 'Table'[Checker Completion Date]
+            && 'Calendar'[IsBusinessDay] = TRUE()
+    )
+)
+    

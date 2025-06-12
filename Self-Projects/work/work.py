@@ -1,13 +1,15 @@
-Calendar = 
-VAR StartDate = DATE(2022, 1, 1)
-VAR EndDate = DATE(2026, 12, 31)
+AdjustedRequestDate = 
+VAR ReqDate = 'YourTable'[Request Date]
 RETURN
-ADDCOLUMNS (
-    CALENDAR (StartDate, EndDate),
-    "IsWorkingDay",
-        IF (
-            WEEKDAY ( [Date], 2 ) <= 5,
-            TRUE(),
-            FALSE()
-        )
-)
+    IF (
+        'YourTable'[RequestTime] = TRUE(),
+        CALCULATE (
+            MIN('Calendar'[Date]),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] > ReqDate
+                && 'Calendar'[IsWorkingDay] = TRUE()
+            )
+        ),
+        ReqDate
+    )

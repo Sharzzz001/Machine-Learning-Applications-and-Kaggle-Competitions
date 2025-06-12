@@ -1,41 +1,26 @@
 Calendar = 
 ADDCOLUMNS (
-    CALENDAR (DATE(2023, 1, 1), DATE(2026, 12, 31)),
-    "DayOfWeek", WEEKDAY([Date], 2),
-    "IsBusinessDay", IF(WEEKDAY([Date], 2) < 6, TRUE(), FALSE())
+    CALENDAR (DATE(2022,1,1), DATE(2026,12,31)),  -- adjust range
+    "IsWorkingDay", 
+        IF (
+            WEEKDAY([Date], 2) <= 5,  -- 1 = Monday, 7 = Sunday; weekdays are 1-5
+            TRUE(),
+            FALSE()
+        )
 )
 
-
-AdjustedRequestDate =
-VAR BaseDate = 'Table'[Request Date]
-VAR ShiftNeeded = 'Table'[RequestTime] = TRUE()
+AdjustedRequestDate = 
+VAR ReqDate = 'YourTable'[Request Date]
 RETURN
     IF (
-        ShiftNeeded,
+        'YourTable'[RequestTime] = TRUE(),
         CALCULATE (
             MIN('Calendar'[Date]),
             FILTER (
                 'Calendar',
-                'Calendar'[Date] > BaseDate &&
-                'Calendar'[IsBusinessDay] = TRUE()
-            ),
-            TOPN(1, 'Calendar', [Date], ASC)
+                'Calendar'[Date] > ReqDate
+                && 'Calendar'[IsWorkingDay] = TRUE()
+            )
         ),
-        BaseDate
+        ReqDate
     )
-    
-    
-SLA_Days_Allowed = IF('Table'[Urgent] = TRUE(), 1, 3)
-
-
-
-BusinessDaysToComplete = 
-CALCULATE (
-    COUNTROWS('Calendar'),
-    FILTER (
-        'Calendar',
-        'Calendar'[Date] >= 'Table'[AdjustedRequestDate]
-            && 'Calendar'[Date] <= 'Table'[Checker Completion Date]
-            && 'Calendar'[IsBusinessDay] = TRUE()
-    )
-)

@@ -24,3 +24,24 @@ RETURN
         ),
         ReqDate
     )
+    
+    
+    
+AdjustedRequestDate = 
+VAR OriginalDateTime = 'Table'[Request Date]
+VAR OriginalTime = MOD(OriginalDateTime, 1)  -- isolates time
+VAR AdjustedDateOnly =
+    CALCULATE (
+        MIN('Calendar'[Date]),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] > INT(OriginalDateTime) &&
+            'Calendar'[IsWorkingDay]
+        )
+    )
+RETURN
+IF (
+    'Table'[RequestTime] = TRUE(),
+    AdjustedDateOnly + OriginalTime,
+    OriginalDateTime
+)

@@ -1,10 +1,12 @@
 Calendar = 
+VAR StartDate = DATE(2022, 1, 1)
+VAR EndDate = DATE(2026, 12, 31)
+RETURN
 ADDCOLUMNS (
-    CALENDAR(DATE(2022, 1, 1), DATE(2026, 12, 31)),
+    CALENDAR (StartDate, EndDate),
     "IsWorkingDay",
-        VAR ThisDate = [Date]
-        RETURN IF (
-            WEEKDAY(ThisDate, 2) <= 5,  -- 2 = Monday, 6/7 = weekend
+        IF (
+            WEEKDAY ( [Date], 2 ) <= 5,
             TRUE(),
             FALSE()
         )

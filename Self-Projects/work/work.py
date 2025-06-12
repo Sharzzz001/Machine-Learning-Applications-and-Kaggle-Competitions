@@ -141,7 +141,27 @@ CALCULATE (
 )
 
 
+BusinessDays_Taken =
+VAR StartDate = INT('Table'[AdjustedRequestDate])
+VAR EndDate = INT('Table'[Checker Completion Date])
 
+VAR DayCount =
+    CALCULATE (
+        COUNTROWS('Calendar'),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] >= StartDate &&
+            'Calendar'[Date] <= EndDate &&
+            'Calendar'[IsWorkingDay] = TRUE()
+        )
+    )
+
+RETURN
+IF (
+    ISBLANK(EndDate),
+    BLANK(),
+    IF(ISBLANK(DayCount), 0, DayCount)
+)
 
 
 

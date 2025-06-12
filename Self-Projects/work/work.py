@@ -1,13 +1,10 @@
 Calendar = 
 ADDCOLUMNS (
-    CALENDAR (
-        DATE( YEAR(CALCULATE(MIN('Table'[Request Date]))), 
-              MONTH(CALCULATE(MIN('Table'[Request Date]))), 
-              DAY(CALCULATE(MIN('Table'[Request Date]))) 
-        ),
-        DATE( YEAR(CALCULATE(MAX('Table'[Checker Completion Date]))) + 1, 
-              1, 1 
+    CALENDAR (DATE(2022,1,1), DATE(2026,12,31)),  -- adjust range
+    "IsWorkingDay", 
+        IF (
+            WEEKDAY([Date], 2) <= 5,  -- 1 = Monday, 7 = Sunday; weekdays are 1-5
+            TRUE(),
+            FALSE()
         )
-    ),
-    "IsWorkday", WEEKDAY([Date], 2) <= 5
 )

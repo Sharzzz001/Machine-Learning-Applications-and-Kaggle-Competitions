@@ -63,6 +63,30 @@ CALCULATE (
 + MOD(StartDate, 1)  -- add time back
 
 
+SLA_Due_Date = 
+VAR StartDate = 'Table'[AdjustedRequestDate]
+VAR SLA_Days = IF('Table'[Urgent] = TRUE(), 1, 3)
+
+VAR DueDateOnly =
+    CALCULATE (
+        MAX('Calendar'[Date]),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] >= INT(StartDate) &&
+            'Calendar'[IsWorkingDay]
+        ),
+        TOPN(SLA_Days, 'Calendar', 'Calendar'[Date], ASC)
+    )
+
+VAR DueDateTime =
+    IF (
+        NOT ISBLANK(DueDateOnly),
+        DueDateOnly + MOD(StartDate, 1),
+        BLANK()
+    )
+
+RETURN DueDateTime
+
 SLA_Status = 
 IF (
     ISBLANK('Table'[Checker Completion Date]),

@@ -6,21 +6,29 @@ ADDCOLUMNS (
 )
 
 
-AdjustedRequestDate = 
-VAR RequestDate = 'Table'[Request Date]
-VAR Shift = IF('Table'[RequestTime] = TRUE(), 1, 0)
+AdjustedRequestDate =
+VAR BaseDate = 'Table'[Request Date]
+VAR ShiftNeeded = 'Table'[RequestTime] = TRUE()
 RETURN
-    CALCULATE (
-        MIN('Calendar'[Date]),
-        FILTER (
-            'Calendar',
-            'Calendar'[Date] >= RequestDate &&
-            'Calendar'[IsBusinessDay] = TRUE()
+    IF (
+        ShiftNeeded,
+        CALCULATE (
+            MIN('Calendar'[Date]),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] > BaseDate &&
+                'Calendar'[IsBusinessDay] = TRUE()
+            ),
+            TOPN(1, 'Calendar', [Date], ASC)
         ),
-        OFFSET(Shift)
+        BaseDate
     )
     
     
+SLA_Days_Allowed = IF('Table'[Urgent] = TRUE(), 1, 3)
+
+
+
 BusinessDaysToComplete = 
 CALCULATE (
     COUNTROWS('Calendar'),
@@ -31,4 +39,3 @@ CALCULATE (
             && 'Calendar'[IsBusinessDay] = TRUE()
     )
 )
-    

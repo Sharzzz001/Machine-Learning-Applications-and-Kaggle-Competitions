@@ -165,7 +165,52 @@ IF (
 
 
 
+Sla 2
 
+AdjustedRequestDateTime =
+VAR OriginalDateTime = 'Table'[Request Date]
+VAR RequestTimeFlag = 'Table'[RequestTime]
+VAR NextWorkday =
+    CALCULATE (
+        MIN('Calendar'[Date]),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] > INT(OriginalDateTime) &&
+            'Calendar'[IsWorkingDay] = TRUE()
+        )
+    )
+RETURN
+IF (
+    RequestTimeFlag,
+    NextWorkday + MOD(OriginalDateTime, 1),  -- add time back
+    OriginalDateTime
+)
+
+SLA2_Due_Date =
+VAR StartDateTime = 'Table'[AdjustedRequestDateTime]
+VAR SLA_Due_Date =
+    IF (
+        'Table'[Urgent] = TRUE(),
+        StartDateTime + TIME(2, 0, 0),           -- 2 hours for urgent
+        INT(StartDateTime) + TIME(23, 59, 0)     -- Same day for normal
+    )
+RETURN SLA_Due_Date
+
+
+SLA2_Status =
+VAR CompletionTime = 'Table'[Checker Completion Date]
+VAR SLA_Deadline = 'Table'[SLA2_Due_Date]
+
+RETURN
+IF (
+    ISBLANK(CompletionTime),
+    BLANK(),  -- still open
+    IF (
+        CompletionTime <= SLA_Deadline,
+        "SLA Met",
+        "SLA Breached"
+    )
+)
 
 
 

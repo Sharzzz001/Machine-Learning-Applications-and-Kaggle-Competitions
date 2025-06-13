@@ -213,6 +213,63 @@ IF (
 )
 
 
+SLA 3
+
+AdjustedRequestDateTime =
+VAR OriginalDateTime = 'Table'[Request Date]
+VAR RequestTimeFlag = 'Table'[RequestTime]
+VAR NextWorkday =
+    CALCULATE (
+        MIN('Calendar'[Date]),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] > INT(OriginalDateTime) &&
+            'Calendar'[IsWorkingDay] = TRUE()
+        )
+    )
+RETURN
+IF (
+    RequestTimeFlag,
+    NextWorkday + MOD(OriginalDateTime, 1),  -- preserves time
+    OriginalDateTime
+)
+
+SLA3_Due_Date =
+VAR StartDateTime = 'Table'[AdjustedRequestDateTime]
+VAR StartDate = INT(StartDateTime)  -- removes time
+
+VAR SLA_Date =
+    IF (
+        'Table'[Urgent] = TRUE(),
+        StartDate + 7,
+        VAR DayOfMonth = DAY(StartDate)
+        VAR MonthBase =
+            IF(DayOfMonth >= 26,
+                EOMONTH(StartDate, 1),  -- next month end
+                EOMONTH(StartDate, 0)   -- this month end
+            )
+        RETURN MonthBase
+    )
+
+RETURN
+SLA_Date + TIME(23, 59, 59)
+
+
+SLA3_Status =
+VAR CompletionTime = 'Table'[Checker Completion Date]
+VAR SLA_Deadline = 'Table'[SLA3_Due_Date]
+
+RETURN
+IF (
+    ISBLANK(CompletionTime),
+    BLANK(),
+    IF (
+        CompletionTime <= SLA_Deadline,
+        "SLA Met",
+        "SLA Breached"
+    )
+)
+
 
 
 

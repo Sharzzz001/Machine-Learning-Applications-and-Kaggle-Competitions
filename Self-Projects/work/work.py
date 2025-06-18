@@ -303,3 +303,49 @@ VAR NextWorkingDate =
 
 RETURN
 NextWorkingDate + StartTime
+
+
+SLA3_Due_Date =
+VAR StartDate = INT('Table'[AdjustedRequestDateTime])  -- remove time
+VAR IsUrgent = 'Table'[Urgent]
+VAR DayOfMonth = DAY(StartDate)
+
+-- Determine base SLA date (no time yet)
+VAR SLA_Base_Date =
+    IF (
+        IsUrgent,
+        StartDate + 7,
+        IF (
+            DayOfMonth >= 26,
+            EOMONTH(StartDate, 1),  -- end of next month
+            EOMONTH(StartDate, 0)   -- end of this month
+        )
+    )
+
+-- Check if base date is a public holiday
+VAR IsHoliday =
+    CALCULATE (
+        COUNTROWS('PublicHolidays'),
+        FILTER (
+            'PublicHolidays',
+            'PublicHolidays'[Date] = SLA_Base_Date
+        )
+    ) > 0
+
+-- If holiday, push forward to next non-holiday date
+VAR Final_Date =
+    IF (
+        IsHoliday,
+        CALCULATE (
+            MIN('Calendar'[Date]),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] > SLA_Base_Date &&
+                NOT 'Calendar'[Date] IN VALUES('PublicHolidays'[Date])
+            )
+        ),
+        SLA_Base_Date
+    )
+
+RETURN Final_Date + TIME(23,59,59)
+

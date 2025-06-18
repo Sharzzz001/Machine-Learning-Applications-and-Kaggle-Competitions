@@ -272,4 +272,34 @@ IF (
 
 
 
+SLA3_Due_Date =
+VAR StartDateTime = 'Table'[AdjustedRequestDateTime]
+VAR StartDate = INT(StartDateTime)         -- date part
+VAR StartTime = MOD(StartDateTime, 1)      -- time part
 
+VAR SLA_Raw_Date =
+    IF (
+        'Table'[Urgent] = TRUE(),
+        StartDate + 7,
+        VAR DayOfMonth = DAY(StartDate)
+        VAR MonthBase =
+            IF(DayOfMonth >= 26,
+                EOMONTH(StartDate, 1),  -- next month end
+                EOMONTH(StartDate, 0)   -- same month end
+            )
+        RETURN MonthBase
+    )
+
+-- Find the next non-holiday date if it's a holiday
+VAR NextWorkingDate =
+    CALCULATE (
+        MIN('Calendar'[Date]),  -- assumes Calendar table includes all dates
+        FILTER (
+            ALL('Calendar'),
+            'Calendar'[Date] >= SLA_Raw_Date &&
+            NOT 'Calendar'[Date] IN VALUES('PublicHolidays'[Date])
+        )
+    )
+
+RETURN
+NextWorkingDate + StartTime

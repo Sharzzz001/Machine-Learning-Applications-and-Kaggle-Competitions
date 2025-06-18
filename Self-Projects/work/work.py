@@ -349,3 +349,32 @@ VAR Final_Date =
 
 RETURN Final_Date + TIME(23,59,59)
 
+
+
+SLA_Due_Date =
+VAR StartDate = INT('Table'[AdjustedRequestDate])  -- Remove time
+VAR SLA_Days = IF('Table'[Urgent] = TRUE(), 1, 3)
+
+-- Filter for working days excluding public holidays
+VAR Workdays =
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] > StartDate &&
+        'Calendar'[IsWorkingDay] = TRUE() &&
+        NOT 'Calendar'[Date] IN VALUES('PublicHolidays'[Date])
+    )
+
+-- Get the nth business day from start date
+VAR DueDateRow =
+    TOPN(SLA_Days, Workdays, 'Calendar'[Date], ASC)
+
+VAR DueDateOnly =
+    MAXX(DueDateRow, 'Calendar'[Date])
+
+RETURN
+IF (
+    ISBLANK(DueDateOnly),
+    BLANK(),
+    DueDateOnly + TIME(23,59,59)
+)
+

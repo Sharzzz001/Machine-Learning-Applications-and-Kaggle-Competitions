@@ -378,3 +378,15 @@ IF (
     DueDateOnly + TIME(23,59,59)
 )
 
+
+Calendar = 
+ADDCOLUMNS (
+    CALENDAR (DATE(2023,1,1), DATE(2026,12,31)),
+    "IsWeekend", WEEKDAY([Date], 2) >= 6,  -- Saturday=6, Sunday=7
+    "IsHoliday", FALSE(),  -- You can manually flag holidays later if needed
+    "IsBusinessDay", IF(WEEKDAY([Date], 2) < 6, TRUE, FALSE)
+)
+
+
+
+

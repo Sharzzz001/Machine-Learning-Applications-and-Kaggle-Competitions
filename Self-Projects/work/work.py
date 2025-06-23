@@ -484,6 +484,49 @@ VAR ThirdBusinessDay =
 RETURN
     ThirdBusinessDay + TIME(23, 59, 59)
     
+
+Adjusted Start Date = 
+VAR ApprovedDateTime = 'Table'[Approved Date]
+VAR RequestTimeFlag = 'Table'[RequestTime]
+VAR BaseDate = DATEVALUE(ApprovedDateTime)  -- strips time
+
+RETURN
+    IF (
+        RequestTimeFlag = TRUE,
+        CALCULATE (
+            MIN('Calendar'[Date]),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] > BaseDate &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        ),
+        BaseDate
+    )
+    
+SLA Due DateTime = 
+VAR StartDate = [Adjusted Start Date]
+VAR SLA_Days = 3
+
+VAR BusinessDays =
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= StartDate &&
+        'Calendar'[IsBusinessDay] = TRUE
+    )
+
+VAR ThirdBusinessDay =
+    MINX (
+        TOPN ( SLA_Days, BusinessDays, 'Calendar'[Date], ASC ),
+        'Calendar'[Date]
+    )
+
+RETURN
+    IF (
+        NOT ISBLANK(ThirdBusinessDay),
+        ThirdBusinessDay + TIME(23,59,59),
+        BLANK()
+    )
     
     
 

@@ -701,3 +701,28 @@ RETURN
 
         FALSE()
     )
+    
+    
+SLA Due DateTime = 
+VAR StartDate = [Adjusted Start Date]
+VAR SLA_Days = 'Table'[SLA_Days]
+
+VAR BusinessDays =
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= StartDate &&
+        'Calendar'[IsBusinessDay] = TRUE
+    )
+
+VAR TargetDate =
+    MAXX (
+        TOPN ( SLA_Days, BusinessDays, 'Calendar'[Date], ASC ),
+        'Calendar'[Date]
+    )
+
+RETURN
+    IF (
+        NOT ISBLANK(TargetDate),
+        TargetDate + TIME(23, 59, 59),
+        BLANK()
+    )

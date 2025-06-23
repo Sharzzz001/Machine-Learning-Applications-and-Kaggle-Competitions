@@ -567,4 +567,17 @@ RETURN
         "SLA Breached"
     )
 
+SLA Met = 
+VAR SLA_Due = [SLA Due DateTime]
+VAR LetterDate = 'Table'[Letter Issue Date]
 
+RETURN
+    IF (
+        ISBLANK(LetterDate),
+        "End Date Blank",
+        IF (
+            LetterDate <= SLA_Due,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )

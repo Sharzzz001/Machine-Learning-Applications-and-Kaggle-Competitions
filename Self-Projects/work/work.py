@@ -785,3 +785,51 @@ RETURN
         )
     )
     
+ROC_BusinessDays = 
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+
+RETURN
+    CALCULATE (
+        COUNTROWS('Calendar'),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] >= DATEVALUE(RocStart) &&
+            'Calendar'[Date] <= DATEVALUE(RocEnd) &&
+            'Calendar'[IsBusinessDay] = TRUE
+        )
+    )
+    
+Avaloq_BusinessDays = 
+VAR StartDate = 'Table'[Soft Copies Received Date]
+VAR EndDate = 'Table'[Avaloq Setup Date]
+
+RETURN
+    CALCULATE (
+        COUNTROWS('Calendar'),
+        FILTER (
+            'Calendar',
+            'Calendar'[Date] >= DATEVALUE(StartDate) &&
+            'Calendar'[Date] <= DATEVALUE(EndDate) &&
+            'Calendar'[IsBusinessDay] = TRUE
+        )
+    )
+    
+
+Net_Business_Days = 
+[Avaloq_BusinessDays] - [ROC_BusinessDays]
+
+Avaloq_SLA_Status = 
+VAR NetDays = [Net_Business_Days]
+
+RETURN
+    IF (
+        ISBLANK('Table'[Avaloq Setup Date]),
+        "End Date Blank",
+        IF (
+            NetDays <= 5,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )
+    

@@ -741,3 +741,47 @@ RETURN
             "SLA Breached"
         )
     )
+
+
+DocReview_AdjustedStartDate = 
+DATEVALUE('Table'[Approved Date])
+
+DocReview_SLA_DueDateTime = 
+VAR StartDate = DATEVALUE('Table'[Approved Date])
+VAR SLA_Days = 5
+
+VAR BusinessDays =
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= StartDate &&
+        'Calendar'[IsBusinessDay] = TRUE
+    )
+
+VAR TargetDate =
+    MAXX (
+        TOPN ( SLA_Days, BusinessDays, 'Calendar'[Date], ASC ),
+        'Calendar'[Date]
+    )
+
+RETURN
+    IF (
+        NOT ISBLANK(TargetDate),
+        TargetDate + TIME(23, 59, 59),
+        BLANK()
+    )
+    
+DocReview_SLA_Status = 
+VAR SLA_Due = [DocReview_SLA_DueDateTime]
+VAR ReviewDate = 'Table'[Document Review Date]
+
+RETURN
+    IF (
+        ISBLANK(ReviewDate),
+        "End Date Blank",
+        IF (
+            ReviewDate <= SLA_Due,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )
+    

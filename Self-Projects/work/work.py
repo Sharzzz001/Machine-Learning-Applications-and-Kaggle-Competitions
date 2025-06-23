@@ -816,6 +816,25 @@ RETURN
     )
     
 
+Avaloq_BusinessDays = 
+VAR StartDate = 'Table'[Soft Copies Received Date]
+VAR EndDate = 'Table'[Avaloq Setup Date]
+
+RETURN
+    IF (
+        NOT ISBLANK(StartDate) && NOT ISBLANK(EndDate),
+        CALCULATE (
+            COUNTROWS('Calendar'),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(StartDate) &&
+                'Calendar'[Date] <= DATEVALUE(EndDate) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        ),
+        BLANK()
+    )
+
 Net_Business_Days = 
 [Avaloq_BusinessDays] - [ROC_BusinessDays]
 

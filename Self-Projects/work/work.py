@@ -948,3 +948,98 @@ SWITCH(
 
     BLANK()
 )
+
+
+LetterSLA_AdjustedStartDate = 
+VAR ApprovedDate = 'Table'[Approved Date]
+VAR RequestTime = 'Table'[RequestTime]
+
+VAR AdjustedDate =
+    IF(
+        RequestTime = TRUE(),
+        CALCULATE(
+            MIN('Calendar'[Date]),
+            FILTER(
+                'Calendar',
+                'Calendar'[Date] > DATEVALUE(ApprovedDate) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        ),
+        DATEVALUE(ApprovedDate)
+    )
+
+RETURN
+    IF(ISBLANK(ApprovedDate), BLANK(), AdjustedDate)
+    
+LetterSLA_ROC_BusinessDays = 
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+VAR TodayDate = TODAY()
+
+RETURN
+    IF(
+        ISBLANK(RocStart),
+        0,
+        CALCULATE(
+            COUNTROWS('Calendar'),
+            FILTER(
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(RocStart) &&
+                'Calendar'[Date] <= DATEVALUE(IF(ISBLANK(RocEnd), TodayDate, RocEnd)) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        )
+    )
+    
+LetterSLA_BusinessDays = 
+VAR StartDate = [LetterSLA_AdjustedStartDate]
+VAR EndDate = IF(ISBLANK('Table'[Letter Issue Date]), TODAY(), 'Table'[Letter Issue Date])
+
+RETURN
+    IF(
+        ISBLANK(StartDate),
+        BLANK(),
+        CALCULATE(
+            COUNTROWS('Calendar'),
+            FILTER(
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(StartDate) &&
+                'Calendar'[Date] <= DATEVALUE(EndDate) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        )
+    )
+    
+LetterSLA_Net_Business_Days = 
+IF(
+    ISBLANK([LetterSLA_BusinessDays]),
+    BLANK(),
+    [LetterSLA_BusinessDays] - [LetterSLA_ROC_BusinessDays]
+)
+
+LetterSLA_Status = 
+VAR StartDate = 'Table'[Approved Date]
+VAR EndDate = 'Table'[Letter Issue Date]
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+VAR NetDays = [LetterSLA_Net_Business_Days]
+
+RETURN
+SWITCH(
+    TRUE(),
+
+    ISBLANK(StartDate) && NOT ISBLANK(EndDate),
+        "Blank Approved Date",
+
+    ISBLANK(RocStart) && NOT ISBLANK(RocEnd),
+        "Blank ROC Submission",
+
+    NetDays <= 3,
+        "SLA Met",
+
+    NetDays > 3,
+        "SLA Breached",
+
+    BLANK()
+)
+

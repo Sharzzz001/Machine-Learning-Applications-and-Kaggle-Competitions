@@ -922,3 +922,29 @@ RETURN
             "SLA Breached"
         )
     )
+
+Avaloq_SLA_Status = 
+VAR SoftCopiesDate = 'Table'[Soft Copies Received Date]
+VAR AvaloqSetupDate = 'Table'[Avaloq Setup Date]
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+VAR NetDays = [Net_Business_Days]
+
+RETURN
+SWITCH(
+    TRUE(),
+
+    ISBLANK(SoftCopiesDate),
+        "Soft Copies Blank",
+
+    ISBLANK(RocStart) && NOT ISBLANK(RocEnd),
+        "ROC Submission Blank",
+
+    NetDays <= 5,
+        "SLA Met",
+
+    NetDays > 5,
+        "SLA Breached",
+
+    BLANK()
+)

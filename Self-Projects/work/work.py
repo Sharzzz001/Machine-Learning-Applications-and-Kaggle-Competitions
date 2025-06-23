@@ -642,3 +642,44 @@ RETURN
             "SLA Breached"
         )
     )
+    
+    
+GroupType = 
+VAR TypeText = LOWER('Table'[Type])
+VAR CreditGroupCol = 'Table'[Credit group]
+
+RETURN
+SWITCH(
+    TRUE(),
+
+    -- Case 1: Embedded in Type
+    SEARCH("credit", TypeText, 1, 0) > 0 && SEARCH("non", TypeText, 1, 0) = 0,
+        "Credit Group",
+
+    SEARCH("non-credit", TypeText, 1, 0) > 0 || SEARCH("non credit", TypeText, 1, 0) > 0,
+        "Non-Credit Group",
+
+    -- Case 2: Use Credit Group column
+    CreditGroupCol = "Credit group",
+        "Credit Group",
+
+    CreditGroupCol = "Non credit group" || ISBLANK(CreditGroupCol),
+        "Non-Credit Group",
+
+    -- Fallback
+    "Other"
+)
+
+SLA_Days = 
+SWITCH(
+    TRUE(),
+    'Table'[Type] IN { "FX", "ST", "Lombard" } 
+        && 'Table'[GroupType] = "Non-Credit Group",
+        3,
+
+    'Table'[Type] IN { "A", "B", "C" } 
+        && 'Table'[GroupType] = "Credit Group",
+        5,
+
+    BLANK()
+)

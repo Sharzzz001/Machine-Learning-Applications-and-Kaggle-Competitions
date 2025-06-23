@@ -389,4 +389,64 @@ ADDCOLUMNS (
 
 
 
+LCO
 
+Calendar = 
+ADDCOLUMNS (
+    CALENDAR (DATE(2023, 1, 1), DATE(2026, 12, 31)),
+    "IsBusinessDay", 
+        IF (
+            WEEKDAY([Date], 2) < 6 
+            && NOT([Date] IN VALUES(Holidays[Date])), 
+            TRUE(), 
+            FALSE()
+        )
+)
+
+
+Adjusted Start Date = 
+VAR ApprovedDate = 'Table'[Approved Date]
+VAR IsNextDay = 'Table'[RequestTime] = TRUE
+RETURN
+    IF(
+        IsNextDay,
+        CALCULATE (
+            MIN ( 'Calendar'[Date] ),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] > DATEVALUE(ApprovedDate)
+                && 'Calendar'[IsBusinessDay] = TRUE
+            )
+        ),
+        DATEVALUE(ApprovedDate)
+    )
+    
+    
+SLA Due DateTime = 
+VAR StartDate = [Adjusted Start Date]
+VAR SLA_Days = 3
+VAR BusinessDays = 
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= StartDate
+            && 'Calendar'[IsBusinessDay] = TRUE
+    )
+VAR ThirdBusinessDay = 
+    MINX (
+        TOPN(SLA_Days, BusinessDays, 'Calendar'[Date], ASC),
+        'Calendar'[Date]
+    )
+RETURN
+    DATETIME(ThirdBusinessDay, TIME(23, 59, 59))  -- end of 3rd biz day
+    
+    
+
+SLA Met = 
+VAR SLA_Due = [SLA Due DateTime]
+VAR LetterDate = 'Table'[Letter Issue Date]
+RETURN
+    IF (
+        LetterDate <= SLA_Due,
+        "SLA Met",
+        "SLA Breached"
+    )

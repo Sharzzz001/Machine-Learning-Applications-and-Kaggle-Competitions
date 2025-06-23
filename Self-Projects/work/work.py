@@ -683,3 +683,21 @@ SWITCH(
 
     BLANK()
 )
+
+IncludeInSLA = 
+VAR TypeText = LOWER('Table'[Type])
+RETURN
+    SWITCH(
+        TRUE(),
+
+        'Table'[Type] IN { "FX", "ST", "Lombard", "A", "B", "C" },
+        TRUE(),
+
+        SEARCH("credit", TypeText, 1, 0) > 0,
+        TRUE(),
+
+        SEARCH("non-credit", TypeText, 1, 0) > 0 || SEARCH("non credit", TypeText, 1, 0) > 0,
+        TRUE(),
+
+        FALSE()
+    )

@@ -1050,3 +1050,36 @@ SWITCH(
     'Table'[Type] IN { "Y1", "Y2", "Y3" }, "Process Y",   -- your Type Y variants
     BLANK()
 )
+
+SimpleSLA_BusinessDays = 
+VAR StartDate = 'Table'[Approved Date]
+VAR EndDate = IF(ISBLANK('Table'[Letter Issue Date]), TODAY(), 'Table'[Letter Issue Date])
+
+RETURN
+    IF(
+        ISBLANK(StartDate),
+        BLANK(),
+        CALCULATE(
+            COUNTROWS('Calendar'),
+            FILTER(
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(StartDate) &&
+                'Calendar'[Date] <= DATEVALUE(EndDate) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        )
+    )
+    
+SimpleSLA_Status = 
+VAR StartDate = 'Table'[Approved Date]
+VAR EndDate = 'Table'[Letter Issue Date]
+VAR DaysTaken = [SimpleSLA_BusinessDays]
+
+RETURN
+SWITCH(
+    TRUE(),
+    ISBLANK(StartDate), "Blank Approved Date",
+    DaysTaken <= 3, "SLA Met",
+    DaysTaken > 3, "SLA Breached",
+    BLANK()
+)

@@ -852,3 +852,73 @@ RETURN
         )
     )
     
+    
+ROC_BusinessDays = 
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+VAR TodayDate = TODAY()
+
+RETURN
+    IF (
+        ISBLANK(RocStart),
+        0,
+        CALCULATE (
+            COUNTROWS('Calendar'),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(RocStart) &&
+                'Calendar'[Date] <= DATEVALUE(IF(ISBLANK(RocEnd), TodayDate, RocEnd)) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        )
+    )
+    
+Avaloq_BusinessDays = 
+VAR StartDate = 'Table'[Soft Copies Received Date]
+VAR EndDate = IF(ISBLANK('Table'[Avaloq Setup Date]), TODAY(), 'Table'[Avaloq Setup Date])
+
+RETURN
+    IF (
+        ISBLANK(StartDate),
+        BLANK(),
+        CALCULATE (
+            COUNTROWS('Calendar'),
+            FILTER (
+                'Calendar',
+                'Calendar'[Date] >= DATEVALUE(StartDate) &&
+                'Calendar'[Date] <= DATEVALUE(EndDate) &&
+                'Calendar'[IsBusinessDay] = TRUE
+            )
+        )
+    )
+    
+Net_Business_Days = 
+IF(
+    ISBLANK([Avaloq_BusinessDays]),
+    BLANK(),
+    [Avaloq_BusinessDays] - [ROC_BusinessDays]
+)
+
+    
+
+Avaloq_SLA_Status = 
+VAR SoftCopiesDate = 'Table'[Soft Copies Received Date]
+VAR AvaloqSetupDate = 'Table'[Avaloq Setup Date]
+VAR RocStart = 'Table'[ROC- Submission Date]
+VAR RocEnd = 'Table'[ROC- Completion Date]
+VAR NetDays = [Net_Business_Days]
+
+RETURN
+    IF (
+        ISBLANK(SoftCopiesDate),
+        "Soft Copies Blank",
+
+        ISBLANK(RocStart) && NOT ISBLANK(RocEnd),
+        "ROC Submission Blank",
+
+        IF (
+            NetDays <= 5,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )

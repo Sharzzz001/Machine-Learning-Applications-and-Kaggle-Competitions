@@ -1108,3 +1108,46 @@ SWITCH(
     BLANK()
 )
 
+MonthEndPlus2BizDays = 
+VAR ApprovedDate = 'Table'[Approved Date]
+
+-- Get last day of the month
+VAR MonthEnd = 
+    EOMONTH(ApprovedDate, 0)
+
+-- Get the 2nd business day after month end
+VAR TargetBizDate =
+    CALCULATE(
+        MAX('Calendar'[Date]),
+        TOPN(
+            2,
+            FILTER(
+                'Calendar',
+                'Calendar'[Date] > MonthEnd &&
+                'Calendar'[IsBusinessDay] = TRUE
+            ),
+            'Calendar'[Date], ASC
+        )
+    )
+
+RETURN
+    IF(
+        ISBLANK(ApprovedDate),
+        BLANK(),
+        TargetBizDate + TIME(23, 59, 59)
+    )
+    
+    
+MonthEndSLA_Status = 
+VAR ApprovedDate = 'Table'[Approved Date]
+VAR SetupDate = IF(ISBLANK('Table'[Avaloq Setup Date]), TODAY(), 'Table'[Avaloq Setup Date])
+VAR SLADue = [MonthEndPlus2BizDays]
+
+RETURN
+SWITCH(
+    TRUE(),
+    ISBLANK(ApprovedDate), "Blank Approved Date",
+    SetupDate <= SLADue, "SLA Met",
+    SetupDate > SLADue, "SLA Breached",
+    BLANK()
+)

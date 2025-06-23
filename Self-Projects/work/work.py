@@ -1083,3 +1083,28 @@ SWITCH(
     DaysTaken > 3, "SLA Breached",
     BLANK()
 )
+
+
+SameDaySLA_DueDateTime = 
+VAR StartDate = 'Table'[Approved Date]
+RETURN
+    IF(
+        ISBLANK(StartDate),
+        BLANK(),
+        INT(StartDate) + TIME(23, 59, 59)
+    )
+    
+SameDaySLA_Status = 
+VAR StartDate = 'Table'[Approved Date]
+VAR EndDate = IF(ISBLANK('Table'[Avaloq Setup Date]), TODAY(), 'Table'[Avaloq Setup Date])
+VAR SLADue = [SameDaySLA_DueDateTime]
+
+RETURN
+SWITCH(
+    TRUE(),
+    ISBLANK(StartDate), "Blank Approved Date",
+    EndDate <= SLADue, "SLA Met",
+    EndDate > SLADue, "SLA Breached",
+    BLANK()
+)
+

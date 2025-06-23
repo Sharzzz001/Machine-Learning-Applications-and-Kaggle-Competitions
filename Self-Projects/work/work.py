@@ -403,6 +403,13 @@ ADDCOLUMNS (
         )
 )
 
+Calendar = 
+ADDCOLUMNS (
+    CALENDAR (DATE(2023, 1, 1), DATE(2026, 12, 31)),
+    "IsBusinessDay", 
+        IF ( WEEKDAY([Date], 2) < 6, TRUE(), FALSE() )
+)
+
 
 Adjusted Start Date = 
 VAR ApprovedDate = 'Table'[Approved Date]
@@ -450,3 +457,5 @@ RETURN
         "SLA Met",
         "SLA Breached"
     )
+
+

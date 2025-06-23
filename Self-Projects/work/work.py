@@ -581,3 +581,64 @@ RETURN
             "SLA Breached"
         )
     )
+
+GroupType = 
+SWITCH(
+    TRUE(),
+    'Table'[Credit group] = "Credit group", "Credit Group",
+    'Table'[Credit group] = "Non credit group" || ISBLANK('Table'[Credit group]), "Non-Credit Group",
+    "Other"
+)
+
+SLA_Days = 
+SWITCH(
+    TRUE(),
+    'Table'[Type] IN { "FX", "ST", "Lombard" } 
+        && ('Table'[Credit group] = "Non credit group" || ISBLANK('Table'[Credit group])),
+        3,
+
+    'Table'[Type] IN { "A", "B", "C" } 
+        && 'Table'[Credit group] = "Credit group",
+        5,
+
+    BLANK()
+)
+
+SLA Due DateTime = 
+VAR StartDate = [Adjusted Start Date]
+VAR SLA_Days = 'Table'[SLA_Days]
+
+VAR BusinessDays =
+    FILTER (
+        'Calendar',
+        'Calendar'[Date] >= StartDate &&
+        'Calendar'[IsBusinessDay] = TRUE
+    )
+
+VAR TargetDate =
+    MAXX (
+        TOPN ( SLA_Days, BusinessDays, 'Calendar'[Date], ASC ),
+        'Calendar'[Date]
+    )
+
+RETURN
+    IF (
+        NOT ISBLANK(TargetDate),
+        TargetDate + TIME(23, 59, 59),
+        BLANK()
+    )
+    
+SLA Status = 
+VAR SLA_Due = [SLA Due DateTime]
+VAR LetterDate = 'Table'[Letter Issue Date]
+
+RETURN
+    IF (
+        ISBLANK(LetterDate),
+        "End Date Blank",
+        IF (
+            LetterDate <= SLA_Due,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )

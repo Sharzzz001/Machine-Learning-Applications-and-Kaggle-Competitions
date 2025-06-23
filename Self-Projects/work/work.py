@@ -726,3 +726,18 @@ RETURN
         TargetDate + TIME(23, 59, 59),
         BLANK()
     )
+
+SLA Status = 
+VAR SLA_Due = [SLA Due DateTime]
+VAR LetterDate = 'Table'[Letter Issue Date]
+
+RETURN
+    IF (
+        ISBLANK(LetterDate),
+        "End Date Blank",
+        IF (
+            LetterDate <= SLA_Due,
+            "SLA Met",
+            "SLA Breached"
+        )
+    )

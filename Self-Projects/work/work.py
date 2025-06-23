@@ -1043,3 +1043,10 @@ SWITCH(
     BLANK()
 )
 
+SLA_Process = 
+SWITCH(
+    TRUE(),
+    'Table'[Type] IN { "X1", "X2", "X3" }, "Process X",   -- your Type X variants
+    'Table'[Type] IN { "Y1", "Y2", "Y3" }, "Process Y",   -- your Type Y variants
+    BLANK()
+)

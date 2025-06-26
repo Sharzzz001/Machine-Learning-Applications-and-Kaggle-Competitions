@@ -1151,3 +1151,22 @@ SWITCH(
     SetupDate > SLADue, "SLA Breached",
     BLANK()
 )
+
+BusinessDays_Bucket =
+SWITCH(
+    TRUE(),
+    'Table'[BusinessDays_Taken] <= 5, "0–5 Days",
+    'Table'[BusinessDays_Taken] <= 10, "6–10 Days",
+    'Table'[BusinessDays_Taken] > 10, "10+ Days",
+    BLANK()
+)
+
+Bucket_Order = 
+SWITCH(
+    'Table'[BusinessDays_Bucket],
+    "0–5 Days", 1,
+    "6–10 Days", 2,
+    "10+ Days", 3
+)
+
+

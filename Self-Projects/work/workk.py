@@ -1,20 +1,34 @@
 import requests
 from requests_ntlm import HttpNtlmAuth
+import pandas as pd
+import datetime
 
-# === CONFIGURE THESE ===
-sharepoint_url = "https://yourcompany.sharepoint.com/sites/yoursite/Shared%20Documents/yourfile.xlsx"
-username = "DOMAIN\\your_username"   # Include domain if required, like "COMPANY\\john.doe"
+# === CONFIGURATION ===
+site_url = "https://sharepoint.company.com"
+list_title = "RR Request V3"  # Must match exact SharePoint list name
+username = "DOMAIN\\your_username"  # Example: "COMPANY\\john.doe"
 password = "your_password"
-local_filename = "downloaded_file.xlsx"  # or .csv etc.
+output_folder = "C:\\Reports\\RRRequest"  # Set to your desired folder
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+output_file = f"{output_folder}\\RR_Request_Export_{timestamp}.xlsx"
 
-# === DOWNLOAD FILE ===
-response = requests.get(sharepoint_url, auth=HttpNtlmAuth(username, password), stream=True)
+# === SharePoint REST API endpoint ===
+endpoint = f"{site_url}/teams/corp/opsacs/cob/_api/web/lists/getbytitle('{list_title}')/items"
+
+# === Set headers ===
+headers = {
+    "Accept": "application/json;odata=verbose"
+}
+
+# === Send request ===
+print("Downloading SharePoint list...")
+response = requests.get(endpoint, auth=HttpNtlmAuth(username, password), headers=headers)
 
 if response.status_code == 200:
-    with open(local_filename, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
-    print(f"File downloaded successfully to: {local_filename}")
+    items = response.json()['d']['results']
+    df = pd.json_normalize(items)
+    df.to_excel(output_file, index=False)
+    print(f"✅ Exported SharePoint list to: {output_file}")
 else:
-    print(f"Failed to download file. Status Code: {response.status_code}")
+    print(f"❌ Failed to download. Status Code: {response.status_code}")
     print(response.text)

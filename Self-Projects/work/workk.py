@@ -1,34 +1,29 @@
-import requests
-from requests_ntlm import HttpNtlmAuth
-import pandas as pd
+import os
 import datetime
+import win32com.client as win32
 
 # === CONFIGURATION ===
-site_url = "https://sharepoint.company.com"
-list_title = "RR Request V3"  # Must match exact SharePoint list name
-username = "DOMAIN\\your_username"  # Example: "COMPANY\\john.doe"
-password = "your_password"
-output_folder = "C:\\Reports\\RRRequest"  # Set to your desired folder
+iqy_path = r"C:\Path\To\Your\RR_Request.iqy"  # Path to the IQY file
+save_folder = r"C:\Reports\RRRequest"
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-output_file = f"{output_folder}\\RR_Request_Export_{timestamp}.xlsx"
+output_file = os.path.join(save_folder, f"RR_Request_{timestamp}.xlsx")
 
-# === SharePoint REST API endpoint ===
-endpoint = f"{site_url}/teams/corp/opsacs/cob/_api/web/lists/getbytitle('{list_title}')/items"
+# === LAUNCH EXCEL AND OPEN IQY ===
+excel = win32.gencache.EnsureDispatch('Excel.Application')
+excel.Visible = False  # Set to True to watch it open
+workbook = excel.Workbooks.Open(iqy_path)
 
-# === Set headers ===
-headers = {
-    "Accept": "application/json;odata=verbose"
-}
+# === REFRESH THE DATA CONNECTION ===
+workbook.RefreshAll()
 
-# === Send request ===
-print("Downloading SharePoint list...")
-response = requests.get(endpoint, auth=HttpNtlmAuth(username, password), headers=headers)
+# === WAIT UNTIL REFRESH IS DONE ===
+# Safer with DoEvents loop
+while excel.CalculateUntilAsyncQueriesDone() != 0:
+    pass
 
-if response.status_code == 200:
-    items = response.json()['d']['results']
-    df = pd.json_normalize(items)
-    df.to_excel(output_file, index=False)
-    print(f"✅ Exported SharePoint list to: {output_file}")
-else:
-    print(f"❌ Failed to download. Status Code: {response.status_code}")
-    print(response.text)
+# === SAVE AS .XLSX AND CLOSE ===
+workbook.SaveAs(output_file, FileFormat=51)  # 51 = .xlsx
+workbook.Close(SaveChanges=False)
+excel.Quit()
+
+print(f"✅ SharePoint data saved to: {output_file}")

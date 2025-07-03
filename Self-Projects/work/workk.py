@@ -1,12 +1,12 @@
 import pandas as pd
 import pyodbc
 
-# --- CONFIGURATION ---
+# --- CONFIG ---
 ACCESS_DB_PATH = r"C:\path\to\RR_Request_DB.accdb"
 TABLE_NAME = "Snapshots"
 STATUS_COLUMNS = ["Screenings", "Documents Ready for Review"]
 
-# --- Connect to Access DB ---
+# --- Read from Access ---
 def read_snapshots_from_access(db_path, table_name):
     conn_str = (
         r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
@@ -17,65 +17,68 @@ def read_snapshots_from_access(db_path, table_name):
     conn.close()
     return df
 
-# --- Calculate aging for one status column ---
+# --- Aging Logic ---
 def calculate_status_aging(df, status_col):
     df = df.copy()
     df["file_date"] = pd.to_datetime(df["file_date"])
-    df = df.sort_values(by=["Title", "Review Type", "file_date"])
+    df["Trigger Date"] = pd.to_datetime(df["Trigger Date"], errors="coerce")
+    df = df.dropna(subset=["Trigger Date", status_col])
+
+    df = df.sort_values(by=["Title", "Review Type", "Trigger Date", "file_date"])
 
     results = []
 
-    for (title, review_type), group in df.groupby(["Title", "Review Type"]):
-        group = group[["file_date", status_col]].dropna().sort_values("file_date")
-        if group.empty:
-            continue
+    group_cols = ["Title", "Review Type", "Trigger Date"]
+    for group_keys, group in df.groupby(group_cols):
+        title, review_type, trigger_date = group_keys
+        group = group[["file_date", status_col]].dropna()
 
         prev_status = None
-        start_date = None
+        prev_start_date = trigger_date  # Start from Trigger Date
 
         for i, row in group.iterrows():
             curr_status = row[status_col]
-            curr_date = row["file_date"]
+            curr_file_date = row["file_date"]
 
             if pd.isna(curr_status):
                 continue
 
             if prev_status is None:
-                # First valid status
                 prev_status = curr_status
-                start_date = curr_date
+                prev_start_date = trigger_date  # First snapshot → use Trigger Date
             elif curr_status != prev_status:
-                # Status changed → close previous status period
+                # Status changed → close the previous one
                 results.append({
                     "Title": title,
                     "Review Type": review_type,
+                    "Trigger Date": trigger_date.date(),
                     "Status Type": status_col,
                     "Status Value": prev_status,
-                    "Start Date": start_date,
-                    "End Date": curr_date,
-                    "Duration (days)": (curr_date - start_date).days
+                    "Start Date": prev_start_date.date(),
+                    "End Date": curr_file_date.date(),
+                    "Duration (days)": (curr_file_date - prev_start_date).days
                 })
-                # Start new period
+                # Start new status aging
                 prev_status = curr_status
-                start_date = curr_date
+                prev_start_date = curr_file_date
 
-        # Add last open period till last date
-        if prev_status is not None and start_date is not None:
-            end_date = group["file_date"].max()
-            duration = (end_date - start_date).days + 1  # Include final day
+        # Handle last open status (up to latest snapshot date)
+        if prev_status is not None:
+            last_file_date = group["file_date"].max()
             results.append({
                 "Title": title,
                 "Review Type": review_type,
+                "Trigger Date": trigger_date.date(),
                 "Status Type": status_col,
                 "Status Value": prev_status,
-                "Start Date": start_date,
-                "End Date": end_date,
-                "Duration (days)": duration
+                "Start Date": prev_start_date.date(),
+                "End Date": last_file_date.date(),
+                "Duration (days)": (last_file_date - prev_start_date).days + 1
             })
 
     return pd.DataFrame(results)
 
-# --- Main aging calculator ---
+# --- Run full aging ---
 def calculate_aging_from_access(db_path, table_name, status_columns):
     df = read_snapshots_from_access(db_path, table_name)
 
@@ -86,11 +89,9 @@ def calculate_aging_from_access(db_path, table_name, status_columns):
 
     return pd.concat(aging_frames, ignore_index=True)
 
-# --- RUN ---
+# --- Execute ---
 aging_df = calculate_aging_from_access(ACCESS_DB_PATH, TABLE_NAME, STATUS_COLUMNS)
 
-# Show result
+# Show or save
 print(aging_df.head())
-
-# Optional: Save to Excel
-aging_df.to_excel("status_aging_output.xlsx", index=False)
+aging_df.to_excel("accurate_status_aging.xlsx", index=False)

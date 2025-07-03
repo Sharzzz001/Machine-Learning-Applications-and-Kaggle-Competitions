@@ -2,23 +2,22 @@ import pandas as pd
 import pyodbc
 import os
 
-# Your DataFrame
+# Sample DataFrame (replace with your actual df)
 df = pd.DataFrame({
-    'ID': [1, 2],
-    'Name': ['Alice', 'Bob'],
-    'Age': [30, 25],
-    'Join_Date': pd.to_datetime(['2022-01-01', '2022-02-01']),
+    'ID': pd.Series(dtype='int'),
+    'Name': pd.Series(dtype='str'),
+    'Age': pd.Series(dtype='float'),
+    'Join_Date': pd.Series(dtype='datetime64[ns]'),
 })
 
-# Access DB path (it will be created if not exists)
+# Path to Access .accdb file
 access_db_path = r'C:\path\to\your\database.accdb'
 
-# If file doesn't exist, create an empty .accdb file (optional)
+# Ensure the file exists (Access doesn't allow creating new .accdb via pyodbc)
 if not os.path.exists(access_db_path):
-    import subprocess
-    subprocess.call(['msaccess.exe', '/nostartup', '/compact', access_db_path])
+    raise FileNotFoundError(f"Access DB not found at: {access_db_path}. Please create a blank .accdb file manually.")
 
-# Connection string
+# pyodbc connection string
 conn_str = (
     r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
     rf'DBQ={access_db_path};'
@@ -29,38 +28,34 @@ conn = pyodbc.connect(conn_str, autocommit=True)
 cursor = conn.cursor()
 
 # Table name
-table_name = 'MyTable'
+table_name = 'MyEmptyTable'
 
-# Drop table if exists (optional)
+# Drop table if exists
 try:
-    cursor.execute(f"DROP TABLE {table_name}")
+    cursor.execute(f"DROP TABLE [{table_name}]")
 except:
     pass
 
-# Create table with appropriate Access data types
+# Map pandas dtypes to Access types
+type_map = {
+    'int64': 'INT',
+    'float64': 'DOUBLE',
+    'object': 'TEXT',
+    'datetime64[ns]': 'DATETIME',
+    'bool': 'YESNO'
+}
+
 column_defs = []
 for col in df.columns:
-    dtype = df[col].dtype
-    if pd.api.types.is_integer_dtype(dtype):
-        col_type = 'INT'
-    elif pd.api.types.is_float_dtype(dtype):
-        col_type = 'DOUBLE'
-    elif pd.api.types.is_datetime64_any_dtype(dtype):
-        col_type = 'DATETIME'
-    else:
-        col_type = 'TEXT'
-    column_defs.append(f"[{col}] {col_type}")
-    
-create_table_sql = f"CREATE TABLE {table_name} ({', '.join(column_defs)})"
-cursor.execute(create_table_sql)
+    dtype_str = str(df[col].dtype)
+    access_type = type_map.get(dtype_str, 'TEXT')  # Default to TEXT if unknown
+    column_defs.append(f"[{col}] {access_type}")
 
-# Insert data row by row
-for _, row in df.iterrows():
-    placeholders = ', '.join(['?'] * len(df.columns))
-    insert_sql = f"INSERT INTO {table_name} VALUES ({placeholders})"
-    cursor.execute(insert_sql, tuple(row))
+# Create table
+create_sql = f"CREATE TABLE [{table_name}] ({', '.join(column_defs)})"
+cursor.execute(create_sql)
 
-# Clean up
-conn.commit()
+# Done
 cursor.close()
 conn.close()
+print(f"Table '{table_name}' created successfully in {access_db_path}")

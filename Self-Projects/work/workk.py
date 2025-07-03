@@ -95,3 +95,34 @@ aging_df = calculate_aging_from_access(ACCESS_DB_PATH, TABLE_NAME, STATUS_COLUMN
 # Show or save
 print(aging_df.head())
 aging_df.to_excel("accurate_status_aging.xlsx", index=False)
+
+
+
+
+import pandas as pd
+
+# Load both snapshot files
+file1 = pd.read_excel("RR_Request_2025-07-02.xlsx")
+file2 = pd.read_excel("RR_Request_2025-07-03.xlsx")
+
+# Columns to compare
+key_cols = ["Title", "Review Type"]
+status_cols = ["Screenings", "Documents Ready for Review"]
+
+# Merge on Title + Review Type
+merged = file1[key_cols + status_cols].merge(
+    file2[key_cols + status_cols],
+    on=key_cols,
+    suffixes=("_old", "_new"),
+    how="inner"
+)
+
+# Identify changes
+for col in status_cols:
+    merged[f"{col}_changed"] = merged[f"{col}_old"] != merged[f"{col}_new"]
+
+# Filter rows where any status changed
+changed = merged[merged[[f"{col}_changed" for col in status_cols]].any(axis=1)]
+
+# Show changes
+print(changed[[*key_cols, *status_cols, *(f"{col}_changed" for col in status_cols)]])

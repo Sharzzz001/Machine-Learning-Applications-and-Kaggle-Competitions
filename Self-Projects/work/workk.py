@@ -1,78 +1,41 @@
-COMPARE_DATE_1 = "2025-07-02"
-COMPARE_DATE_2 = "2025-07-03"
+import win32com.client
+import os
 
-import pandas as pd
-import pyodbc
+# === CONFIGURATION ===
+access_path = r"C:\Path\To\Your\Database.accdb"      # Change this to your Access DB path
+query_name = "YourQueryName"                         # Change this to the name of your saved query
+export_path = r"C:\Path\To\Export\output.xlsx"       # Desired output path for Excel file
 
-# --- CONFIG: EDIT THESE ---
-ACCESS_DB_PATH = r"C:\path\to\RR_Request_DB.accdb"
-TABLE_NAME = "Snapshots"
+# Excel export needs to be .xlsx but Access natively saves as .xls
+temp_export_path = export_path.replace('.xlsx', '.xls')  # Temporary .xls export
 
-COMPARE_DATE_1 = "2025-07-02"  # First snapshot date
-COMPARE_DATE_2 = "2025-07-03"  # Second snapshot date
-TRIGGER_DATE_THRESHOLD = "2025-07-02"
+# === START AUTOMATION ===
+access = win32com.client.Dispatch("Access.Application")
+access.Visible = False
 
-# --- Load data from Access ---
-def load_data(date1, date2):
-    conn_str = (
-        r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-        rf"DBQ={ACCESS_DB_PATH};"
-    )
-    conn = pyodbc.connect(conn_str)
-    
-    query = f"""
-        SELECT [Title], [Review Type], [Trigger Date],
-               [Screenings], [Documents Ready for Review], [file_date]
-        FROM [{TABLE_NAME}]
-        WHERE [Trigger Date] > #{TRIGGER_DATE_THRESHOLD}#
-          AND file_date IN (#{date1}#, #{date2}#)
-    """
-    
-    df = pd.read_sql(query, conn)
-    conn.close()
-    return df
+# Open the DB
+access.OpenCurrentDatabase(access_path)
 
-# --- Compare snapshots ---
-def compare_snapshots(df, date1, date2):
-    df["file_date"] = pd.to_datetime(df["file_date"])
-    df["Trigger Date"] = pd.to_datetime(df["Trigger Date"])
-    df["file_date_str"] = df["file_date"].dt.strftime("%Y-%m-%d")
+# Export the query result to Excel (.xls)
+access.DoCmd.TransferSpreadsheet(
+    TransferType=1,       # acExport
+    SpreadsheetType=8,    # acSpreadsheetTypeExcel9 (.xls)
+    TableName=query_name,
+    FileName=temp_export_path,
+    HasFieldNames=True
+)
 
-    # Pivot screenings
-    screening_pivot = df.pivot_table(
-        index=["Title", "Review Type", "Trigger Date"],
-        columns="file_date_str",
-        values="Screenings",
-        aggfunc="first"
-    ).rename(columns={
-        date1: f"Screening {date1}",
-        date2: f"Screening {date2}"
-    })
+# Close Access
+access.Quit()
 
-    # Pivot document status
-    document_pivot = df.pivot_table(
-        index=["Title", "Review Type", "Trigger Date"],
-        columns="file_date_str",
-        values="Documents Ready for Review",
-        aggfunc="first"
-    ).rename(columns={
-        date1: f"Document {date1}",
-        date2: f"Document {date2}"
-    })
+# Optional: Convert .xls to .xlsx using Excel
+excel = win32com.client.Dispatch("Excel.Application")
+wb = excel.Workbooks.Open(temp_export_path)
+wb.SaveAs(export_path, FileFormat=51)  # FileFormat=51 is .xlsx
+wb.Close(False)
+excel.Quit()
 
-    # Merge
-    merged = screening_pivot.join(document_pivot, how="outer").reset_index()
+# Delete the temporary .xls file
+os.remove(temp_export_path)
 
-    # Add change flags
-    merged["Screening Changed"] = merged[f"Screening {date1}"] != merged[f"Screening {date2}"]
-    merged["Document Changed"] = merged[f"Document {date1}"] != merged[f"Document {date2}"]
-
-    return merged
-
-# --- Run Script ---
-df = load_data(COMPARE_DATE_1, COMPARE_DATE_2)
-comparison_df = compare_snapshots(df, COMPARE_DATE_1, COMPARE_DATE_2)
-
-# Display or save
-print(comparison_df.head())
-comparison_df.to_excel(f"status_change_{COMPARE_DATE_1}_to_{COMPARE_DATE_2}.xlsx", index=False)
+print(f"Exported '{query_name}' from Access to {export_path}")

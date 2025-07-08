@@ -1,41 +1,60 @@
-import win32com.client
+import pandas as pd
 import os
+import re
+from datetime import datetime
 
 # === CONFIGURATION ===
-access_path = r"C:\Path\To\Your\Database.accdb"      # Change this to your Access DB path
-query_name = "YourQueryName"                         # Change this to the name of your saved query
-export_path = r"C:\Path\To\Export\output.xlsx"       # Desired output path for Excel file
+folder_path = r'C:\Path\To\Folder'  # Folder with Output1_YYYY-MM-DD.xlsx files
+main_df = pd.read_excel(r'C:\Path\To\Main.xlsx')  # Main file with Account IDs only
+main_df['Sales Code'] = None
+main_df['EKYC ID'] = None
 
-# Excel export needs to be .xlsx but Access natively saves as .xls
-temp_export_path = export_path.replace('.xlsx', '.xls')  # Temporary .xls export
+# === STEP 1: Get all output files sorted by date descending ===
+pattern = re.compile(r'Output1_(\d{4}-\d{2}-\d{2})\.xlsx')
+file_date_paths = []
 
-# === START AUTOMATION ===
-access = win32com.client.Dispatch("Access.Application")
-access.Visible = False
+for fname in os.listdir(folder_path):
+    match = pattern.match(fname)
+    if match:
+        date = datetime.strptime(match.group(1), '%Y-%m-%d')
+        full_path = os.path.join(folder_path, fname)
+        file_date_paths.append((date, full_path))
 
-# Open the DB
-access.OpenCurrentDatabase(access_path)
+# Sort by most recent first
+file_date_paths.sort(reverse=True)
 
-# Export the query result to Excel (.xls)
-access.DoCmd.TransferSpreadsheet(
-    TransferType=1,       # acExport
-    SpreadsheetType=8,    # acSpreadsheetTypeExcel9 (.xls)
-    TableName=query_name,
-    FileName=temp_export_path,
-    HasFieldNames=True
-)
+# === STEP 2: Build a dictionary to hold data as we find it ===
+found_data = {}  # key: account id → value: (Sales Code, EKYC ID)
 
-# Close Access
-access.Quit()
+# === STEP 3: Iterate through files, updating only unmatched IDs ===
+unmatched_ids = set(main_df['Account ID'])
 
-# Optional: Convert .xls to .xlsx using Excel
-excel = win32com.client.Dispatch("Excel.Application")
-wb = excel.Workbooks.Open(temp_export_path)
-wb.SaveAs(export_path, FileFormat=51)  # FileFormat=51 is .xlsx
-wb.Close(False)
-excel.Quit()
+for date, path in file_date_paths:
+    if not unmatched_ids:
+        break  # All found
 
-# Delete the temporary .xls file
-os.remove(temp_export_path)
+    print(f"Looking in file: {os.path.basename(path)}")
+    try:
+        df = pd.read_excel(path)
+    except Exception as e:
+        print(f"Failed to read {path}: {e}")
+        continue
 
-print(f"Exported '{query_name}' from Access to {export_path}")
+    # Filter rows with account ids we're still looking for
+    df = df[['Account ID', 'Sales Code', 'EKYC ID']].dropna(subset=['Account ID'])
+    df = df[df['Account ID'].isin(unmatched_ids)]
+
+    for _, row in df.iterrows():
+        acc_id = row['Account ID']
+        sales = row['Sales Code']
+        ekyc = row['EKYC ID']
+        found_data[acc_id] = (sales, ekyc)
+        unmatched_ids.discard(acc_id)
+
+# === STEP 4: Fill main_df using the found_data dict ===
+main_df['Sales Code'] = main_df['Account ID'].map(lambda x: found_data.get(x, (None, None))[0])
+main_df['EKYC ID'] = main_df['Account ID'].map(lambda x: found_data.get(x, (None, None))[1])
+
+# === STEP 5: Export or continue ===
+main_df.to_excel('main_with_merged_data.xlsx', index=False)
+print("✅ Done. Output written to 'main_with_merged_data.xlsx'")

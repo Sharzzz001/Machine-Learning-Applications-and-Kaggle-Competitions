@@ -1,60 +1,73 @@
+import pyodbc
 import pandas as pd
-import os
-import re
-from datetime import datetime
 
-# === CONFIGURATION ===
-folder_path = r'C:\Path\To\Folder'  # Folder with Output1_YYYY-MM-DD.xlsx files
-main_df = pd.read_excel(r'C:\Path\To\Main.xlsx')  # Main file with Account IDs only
-main_df['Sales Code'] = None
-main_df['EKYC ID'] = None
+# --- Config ---
+access_db_path = r"C:\path\to\your\database.accdb"  # Change this
+table_name = "YourTableName"                        # Change this
+parquet_output_path = r"C:\path\to\output.parquet"  # Change this
 
-# === STEP 1: Get all output files sorted by date descending ===
-pattern = re.compile(r'Output1_(\d{4}-\d{2}-\d{2})\.xlsx')
-file_date_paths = []
+# --- Connection String (for Access .accdb) ---
+conn_str = (
+    r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
+    f"DBQ={access_db_path};"
+)
 
-for fname in os.listdir(folder_path):
-    match = pattern.match(fname)
-    if match:
-        date = datetime.strptime(match.group(1), '%Y-%m-%d')
-        full_path = os.path.join(folder_path, fname)
-        file_date_paths.append((date, full_path))
+# --- Read Table from Access ---
+with pyodbc.connect(conn_str) as conn:
+    query = f"SELECT * FROM [{table_name}]"
+    df = pd.read_sql(query, conn)
 
-# Sort by most recent first
-file_date_paths.sort(reverse=True)
+# --- Save to Parquet ---
+df.to_parquet(parquet_output_path, engine="pyarrow", index=False)
 
-# === STEP 2: Build a dictionary to hold data as we find it ===
-found_data = {}  # key: account id → value: (Sales Code, EKYC ID)
+print(f"✅ Exported {len(df)} rows from '{table_name}' to '{parquet_output_path}'")
 
-# === STEP 3: Iterate through files, updating only unmatched IDs ===
-unmatched_ids = set(main_df['Account ID'])
 
-for date, path in file_date_paths:
-    if not unmatched_ids:
-        break  # All found
+import pandas as pd
+import hashlib
+from cryptography.fernet import Fernet
 
-    print(f"Looking in file: {os.path.basename(path)}")
-    try:
-        df = pd.read_excel(path)
-    except Exception as e:
-        print(f"Failed to read {path}: {e}")
-        continue
+# Set up a reversible encryption key — save this securely!
+key = Fernet.generate_key()
+cipher = Fernet(key)
 
-    # Filter rows with account ids we're still looking for
-    df = df[['Account ID', 'Sales Code', 'EKYC ID']].dropna(subset=['Account ID'])
-    df = df[df['Account ID'].isin(unmatched_ids)]
+# Save this key to a file for unmasking later
+with open("masking_key.key", "wb") as f:
+    f.write(key)
 
-    for _, row in df.iterrows():
-        acc_id = row['Account ID']
-        sales = row['Sales Code']
-        ekyc = row['EKYC ID']
-        found_data[acc_id] = (sales, ekyc)
-        unmatched_ids.discard(acc_id)
+def encrypt_value(val):
+    if pd.isnull(val): return val
+    return cipher.encrypt(str(val).encode()).decode()
 
-# === STEP 4: Fill main_df using the found_data dict ===
-main_df['Sales Code'] = main_df['Account ID'].map(lambda x: found_data.get(x, (None, None))[0])
-main_df['EKYC ID'] = main_df['Account ID'].map(lambda x: found_data.get(x, (None, None))[1])
+def decrypt_value(val):
+    if pd.isnull(val): return val
+    return cipher.decrypt(val.encode()).decode()
+    
+# Load your Excel
+df = pd.read_excel("original_data.xlsx")
 
-# === STEP 5: Export or continue ===
-main_df.to_excel('main_with_merged_data.xlsx', index=False)
-print("✅ Done. Output written to 'main_with_merged_data.xlsx'")
+# Define sensitive columns
+sensitive_cols = ['Name', 'Email']
+
+# Mask them
+for col in sensitive_cols:
+    df[col] = df[col].apply(encrypt_value)
+
+# Optionally obfuscate Salary but keep ratios
+df['Salary'] = df['Salary'] * 1.2  # or use encryption if you want
+
+# Save masked version
+df.to_excel("masked_data.xlsx", index=False)
+
+# Load key again
+with open("masking_key.key", "rb") as f:
+    key = f.read()
+
+cipher = Fernet(key)
+
+# Load transformed file
+masked_df = pd.read_excel("masked_transformed.xlsx")
+
+# Decrypt
+for col in sensitive_cols:
+    masked_df[col] = masked_df[col].apply(decrypt_value)

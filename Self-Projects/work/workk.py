@@ -1,73 +1,31 @@
-import pyodbc
 import pandas as pd
 
-# --- Config ---
-access_db_path = r"C:\path\to\your\database.accdb"  # Change this
-table_name = "YourTableName"                        # Change this
-parquet_output_path = r"C:\path\to\output.parquet"  # Change this
+# Load your original Excel file
+df = pd.read_excel("your_file.xlsx")
 
-# --- Connection String (for Access .accdb) ---
-conn_str = (
-    r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-    f"DBQ={access_db_path};"
-)
+# Pick the columns to mask
+columns_to_mask = ['CustomerName', 'Email', 'AccountID']  # example
 
-# --- Read Table from Access ---
-with pyodbc.connect(conn_str) as conn:
-    query = f"SELECT * FROM [{table_name}]"
-    df = pd.read_sql(query, conn)
+# Store mappings for reversibility
+mask_maps = {}
 
-# --- Save to Parquet ---
-df.to_parquet(parquet_output_path, engine="pyarrow", index=False)
-
-print(f"✅ Exported {len(df)} rows from '{table_name}' to '{parquet_output_path}'")
-
-
-import pandas as pd
-import hashlib
-from cryptography.fernet import Fernet
-
-# Set up a reversible encryption key — save this securely!
-key = Fernet.generate_key()
-cipher = Fernet(key)
-
-# Save this key to a file for unmasking later
-with open("masking_key.key", "wb") as f:
-    f.write(key)
-
-def encrypt_value(val):
-    if pd.isnull(val): return val
-    return cipher.encrypt(str(val).encode()).decode()
-
-def decrypt_value(val):
-    if pd.isnull(val): return val
-    return cipher.decrypt(val.encode()).decode()
+for col in columns_to_mask:
+    unique_vals = df[col].dropna().unique()
     
-# Load your Excel
-df = pd.read_excel("original_data.xlsx")
+    # Create a mapping: each unique value gets a fake label
+    mapping = {orig: f"{col}_MASKED_{i+1:04d}" for i, orig in enumerate(unique_vals)}
+    
+    # Apply mapping
+    df[col] = df[col].map(mapping)
+    
+    # Save mapping for reverse unmasking
+    mask_maps[col] = mapping
 
-# Define sensitive columns
-sensitive_cols = ['Name', 'Email']
+# Save the masked file
+df.to_excel("masked_output.xlsx", index=False)
 
-# Mask them
-for col in sensitive_cols:
-    df[col] = df[col].apply(encrypt_value)
+# Optionally save the mappings to JSON for unmasking later
+import json
 
-# Optionally obfuscate Salary but keep ratios
-df['Salary'] = df['Salary'] * 1.2  # or use encryption if you want
-
-# Save masked version
-df.to_excel("masked_data.xlsx", index=False)
-
-# Load key again
-with open("masking_key.key", "rb") as f:
-    key = f.read()
-
-cipher = Fernet(key)
-
-# Load transformed file
-masked_df = pd.read_excel("masked_transformed.xlsx")
-
-# Decrypt
-for col in sensitive_cols:
-    masked_df[col] = masked_df[col].apply(decrypt_value)
+with open("mask_mappings.json", "w") as f:
+    json.dump(mask_maps, f)

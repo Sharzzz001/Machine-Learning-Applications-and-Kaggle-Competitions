@@ -75,3 +75,31 @@ plt.show()
 
 avg_doc.to_excel("avg_document_status_aging.xlsx", index=False)
 avg_screen.to_excel("avg_screening_status_aging.xlsx", index=False)
+
+
+import plotly.express as px
+
+fig = px.box(
+    aging_doc_filtered,
+    x='Status',
+    y='Aging_Days',
+    points="all",  # show all data points
+    hover_data=['Account number'],  # optional: show account info on hover
+    title="Interactive Aging Boxplot by Document Review Status"
+)
+
+fig.show()
+
+
+fig2 = px.box(
+    aging_screen_filtered,
+    x='Status_screen',
+    y='Aging_Days',
+    points="all",
+    hover_data=['Account number'],
+    title="Interactive Aging Boxplot by Screening Status"
+)
+
+fig2.show()
+
+fig.write_html("doc_status_aging_boxplot.html")

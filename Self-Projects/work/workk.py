@@ -29,3 +29,18 @@ import json
 
 with open("mask_mappings.json", "w") as f:
     json.dump(mask_maps, f)
+    
+
+# Load masked file
+masked_df = pd.read_excel("masked_output.xlsx")
+
+# Load mapping
+with open("mask_mappings.json") as f:
+    mask_maps = json.load(f)
+
+# Reverse mapping
+for col, mapping in mask_maps.items():
+    reverse_map = {v: k for k, v in mapping.items()}
+    masked_df[col] = masked_df[col].map(reverse_map)
+
+masked_df.to_excel("unmasked_output.xlsx", index=False)

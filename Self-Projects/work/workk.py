@@ -86,3 +86,39 @@ print(aging_doc_filtered.head())
 
 print("\nFiltered Screening Aging Sample:")
 print(aging_screen_filtered.head())
+
+def truncate_on_completion(group, status_col, completion_value):
+    idx = group[group[status_col] == completion_value].first_valid_index()
+    if idx is not None:
+        group = group.loc[:idx]  # Include the completion day
+    return group
+
+df_doc = df_clean.groupby('Account number', group_keys=False).apply(
+    truncate_on_completion, status_col='Status', completion_value='KYC_Completed'
+)
+
+df_screen = df_clean.groupby('Account number', group_keys=False).apply(
+    truncate_on_completion, status_col='Status_screen', completion_value='Completed'
+)
+
+def compute_aging(group, status_col):
+    group = group.copy()
+    group['prev_status'] = group[status_col].shift()
+    group['status_change'] = group[status_col] != group['prev_status']
+    group['group_id'] = group['status_change'].cumsum()
+    aging = group.groupby('group_id').agg({
+        'Date': ['min', 'max'],
+        status_col: 'first',
+        'Account number': 'first'
+    }).reset_index()
+
+    aging.columns = ['group_id', 'Start_Date', 'End_Date', status_col, 'Account number']
+    aging['Aging_Days'] = (aging['End_Date'] - aging['Start_Date']).dt.days + 1
+    return aging
+
+aging_doc = df_doc.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status'))
+aging_screen = df_screen.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status_screen'))
+
+
+
+

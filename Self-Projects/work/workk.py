@@ -1,12 +1,14 @@
 import pandas as pd
 import pyodbc
+import numpy as np
 
 # ---- CONFIGURATION ---- #
-ACCESS_DB_PATH = r"C:\path\to\your\file.accdb"  # Change this
-TABLE_NAME = "SnapshotTable"  # Change this
+ACCESS_DB_PATH = r"C:\path\to\your\file.accdb"  # 🔁 Change to your Access DB path
+TABLE_NAME = "SnapshotTable"  # 🔁 Change to your Access table name
 DOC_COMPLETED = "KYC_Completed"
 SCREEN_COMPLETED = "Completed"
 CANCELLED_KEYWORD = "Cancelled"
+START_FROM = 'focus'  # Use 'focus' to start aging from Focus list entering date, or 'snapshot'
 
 # ---- CONNECT TO ACCESS ---- #
 conn_str = (
@@ -17,11 +19,11 @@ conn = pyodbc.connect(conn_str)
 df = pd.read_sql(f"SELECT * FROM {TABLE_NAME}", conn)
 conn.close()
 
-# ---- CLEANING ---- #
+# ---- PREPROCESSING ---- #
 df['Date'] = pd.to_datetime(df['Date'])
 df['Focus list entering date'] = pd.to_datetime(df['Focus list entering date'], errors='coerce')
 
-# Remove cancelled accounts
+# ---- REMOVE CANCELLED ACCOUNTS ---- #
 cancelled_accounts = df[df['Status'].str.contains(CANCELLED_KEYWORD, case=False, na=False)]['Account number'].unique()
 df = df[~df['Account number'].isin(cancelled_accounts)].copy()
 
@@ -29,20 +31,24 @@ df = df[~df['Account number'].isin(cancelled_accounts)].copy()
 def truncate_on_completion(group, status_col, completed_value):
     idx = group[group[status_col] == completed_value].first_valid_index()
     if idx is not None:
-        group = group.loc[:idx]  # include the completion day
+        group = group.loc[:idx]
     return group
 
-# Truncate Status
 df_doc = df.groupby('Account number', group_keys=False).apply(
     truncate_on_completion, status_col='Status', completed_value=DOC_COMPLETED
 )
 
-# Truncate Status_screen
 df_screen = df.groupby('Account number', group_keys=False).apply(
     truncate_on_completion, status_col='Status_screen', completed_value=SCREEN_COMPLETED
 )
 
-# ---- AGING CALCULATION FUNCTION ---- #
+# ---- BUSINESS DAY COUNT FUNCTION ---- #
+def count_business_days(start, end):
+    if pd.isnull(start) or pd.isnull(end):
+        return np.nan
+    return np.busday_count(start.date(), (end + pd.Timedelta(days=1)).date())
+
+# ---- AGING COMPUTATION FUNCTION ---- #
 def compute_aging(group, status_col):
     group = group.sort_values('Date').copy()
     group['prev_status'] = group[status_col].shift()
@@ -58,15 +64,19 @@ def compute_aging(group, status_col):
 
     aging.columns = ['group_id', 'Start_Snapshot', 'End_Date', status_col, 'Account number', 'Focus_list_start']
 
-    # Start aging from Focus list entering date for the first group only
-    aging['Start_Date'] = aging['Start_Snapshot']
-    min_group = aging['group_id'].min()
-    aging.loc[aging['group_id'] == min_group, 'Start_Date'] = aging.loc[aging['group_id'] == min_group, 'Focus_list_start'].values
+    # Set Start_Date based on switch
+    if START_FROM == 'focus':
+        aging['Start_Date'] = aging['Start_Snapshot']
+        min_group = aging['group_id'].min()
+        aging.loc[aging['group_id'] == min_group, 'Start_Date'] = aging.loc[aging['group_id'] == min_group, 'Focus_list_start'].values
+    else:
+        aging['Start_Date'] = aging['Start_Snapshot']
 
-    aging['Aging_Days'] = (aging['End_Date'] - aging['Start_Date']).dt.days + 1
+    aging['Aging_Days'] = aging.apply(lambda row: count_business_days(row['Start_Date'], row['End_Date']), axis=1)
+
     return aging.drop(columns=['Start_Snapshot', 'Focus_list_start'])
 
-# ---- APPLY TO BOTH PROCESSES ---- #
+# ---- APPLY AGING ---- #
 aging_doc = df_doc.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status'))
 aging_screen = df_screen.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status_screen'))
 
@@ -80,9 +90,9 @@ def remove_outliers_iqr(df, col='Aging_Days'):
 aging_doc_filtered = remove_outliers_iqr(aging_doc)
 aging_screen_filtered = remove_outliers_iqr(aging_screen)
 
-# ---- DONE ---- #
-print("Filtered Document Aging Sample:")
+# ---- OUTPUT ---- #
+print("📄 Document Status Aging (Filtered):")
 print(aging_doc_filtered.head())
 
-print("\nFiltered Screening Aging Sample:")
+print("\n🔍 Screening Status Aging (Filtered):")
 print(aging_screen_filtered.head())

@@ -1,46 +1,77 @@
 import pandas as pd
+import pyodbc
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-# Load your original Excel file
-df = pd.read_excel("your_file.xlsx")
+# Path to your .accdb file
+access_db_path = r'C:\path\to\your\database.accdb'  # CHANGE THIS
 
-# Pick the columns to mask
-columns_to_mask = ['CustomerName', 'Email', 'AccountID']  # example
+# Connect to Access DB
+conn_str = (
+    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
+    rf'DBQ={access_db_path};'
+)
+conn = pyodbc.connect(conn_str)
 
-# Store mappings for reversibility
-mask_maps = {}
+# Load snapshot table
+df = pd.read_sql("SELECT * FROM SnapshotTable", conn)  # CHANGE TABLE NAME
+df['Date'] = pd.to_datetime(df['Date'])
+df['Focus list entering date'] = pd.to_datetime(df['Focus list entering date'], errors='coerce')
 
-for col in columns_to_mask:
-    unique_vals = df[col].dropna().unique()
-    
-    # Create a mapping: each unique value gets a fake label
-    mapping = {orig: f"{col}_MASKED_{i+1:04d}" for i, orig in enumerate(unique_vals)}
-    
-    # Apply mapping
-    df[col] = df[col].map(mapping)
-    
-    # Save mapping for reverse unmasking
-    mask_maps[col] = mapping
 
-# Save the masked file
-df.to_excel("masked_output.xlsx", index=False)
+df = df.sort_values(by=['Account number', 'Date'])
 
-# Optionally save the mappings to JSON for unmasking later
-import json
 
-with open("mask_mappings.json", "w") as f:
-    json.dump(mask_maps, f)
-    
+def compute_aging(group, status_col):
+    group = group.copy()
+    group['prev_status'] = group[status_col].shift()
+    group['status_change'] = group[status_col] != group['prev_status']
+    group['group_id'] = group['status_change'].cumsum()
+    aging = group.groupby('group_id').agg({
+        'Date': ['min', 'max'],
+        status_col: 'first',
+        'Account number': 'first'
+    }).reset_index()
 
-# Load masked file
-masked_df = pd.read_excel("masked_output.xlsx")
+    aging.columns = ['group_id', 'Start_Date', 'End_Date', status_col, 'Account number']
+    aging['Aging_Days'] = (aging['End_Date'] - aging['Start_Date']).dt.days + 1
+    return aging
 
-# Load mapping
-with open("mask_mappings.json") as f:
-    mask_maps = json.load(f)
+aging_doc = df.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status'))
+aging_screen = df.groupby('Account number', group_keys=False).apply(lambda x: compute_aging(x, 'Status_screen'))
 
-# Reverse mapping
-for col, mapping in mask_maps.items():
-    reverse_map = {v: k for k, v in mapping.items()}
-    masked_df[col] = masked_df[col].map(reverse_map)
 
-masked_df.to_excel("unmasked_output.xlsx", index=False)
+def remove_outliers_iqr(df, col='Aging_Days'):
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    return df[(df[col] >= Q1 - 1.5 * IQR) & (df[col] <= Q3 + 1.5 * IQR)]
+
+aging_doc_filtered = remove_outliers_iqr(aging_doc)
+aging_screen_filtered = remove_outliers_iqr(aging_screen)
+
+
+
+avg_doc = aging_doc_filtered.groupby('Status')['Aging_Days'].mean().reset_index()
+avg_screen = aging_screen_filtered.groupby('Status_screen')['Aging_Days'].mean().reset_index()
+
+
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.boxplot(data=aging_doc_filtered, x='Status', y='Aging_Days')
+plt.xticks(rotation=45)
+plt.title("Document Review Status Aging")
+
+plt.subplot(1, 2, 2)
+sns.boxplot(data=aging_screen_filtered, x='Status_screen', y='Aging_Days')
+plt.xticks(rotation=45)
+plt.title("Name Screening Status Aging")
+
+plt.tight_layout()
+plt.show()
+
+
+avg_doc.to_excel("avg_document_status_aging.xlsx", index=False)
+avg_screen.to_excel("avg_screening_status_aging.xlsx", index=False)

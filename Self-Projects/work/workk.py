@@ -96,3 +96,21 @@ print(aging_doc_filtered.head())
 
 print("\n🔍 Screening Status Aging (Filtered):")
 print(aging_screen_filtered.head())
+
+
+# Get earliest snapshot date available
+min_snapshot_date = df['Date'].min()
+
+# Find first non-null focus date per account
+first_valid_focus = (
+    df.sort_values('Date')
+    .dropna(subset=['Focus list entering date'])
+    .groupby('Account number')['Focus list entering date']
+    .first()
+)
+
+# Keep accounts where first valid focus date is >= snapshot start
+valid_accounts = first_valid_focus[first_valid_focus >= min_snapshot_date].index
+
+# Filter dataset
+df = df[df['Account number'].isin(valid_accounts)].copy()

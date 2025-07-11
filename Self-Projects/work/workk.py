@@ -1,13 +1,9 @@
-def remove_outliers_iqr(df, column):
+def cap_outliers_iqr(df, column):
     """
-    Removes outliers from a DataFrame using the IQR method for a specific column.
+    Caps outliers in the given column using the IQR method (winsorizing).
 
-    Parameters:
-        df (pd.DataFrame): Input DataFrame
-        column (str): Column name on which to apply the IQR filter
-
-    Returns:
-        pd.DataFrame: DataFrame without outliers
+    Values above upper fence are capped to upper fence,
+    values below lower fence are capped to lower fence.
     """
     Q1 = df[column].quantile(0.25)
     Q3 = df[column].quantile(0.75)
@@ -15,5 +11,6 @@ def remove_outliers_iqr(df, column):
     lower_fence = Q1 - 1.5 * IQR
     upper_fence = Q3 + 1.5 * IQR
 
-    df_filtered = df[(df[column] >= lower_fence) & (df[column] <= upper_fence)]
-    return df_filtered
+    df_capped = df.copy()
+    df_capped[column] = df_capped[column].clip(lower=lower_fence, upper=upper_fence)
+    return df_capped

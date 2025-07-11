@@ -1,30 +1,34 @@
 def calculate_remaining_entertainment(necessary_spends, entertainment_spent, total_per_diem=2112, declarable_ratio=0.66):
     """
-    Calculates how much more you can spend on entertainment.
-
-    Parameters:
-    - necessary_spends (float): Total legit expenses (F&B, laundry, etc.)
-    - entertainment_spent (float): Amount already spent on entertainment
-    - total_per_diem (float): Total allowance for the trip (default = 2112)
-    - declarable_ratio (float): Minimum % of spend that must be billable (default = 0.66)
+    Calculates how much more you can safely spend on entertainment.
 
     Returns:
     - Max total entertainment allowed
     - Remaining entertainment you can still spend
     """
-    max_non_declarable_spend = total_per_diem * (1 - declarable_ratio)
 
-    # Based on 66% rule: total_spend <= necessary / 0.66
-    max_total_spend = necessary_spends / declarable_ratio
-    max_entertainment_spend = max_total_spend - necessary_spends
+    # 1. Hard cap: max total allowed entertainment (based on 66% rule)
+    max_total_spend_by_66 = necessary_spends / declarable_ratio
+    max_entertainment_by_66 = max_total_spend_by_66 - necessary_spends
 
-    # Cap by 33% rule (non-declarable portion)
-    max_entertainment_spend = min(max_entertainment_spend, max_non_declarable_spend)
+    # 2. Cap based on 33% of total per diem
+    max_entertainment_by_33 = total_per_diem * (1 - declarable_ratio)
 
-    # Remaining entertainment budget
-    remaining_entertainment = max(0, round(max_entertainment_spend - entertainment_spent, 2))
+    # 3. Cap based on remaining money
+    remaining_budget = total_per_diem - (necessary_spends + entertainment_spent)
 
-    return round(max_entertainment_spend, 2), remaining_entertainment
+    # 4. Take the minimum of all three constraints
+    remaining_entertainment = min(
+        max_entertainment_by_66 - entertainment_spent,
+        max_entertainment_by_33 - entertainment_spent,
+        remaining_budget
+    )
+
+    # Clamp to 0 if over budget
+    remaining_entertainment = max(0, round(remaining_entertainment, 2))
+    max_entertainment_allowed = min(max_entertainment_by_66, max_entertainment_by_33, total_per_diem - necessary_spends)
+
+    return round(max_entertainment_allowed, 2), remaining_entertainment
 
 
 # ==== Interactive Prompt ====
@@ -34,7 +38,7 @@ try:
 
     max_entertainment, remaining = calculate_remaining_entertainment(necessary_spends, entertainment_spent)
 
-    print(f"\n✅ Max entertainment allowed: SGD {max_entertainment}")
+    print(f"\n✅ Max total entertainment allowed: SGD {max_entertainment}")
     print(f"💡 Remaining entertainment you can still spend: SGD {remaining}")
 except ValueError:
     print("⚠️ Please enter valid numbers.")

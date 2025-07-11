@@ -1,74 +1,28 @@
-def compute_phased_aging(group, status_col, completed_value):
-    group = group.sort_values('Date').copy()
-    group['prev_status'] = group[status_col].shift()
-    group['status_change'] = group[status_col] != group['prev_status']
-    group['group_id'] = group['status_change'].cumsum()
-
-    # Trim the group after first 'Completed' status (inclusive)
-    if completed_value in group[status_col].values:
-        completed_idx = group[group[status_col] == completed_value].first_valid_index()
-        group = group.loc[:completed_idx]
-
-    # Compute aging per status phase
-    aging = group.groupby('group_id').agg({
-        'Date': ['min', 'max'],
-        status_col: 'first',
-        'Account number': 'first'
-    }).reset_index()
-
-    aging.columns = ['group_id', 'Start_Date', 'End_Date', status_col, 'Account number']
-    aging['Aging_Days'] = aging.apply(
-        lambda row: np.busday_count(row['Start_Date'].date(), (row['End_Date'] + pd.Timedelta(days=1)).date()),
-        axis=1
-    )
-    return aging
+def calculate_entertainment_allowance(necessary_spends, total_per_diem=2112, declarable_ratio=0.66):
+    """
+    necessary_spends: total F&B/laundry/etc. expenses over the trip (in SGD)
+    total_per_diem: total allowance (default: 2112)
+    declarable_ratio: % that must be covered by receipts (default: 66%)
     
+    Returns: max entertainment allowance within rules
+    """
+    max_non_declarable_spend = total_per_diem * (1 - declarable_ratio)
     
-aging_doc = df_doc.groupby('Account number', group_keys=False).apply(
-    lambda x: compute_phased_aging(x, 'Status', STATUS_COMPLETE)
-)
+    # Total spent = necessary + entertainment
+    # To stay within 66% declarable rule:
+    # necessary_spends >= (total_spent) * 0.66
+    # => total_spent <= necessary_spends / 0.66
 
-aging_screen = df_screen.groupby('Account number', group_keys=False).apply(
-    lambda x: compute_phased_aging(x, 'Status_screen', SCREEN_COMPLETE)
-)
+    max_total_spend = necessary_spends / declarable_ratio
+    max_entertainment_spend = max_total_spend - necessary_spends
 
-def average_age_per_status(group, status_col, completed_value):
-    group = group.sort_values('Date').copy()
-    group['prev_status'] = group[status_col].shift()
-    group['hop_id'] = (group[status_col] != group['prev_status']).cumsum()
+    # Also cap at total_per_diem * 0.33
+    max_entertainment_spend = min(max_entertainment_spend, max_non_declarable_spend)
 
-    # Trim on first completion
-    if completed_value in group[status_col].values:
-        idx = group[group[status_col] == completed_value].first_valid_index()
-        group = group.loc[:idx]
+    return round(max_entertainment_spend, 2)
 
-    # Track aging per hop
-    hops = group.groupby(['hop_id', status_col]).agg({
-        'Date': ['min', 'max'],
-        'Account number': 'first'
-    }).reset_index()
 
-    hops.columns = ['hop_id', status_col, 'Start_Date', 'End_Date', 'Account number']
-
-    hops['Hop_Duration'] = hops.apply(
-        lambda row: np.busday_count(row['Start_Date'].date(), (row['End_Date'] + pd.Timedelta(days=1)).date()),
-        axis=1
-    )
-
-    # Aggregate per status
-    result = hops.groupby(['Account number', status_col]).agg(
-        Total_Days=('Hop_Duration', 'sum'),
-        Hop_Count=('Hop_Duration', 'count')
-    ).reset_index()
-
-    result['Avg_Days_Per_Hop'] = result['Total_Days'] / result['Hop_Count']
-
-    return result
-    
-aging_doc_avg = df_doc.groupby('Account number', group_keys=False).apply(
-    lambda x: average_age_per_status(x, 'Status', STATUS_COMPLETE)
-)
-
-aging_screen_avg = df_screen.groupby('Account number', group_keys=False).apply(
-    lambda x: average_age_per_status(x, 'Status_screen', SCREEN_COMPLETE)
-)
+# Example usage
+necessary_spends = float(input("Enter your total F&B/laundry/etc. spend (SGD): "))
+entertainment_allowance = calculate_entertainment_allowance(necessary_spends)
+print(f"\n💡 You can safely spend up to SGD {entertainment_allowance} on entertainment without exceeding your 33% cap.")

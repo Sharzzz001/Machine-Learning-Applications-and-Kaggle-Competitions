@@ -1,32 +1,19 @@
-def average_age_per_status(group, status_col, completion_statuses):
-    group = group.sort_values('Date').copy()
-    group['prev_status'] = group[status_col].shift()
-    group['hop_id'] = (group[status_col] != group['prev_status']).cumsum()
+def remove_outliers_iqr(df, column):
+    """
+    Removes outliers from a DataFrame using the IQR method for a specific column.
 
-    # Stop aging after first match in completion list
-    if any(group[status_col].isin(completion_statuses)):
-        idx = group[group[status_col].isin(completion_statuses)].first_valid_index()
-        group = group.loc[:idx]
+    Parameters:
+        df (pd.DataFrame): Input DataFrame
+        column (str): Column name on which to apply the IQR filter
 
-    # Compute hop-level aging
-    hops = group.groupby(['hop_id', status_col]).agg({
-        'Date': ['min', 'max'],
-        'Account number': 'first'
-    }).reset_index()
+    Returns:
+        pd.DataFrame: DataFrame without outliers
+    """
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_fence = Q1 - 1.5 * IQR
+    upper_fence = Q3 + 1.5 * IQR
 
-    hops.columns = ['hop_id', status_col, 'Start_Date', 'End_Date', 'Account number']
-
-    hops['Hop_Duration'] = hops.apply(
-        lambda row: np.busday_count(row['Start_Date'].date(), (row['End_Date'] + pd.Timedelta(days=1)).date()),
-        axis=1
-    )
-
-    # Aggregate per status
-    result = hops.groupby(['Account number', status_col]).agg(
-        Total_Days=('Hop_Duration', 'sum'),
-        Hop_Count=('Hop_Duration', 'count')
-    ).reset_index()
-
-    result['Avg_Days_Per_Hop'] = result['Total_Days'] / result['Hop_Count']
-
-    return result
+    df_filtered = df[(df[column] >= lower_fence) & (df[column] <= upper_fence)]
+    return df_filtered

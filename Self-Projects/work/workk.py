@@ -6,31 +6,37 @@ def calculate_split(existing_inr, additional_inr, entry_price_usd, leverage, inr
     # Current position size (ETH)
     existing_eth = (existing_margin_usdt * leverage) / entry_price_usd
 
-    # Keep liquidation same: maintain margin-to-position ratio
-    # Solve for split of additional_usdt between position and margin
+    # Total USDT after addition
+    total_usdt = existing_margin_usdt + additional_usdt
 
-    # Let x be USDT used for position, remaining goes to margin
-    # Position size after: existing_eth + (x * leverage / entry)
-    # Margin after: existing_margin + (additional_usdt - x)
+    # Maintain same liquidation price:
+    # New Margin / New Position Size = Old Margin / Old Position Size
+    # Let new_eth = existing_eth + delta_eth
+    # Let new_margin = existing_margin + margin_added
+    # Then:
+    # (existing_margin + margin_added) / (existing_eth + delta_eth) = existing_margin / existing_eth
 
-    # Maintain ratio:
-    # existing_margin / existing_eth = (existing_margin + (additional_usdt - x)) / (existing_eth + (x * leverage / entry_price_usd))
+    # Solve for delta_eth and margin_added
+
+    # From new funds, x goes to margin, rest to position
+    # Let x = amount in USDT added to margin
+    # (existing_margin_usdt + x) / (existing_eth + ((additional_usdt - x) * leverage / entry_price_usd)) = existing_margin_usdt / existing_eth
 
     from sympy import symbols, Eq, solve
 
     x = symbols('x')
-    lhs = existing_margin_usdt / existing_eth
-    rhs = (existing_margin_usdt + (additional_usdt - x)) / (existing_eth + (x * leverage / entry_price_usd))
+    lhs = (existing_margin_usdt + x) / (existing_eth + ((additional_usdt - x) * leverage / entry_price_usd))
+    rhs = existing_margin_usdt / existing_eth
 
     eq = Eq(lhs, rhs)
     sol = solve(eq, x)
 
-    x_usdt_position = float(sol[0])
-    x_usdt_margin = additional_usdt - x_usdt_position
+    x_usdt_margin = float(sol[0])
+    x_usdt_position = additional_usdt - x_usdt_margin
 
     # Convert back to INR
-    position_inr = x_usdt_position * inr_usdt_rate
     margin_inr = x_usdt_margin * inr_usdt_rate
+    position_inr = x_usdt_position * inr_usdt_rate
 
     return round(position_inr, 2), round(margin_inr, 2)
 

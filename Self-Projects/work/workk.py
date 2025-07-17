@@ -1,64 +1,40 @@
-from sympy import symbols, Eq, solve
+import pandas as pd
+import os
 
-def split_with_flexible_liquidation(existing_inr, additional_inr, entry_price_usd, leverage, inr_usdt_rate, max_liq_shift_pct=0.5):
-    # Convert INR to USDT
-    existing_margin_usdt = existing_inr / inr_usdt_rate
-    additional_usdt = additional_inr / inr_usdt_rate
+found_data = {}
 
-    # Current position size (ETH)
-    existing_eth = (existing_margin_usdt * leverage) / entry_price_usd
+# Step 1: Standardize account numbers
+main_df['Account Number'] = main_df['Account Number'].astype(str).str.strip()
+unmatched_ids = set(main_df['Account Number'])
 
-    # Current notional size in USD
-    position_usd = existing_eth * entry_price_usd
+# Step 2: Get list of needed files based on dates
+unique_dates = main_df['Date'].dt.strftime('%Y-%m-%d').unique()
+file_dict = {f.split('.')[0]: f for f in os.listdir(folder_path) if f.endswith('.xlsx')}
+target_files = [file_dict[date] for date in unique_dates if date in file_dict]
 
-    # Maintenance margin rate assumed for liquidation
-    mmr = 0.005
+# Step 3: Sort files newest to oldest (reverse chronological)
+target_files.sort(reverse=True)
 
-    # Current liquidation price
-    maint_margin = position_usd * mmr
-    initial_margin = existing_margin_usdt
-    liq_price = entry_price_usd * (1 - ((initial_margin - maint_margin) / position_usd))
+# Step 4: Loop through relevant files
+for file in target_files:
+    if not unmatched_ids:
+        break
 
-    # Allow liquidation to shift down slightly (max_liq_shift_pct%)
-    target_liq_price = liq_price * (1 - max_liq_shift_pct / 100)
+    try:
+        df = pd.read_excel(os.path.join(folder_path, file))
+        df['Account Number'] = df['Account Number'].astype(str).str.strip()
+        df = df[df['Account Number'].isin(unmatched_ids)]
 
-    # New funds split calculation
-    x = symbols('x')  # Amount added to margin
+        for _, row in df.iterrows():
+            acc_id = row['Account Number']
+            sales = row['Sales Code']
+            ekyc = row['eKYC']
+            found_data[acc_id] = (sales, ekyc)
+            unmatched_ids.discard(acc_id)
 
-    new_margin = existing_margin_usdt + x
-    new_position_eth = existing_eth + ((additional_usdt - x) * leverage / entry_price_usd)
-    new_position_usd = new_position_eth * entry_price_usd
+    except Exception as e:
+        print(f"Error reading {file}: {e}")
 
-    new_maint_margin = new_position_usd * mmr
-
-    new_liq = entry_price_usd * (1 - ((new_margin - new_maint_margin) / new_position_usd))
-
-    eq = Eq(new_liq, target_liq_price)
-    sol = solve(eq, x)
-
-    x_usdt_margin = float(sol[0])
-    x_usdt_position = additional_usdt - x_usdt_margin
-
-    # Convert back to INR
-    margin_inr = x_usdt_margin * inr_usdt_rate
-    position_inr = x_usdt_position * inr_usdt_rate
-
-    return {
-        'Add to Position (INR)': round(position_inr, 2),
-        'Add to Margin (INR)': round(margin_inr, 2),
-        'Old Liq Price': round(float(liq_price), 2),
-        'Target Liq Price (0.5% shift)': round(float(target_liq_price), 2),
-        'New Liq Check': round(float(new_liq.subs(x, sol[0])), 2)
-    }
-
-# Example Usage
-result = split_with_flexible_liquidation(
-    existing_inr=2000,
-    additional_inr=10000,
-    entry_price_usd=2988.33,
-    leverage=8,
-    inr_usdt_rate=93,
-    max_liq_shift_pct=0.5  # Allow 0.5% lower liquidation price
-)
-
-print(result)
+# Step 5: Map back to main_df
+main_df['Sales Code'] = main_df['Account Number'].map(lambda x: found_data.get(x, (None, None))[0])
+main_df['eKYC'] = main_df['Account Number'].map(lambda x: found_data.get(x, (None, None))[1])

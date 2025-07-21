@@ -64,3 +64,32 @@ for process in ['Screening_Status', 'Doc_Status']:
 
 result_df = pd.DataFrame(results)
 print(result_df)
+
+import pyodbc
+import pandas as pd
+
+# DB Path
+db_path = r'C:\Path\To\Your\Database.accdb'
+
+# Connection
+conn_str = (
+    r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
+    rf'DBQ={db_path};'
+)
+
+conn = pyodbc.connect(conn_str)
+
+# Query
+query = """
+SELECT Account_ID, Screening_Status, Doc_Status, Trigger_Date, File_Date
+FROM Snapshots
+"""
+
+# Read into DataFrame
+df = pd.read_sql(query, conn)
+
+# Date conversion
+df['Trigger_Date'] = pd.to_datetime(df['Trigger_Date'])
+df['File_Date'] = pd.to_datetime(df['File_Date'])
+
+print(df.head())

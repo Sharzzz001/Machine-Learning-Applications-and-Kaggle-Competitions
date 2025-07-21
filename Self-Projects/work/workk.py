@@ -1,146 +1,66 @@
-CalendarDays_Aging =
-DATEDIFF('Table'[StartDate], TODAY(), DAY)
+import pandas as pd
+import numpy as np
+from datetime import datetime
 
+# Sample data
+data = [
+    [123, 'Ready for Name Screening', 'Pending RM', '2025-07-14', '2025-07-18'],
+    [123, 'Pending CDD', 'Pending RM', '2025-07-14', '2025-07-21'],
+    [123, 'Pending RM', 'Pending CDD', '2025-07-14', '2025-07-22']
+]
 
-Aging_Bucket =
-SWITCH(
-    TRUE(),
-    ISBLANK('Table'[StartDate]), "No Start Date",
-    'Table'[CalendarDays_Aging] <= 30, "0–30 Days",
-    'Table'[CalendarDays_Aging] > 30 && NOT(ISBLANK('Table'[Extended Deadline])) && 'Table'[CalendarDays_Aging] <= 100, ">30 Days with FCC Extension",
-    'Table'[CalendarDays_Aging] > 30 && ISBLANK('Table'[Extended Deadline]) && 'Table'[CalendarDays_Aging] <= 100, ">30 Days without FCC Extension",
-    'Table'[CalendarDays_Aging] > 100 && 'Table'[CalendarDays_Aging] <= 120, ">100 Days",
-    'Table'[CalendarDays_Aging] > 120, ">120 Days",
-    BLANK()
-)
+df = pd.DataFrame(data, columns=['Account_ID', 'Screening_Status', 'Doc_Status', 'Trigger_Date', 'File_Date'])
+df['Trigger_Date'] = pd.to_datetime(df['Trigger_Date'])
+df['File_Date'] = pd.to_datetime(df['File_Date'])
 
+today = pd.to_datetime('2025-07-25')
 
-Pending_Accounts_Count =
-CALCULATE(
-    DISTINCTCOUNT('Table'[Account ID]),
-    'Table'[Doc Status] = "Pending"
-)
+results = []
 
-Aging_Bucket_Sort =
-DATATABLE(
-    "Aging_Bucket", STRING,
-    "SortOrder", INTEGER,
-    {
-        { "0–30 Days", 1 },
-        { ">30 Days with FCC Extension", 2 },
-        { ">30 Days without FCC Extension", 3 },
-        { ">100 Days", 4 },
-        { ">120 Days", 5 },
-        { "No Start Date", 6 }
-    }
-)
+for process in ['Screening_Status', 'Doc_Status']:
+    for acc_id, group in df.groupby('Account_ID'):
+        statuses = group[[process, 'Trigger_Date', 'File_Date']].copy()
+        statuses = statuses.sort_values('File_Date')
+        
+        # Track changes
+        statuses['Prev_Status'] = statuses[process].shift(1)
+        statuses['Change'] = statuses[process] != statuses['Prev_Status']
+        statuses.loc[statuses.index[0], 'Change'] = True  # Force first row as change
 
-ActionComment =
-SWITCH(
-    [Aging_Bucket],
-    "0–30 Days", "Escalated to Team/Group Head",
-    ">30 Days with FCC Extension", "Escalated to FCC for Approval",
-    ">30 Days without FCC Extension", "Pending Review - No FCC Approval",
-    ">100 Days", "Critical - Immediate Action Required",
-    ">120 Days", "Breached - High Priority Escalation",
-    "No Start Date", "Data Issue - Start Date Missing",
-    BLANK()
-)
+        # Determine start dates
+        start_dates = []
+        for idx, row in statuses.iterrows():
+            if row['Change']:
+                if idx == statuses.index[0]:
+                    start_dates.append(row['Trigger_Date'])  # First status uses Trigger Date
+                else:
+                    start_dates.append(row['File_Date'])
+            else:
+                start_dates.append(np.nan)
 
-ActionComment_Display =
-IF(
-    HASONEFILTER('Aging_Bucket_Sort'[Aging_Bucket]),
-    FIRSTNONBLANK('Aging_Bucket_Sort'[ActionComment], 1),
-    BLANK()  // For Grand Total row, show blank
-)
+        statuses['Start_Date'] = start_dates
+        statuses['Start_Date'].ffill(inplace=True)
 
-PendingAccounts_ByBucket =
-VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
-RETURN
-CALCULATE (
-    DISTINCTCOUNT('FactTable'[Account ID]),
-    FILTER (
-        'FactTable',
-        'FactTable'[Aging_Bucket] = SelectedBucket &&
-        'FactTable'[Doc Status] = "Pending"
-    )
-)
+        # Determine end dates
+        statuses['End_Date'] = statuses['File_Date'].shift(-1)
+        statuses['End_Date'].fillna(today, inplace=True)
 
+        # Only keep changes
+        changed_statuses = statuses[statuses['Change']]
+        
+        # Calculate business days
+        changed_statuses['Days'] = changed_statuses.apply(
+            lambda row: np.busday_count(row['Start_Date'].date(), row['End_Date'].date()),
+            axis=1
+        )
+        
+        for _, row in changed_statuses.iterrows():
+            results.append({
+                'Account_ID': acc_id,
+                'Process': 'Screening' if process == 'Screening_Status' else 'Doc Review',
+                'Status': row[process],
+                'Days': row['Days']
+            })
 
-PendingAccounts_ByBucket =
-VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
-RETURN
-CALCULATE(
-    DISTINCTCOUNT('DocumentData'[Account ID]),
-    TREATAS( { SelectedBucket }, 'DocumentData'[Aging_Bucket] ),
-    'DocumentData'[Doc Status] = "Pending"
-)
-
-PendingAccounts_ByBucket =
-VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
-VAR CountResult =
-    CALCULATE(
-        DISTINCTCOUNT('DocumentData'[Account ID]),
-        TREATAS( { SelectedBucket }, 'DocumentData'[Aging_Bucket] ),
-        'DocumentData'[Doc Status] = "Pending"
-    )
-RETURN
-COALESCE(CountResult, 0)
-
-pending_accounts_count =
-COALESCE(
-    CALCULATE(
-        DISTINCTCOUNT('DocumentData'[Account ID]),
-        'DocumentData'[Doc Status] = "Pending"
-    ),
-    0
-)
-
-PendingAccounts_ByBucket =
-VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
-RETURN
-IF(
-    ISINSCOPE('Aging_Bucket_Sort'[Aging_Bucket]),
-    SWITCH(
-        TRUE(),
-        SelectedBucket = "0–30 Days",
-            CALCULATE(
-                DISTINCTCOUNT('DocumentData'[Account ID]),
-                'DocumentData'[Doc Status] = "Pending",
-                'DocumentData'[Days_Open] <= 30
-            ),
-        SelectedBucket = ">30 Days with FCC Extension",
-            CALCULATE(
-                DISTINCTCOUNT('DocumentData'[Account ID]),
-                'DocumentData'[Doc Status] = "Pending",
-                'DocumentData'[Days_Open] > 30,
-                NOT(ISBLANK('DocumentData'[Extended Deadline]))
-            ),
-        SelectedBucket = ">30 Days without FCC Extension",
-            CALCULATE(
-                DISTINCTCOUNT('DocumentData'[Account ID]),
-                'DocumentData'[Doc Status] = "Pending",
-                'DocumentData'[Days_Open] > 30,
-                ISBLANK('DocumentData'[Extended Deadline])
-            ),
-        SelectedBucket = ">100 Days",
-            CALCULATE(
-                DISTINCTCOUNT('DocumentData'[Account ID]),
-                'DocumentData'[Doc Status] = "Pending",
-                'DocumentData'[Days_Open] > 100
-            ),
-        SelectedBucket = ">120 Days",
-            CALCULATE(
-                DISTINCTCOUNT('DocumentData'[Account ID]),
-                'DocumentData'[Doc Status] = "Pending",
-                'DocumentData'[Days_Open] > 120
-            ),
-        0
-    ),
-    // Grand Total logic here:
-    CALCULATE(
-        DISTINCTCOUNT('DocumentData'[Account ID]),
-        'DocumentData'[Doc Status] = "Pending"
-    )
-)
-
+result_df = pd.DataFrame(results)
+print(result_df)

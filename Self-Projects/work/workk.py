@@ -87,3 +87,12 @@ VAR CountResult =
 RETURN
 COALESCE(CountResult, 0)
 
+pending_accounts_count =
+COALESCE(
+    CALCULATE(
+        DISTINCTCOUNT('DocumentData'[Account ID]),
+        'DocumentData'[Doc Status] = "Pending"
+    ),
+    0
+)
+

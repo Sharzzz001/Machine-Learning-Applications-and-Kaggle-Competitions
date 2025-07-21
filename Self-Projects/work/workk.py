@@ -75,3 +75,15 @@ CALCULATE(
     TREATAS( { SelectedBucket }, 'DocumentData'[Aging_Bucket] ),
     'DocumentData'[Doc Status] = "Pending"
 )
+
+PendingAccounts_ByBucket =
+VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
+VAR CountResult =
+    CALCULATE(
+        DISTINCTCOUNT('DocumentData'[Account ID]),
+        TREATAS( { SelectedBucket }, 'DocumentData'[Aging_Bucket] ),
+        'DocumentData'[Doc Status] = "Pending"
+    )
+RETURN
+COALESCE(CountResult, 0)
+

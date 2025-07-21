@@ -65,3 +65,13 @@ CALCULATE (
         'FactTable'[Doc Status] = "Pending"
     )
 )
+
+
+PendingAccounts_ByBucket =
+VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
+RETURN
+CALCULATE(
+    DISTINCTCOUNT('DocumentData'[Account ID]),
+    TREATAS( { SelectedBucket }, 'DocumentData'[Aging_Bucket] ),
+    'DocumentData'[Doc Status] = "Pending"
+)

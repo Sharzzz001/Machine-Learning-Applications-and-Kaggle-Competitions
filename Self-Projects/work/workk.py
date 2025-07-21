@@ -1,11 +1,13 @@
 import os
 from tqdm import tqdm
 
-def get_folder_size(folder):
+def get_folder_size_recursive(folder):
     total_size = 0
-    for entry in os.scandir(folder):
-        if entry.is_file():
-            total_size += entry.stat().st_size
+    for root, dirs, files in os.walk(folder):
+        for f in files:
+            fp = os.path.join(root, f)
+            if os.path.isfile(fp):
+                total_size += os.path.getsize(fp)
     return total_size
 
 def print_subfolder_sizes_live(parent_folder):
@@ -15,7 +17,7 @@ def print_subfolder_sizes_live(parent_folder):
     print(f"Calculating folder sizes in: {parent_folder}\n")
     
     for entry in tqdm(subfolders, desc="Processing Folders", unit="folder"):
-        folder_size = get_folder_size(entry.path)
+        folder_size = get_folder_size_recursive(entry.path)
         size_mb = folder_size / (1024 * 1024)
         results.append((entry.name, size_mb))
         print(f"{entry.name}: {size_mb:.2f} MB", flush=True)

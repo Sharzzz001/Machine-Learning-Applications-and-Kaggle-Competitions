@@ -35,3 +35,14 @@ DATATABLE(
     }
 )
 
+ActionComment =
+SWITCH(
+    [Aging_Bucket],
+    "0–30 Days", "Escalated to Team/Group Head",
+    ">30 Days with FCC Extension", "Escalated to FCC for Approval",
+    ">30 Days without FCC Extension", "Pending Review - No FCC Approval",
+    ">100 Days", "Critical - Immediate Action Required",
+    ">120 Days", "Breached - High Priority Escalation",
+    "No Start Date", "Data Issue - Start Date Missing",
+    BLANK()
+)

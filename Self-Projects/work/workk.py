@@ -96,3 +96,51 @@ COALESCE(
     0
 )
 
+PendingAccounts_ByBucket =
+VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
+RETURN
+IF(
+    ISINSCOPE('Aging_Bucket_Sort'[Aging_Bucket]),
+    SWITCH(
+        TRUE(),
+        SelectedBucket = "0–30 Days",
+            CALCULATE(
+                DISTINCTCOUNT('DocumentData'[Account ID]),
+                'DocumentData'[Doc Status] = "Pending",
+                'DocumentData'[Days_Open] <= 30
+            ),
+        SelectedBucket = ">30 Days with FCC Extension",
+            CALCULATE(
+                DISTINCTCOUNT('DocumentData'[Account ID]),
+                'DocumentData'[Doc Status] = "Pending",
+                'DocumentData'[Days_Open] > 30,
+                NOT(ISBLANK('DocumentData'[Extended Deadline]))
+            ),
+        SelectedBucket = ">30 Days without FCC Extension",
+            CALCULATE(
+                DISTINCTCOUNT('DocumentData'[Account ID]),
+                'DocumentData'[Doc Status] = "Pending",
+                'DocumentData'[Days_Open] > 30,
+                ISBLANK('DocumentData'[Extended Deadline])
+            ),
+        SelectedBucket = ">100 Days",
+            CALCULATE(
+                DISTINCTCOUNT('DocumentData'[Account ID]),
+                'DocumentData'[Doc Status] = "Pending",
+                'DocumentData'[Days_Open] > 100
+            ),
+        SelectedBucket = ">120 Days",
+            CALCULATE(
+                DISTINCTCOUNT('DocumentData'[Account ID]),
+                'DocumentData'[Doc Status] = "Pending",
+                'DocumentData'[Days_Open] > 120
+            ),
+        0
+    ),
+    // Grand Total logic here:
+    CALCULATE(
+        DISTINCTCOUNT('DocumentData'[Account ID]),
+        'DocumentData'[Doc Status] = "Pending"
+    )
+)
+

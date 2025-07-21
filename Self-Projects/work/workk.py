@@ -46,3 +46,10 @@ SWITCH(
     "No Start Date", "Data Issue - Start Date Missing",
     BLANK()
 )
+
+ActionComment_Display =
+IF(
+    HASONEFILTER('Aging_Bucket_Sort'[Aging_Bucket]),
+    FIRSTNONBLANK('Aging_Bucket_Sort'[ActionComment], 1),
+    BLANK()  // For Grand Total row, show blank
+)

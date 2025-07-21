@@ -53,3 +53,15 @@ IF(
     FIRSTNONBLANK('Aging_Bucket_Sort'[ActionComment], 1),
     BLANK()  // For Grand Total row, show blank
 )
+
+PendingAccounts_ByBucket =
+VAR SelectedBucket = SELECTEDVALUE('Aging_Bucket_Sort'[Aging_Bucket])
+RETURN
+CALCULATE (
+    DISTINCTCOUNT('FactTable'[Account ID]),
+    FILTER (
+        'FactTable',
+        'FactTable'[Aging_Bucket] = SelectedBucket &&
+        'FactTable'[Doc Status] = "Pending"
+    )
+)

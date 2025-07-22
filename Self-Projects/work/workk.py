@@ -1,26 +1,25 @@
 import requests
 from requests_ntlm import HttpNtlmAuth
 
-# File URL - must be the **direct download link** (ends with ?download=1 or similar)
-file_url = "https://yourcompany.sharepoint.com/sites/YourSite/Shared%20Documents/filename.xlsx"
+site_url = "https://yourcompany.sharepoint.com/sites/YourSite"
+list_name = "YourListName"
 
-# Destination path to save the file
-save_path = r"C:\Users\YourName\Downloads\filename.xlsx"
-
-# Use current Windows username and password via NTLM SSO
-import getpass
-username = os.getlogin()
-domain = "YOURDOMAIN"  # Example: CORP or COMPANYAD
+url = f"{site_url}/_api/web/lists/getbytitle('{list_name}')/items?$expand=AttachmentFiles"
 
 session = requests.Session()
-session.auth = HttpNtlmAuth(f"{domain}\\{username}", getpass.getpass("Windows Password (SSO): "))
+session.auth = HttpNtlmAuth('DOMAIN\\username', 'password')
 
-# Download the file
-response = session.get(file_url)
+headers = {
+    "Accept": "application/json;odata=verbose"
+}
+
+response = session.get(url, headers=headers)
 
 if response.status_code == 200:
-    with open(save_path, 'wb') as f:
-        f.write(response.content)
-    print("File downloaded successfully.")
+    data = response.json()
+    for item in data['d']['results']:
+        for file in item['AttachmentFiles']['results']:
+            print(f"File Name: {file['FileName']}")
+            print(f"File URL: {file['ServerRelativeUrl']}")
 else:
-    print(f"Failed to download. Status code: {response.status_code}")
+    print(f"Failed: {response.status_code}")

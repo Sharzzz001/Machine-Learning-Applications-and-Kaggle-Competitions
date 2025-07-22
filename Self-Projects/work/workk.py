@@ -1,32 +1,26 @@
-import os
-from tqdm import tqdm
+import requests
+from requests_ntlm import HttpNtlmAuth
 
-def get_folder_size_recursive(folder):
-    total_size = 0
-    for root, dirs, files in os.walk(folder):
-        for f in files:
-            fp = os.path.join(root, f)
-            if os.path.isfile(fp):
-                total_size += os.path.getsize(fp)
-    return total_size
+# File URL - must be the **direct download link** (ends with ?download=1 or similar)
+file_url = "https://yourcompany.sharepoint.com/sites/YourSite/Shared%20Documents/filename.xlsx"
 
-def print_subfolder_sizes_live(parent_folder):
-    subfolders = [entry for entry in os.scandir(parent_folder) if entry.is_dir()]
-    results = []
+# Destination path to save the file
+save_path = r"C:\Users\YourName\Downloads\filename.xlsx"
 
-    print(f"Calculating folder sizes in: {parent_folder}\n")
-    
-    for entry in tqdm(subfolders, desc="Processing Folders", unit="folder"):
-        folder_size = get_folder_size_recursive(entry.path)
-        size_mb = folder_size / (1024 * 1024)
-        results.append((entry.name, size_mb))
-        print(f"{entry.name}: {size_mb:.2f} MB", flush=True)
+# Use current Windows username and password via NTLM SSO
+import getpass
+username = os.getlogin()
+domain = "YOURDOMAIN"  # Example: CORP or COMPANYAD
 
-    # Print final summary sorted by size (descending)
-    print("\nSummary (Sorted by Size Descending):\n")
-    for name, size_mb in sorted(results, key=lambda x: x[1], reverse=True):
-        print(f"{name}: {size_mb:.2f} MB")
+session = requests.Session()
+session.auth = HttpNtlmAuth(f"{domain}\\{username}", getpass.getpass("Windows Password (SSO): "))
 
-# Example usage:
-parent_folder_path = r"C:\Your\Folder\Path"
-print_subfolder_sizes_live(parent_folder_path)
+# Download the file
+response = session.get(file_url)
+
+if response.status_code == 200:
+    with open(save_path, 'wb') as f:
+        f.write(response.content)
+    print("File downloaded successfully.")
+else:
+    print(f"Failed to download. Status code: {response.status_code}")

@@ -1,6 +1,3 @@
-# Get-DirStats.ps1
-# Modified to output sizes in GB
-
 param(
     [parameter(Position=0,Mandatory=$false,ParameterSetName="Path",ValueFromPipeline=$true)]
     $Path = (Get-Location).Path,
@@ -43,48 +40,40 @@ begin {
         }
     }
 
-    function Format-Output {
-        process {
-            $_ | Select-Object Path,
-                @{Name="Files"; Expression={"{0:N0}" -f $_.Files}},
-                @{Name="Size (Bytes)"; Expression={"{0:N0}" -f $_.Size}},
-                @{Name="Size (GB)"; Expression={"{0:N2}" -f ($_.Size / 1GB)}}
+    function Output-Stats {
+        param($path, $files, $bytes)
+
+        $gb = [math]::Round($bytes / 1GB, 2)
+
+        if ($FormatNumbers) {
+            "{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB" -f $path, $files, $bytes, $gb
+        }
+        else {
+            "{0,-60} {1,12} files   {2,15} bytes   {3,10} GB" -f $path, $files, $bytes, $gb
         }
     }
 
     function Get-DirectoryStats {
-        param( $directory, $recurse, $format )
+        param($directory, $recurse)
 
-        Write-Progress -Activity "Get-DirStats.ps1" -Status "Reading '$($directory.FullName)'"
+        Write-Progress -Activity "Calculating folder size" -Status $directory.FullName
 
-        $files = $directory | Get-ChildItem -Force -Recurse:$recurse | Where-Object { -not $_.PSIsContainer }
+        $files = $directory | Get-ChildItem -Force -Recurse:$recurse -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
 
-        if ( $files ) {
-            Write-Progress -Activity "Get-DirStats.ps1" -Status "Calculating '$($directory.FullName)'"
-
+        if ($files) {
             $measure = $files | Measure-Object -Sum -Property Length
-
-            $output = [PSCustomObject]@{
-                Path   = $directory.FullName
-                Files  = $measure.Count
-                Size   = $measure.Sum
-                SizeGB = [math]::Round($measure.Sum / 1GB, 2)
-            }
-
-            $script:totalcount += $measure.Count
-            $script:totalbytes += $measure.Sum
+            $count = $measure.Count
+            $size = $measure.Sum
         }
         else {
-            $output = [PSCustomObject]@{
-                Path   = $directory.FullName
-                Files  = 0
-                Size   = 0
-                SizeGB = 0
-            }
+            $count = 0
+            $size = 0
         }
 
-        if (-not $format) { $output }
-        else { $output | Format-Output }
+        $script:totalcount += $count
+        $script:totalbytes += $size
+
+        Output-Stats -path $directory.FullName -files $count -bytes $size
     }
 }
 
@@ -103,33 +92,30 @@ process {
 
     $directory = Get-Directory -item $item
 
-    if ( -not $directory ) {
+    if (-not $directory) {
         Write-Error -Message "Path '$item' is not a directory in the file system." -Category InvalidType
         return
     }
 
-    # First-level directory stats
-    Get-DirectoryStats -directory $directory -recurse:$false -format:$FormatNumbers
+    # First-level folder
+    Get-DirectoryStats -directory $directory -recurse:$false
 
-    if ( $Only ) { return }
+    if ($Only) { return }
 
-    # Subdirectories
-    $directory | Get-ChildItem -Force -Recurse:$Every |
-        Where-Object { $_.PSIsContainer } | ForEach-Object {
-            Get-DirectoryStats -directory $_ -recurse:(-not $Every) -format:$FormatNumbers
-        }
+    # Subfolders
+    $directory | Get-ChildItem -Force -Recurse:$Every | Where-Object { $_.PSIsContainer } | ForEach-Object {
+        Get-DirectoryStats -directory $_ -recurse:(!$Every)
+    }
 }
 
 end {
-    if ( $Total ) {
-        $totalGB = [math]::Round($script:totalbytes / 1GB, 2)
-        $output = [PSCustomObject]@{
-            Path   = "<Total>"
-            Files  = $script:totalcount
-            Size   = $script:totalbytes
-            SizeGB = $totalGB
+    if ($Total) {
+        $gb = [math]::Round($script:totalbytes / 1GB, 2)
+        if ($FormatNumbers) {
+            "`n{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB" -f "<Total>", $script:totalcount, $script:totalbytes, $gb
         }
-        if ( -not $FormatNumbers ) { $output }
-        else { $output | Format-Output }
+        else {
+            "`n{0,-60} {1,12} files   {2,15} bytes   {3,10} GB" -f "<Total>", $script:totalcount, $script:totalbytes, $gb
+        }
     }
 }

@@ -22,6 +22,7 @@ begin {
 
     [UInt64] $script:totalcount = 0
     [UInt64] $script:totalbytes = 0
+    [double] $script:totaltime = 0
 
     function Get-Directory {
         param( $item )
@@ -41,15 +42,15 @@ begin {
     }
 
     function Output-Stats {
-        param($path, $files, $bytes)
+        param($path, $files, $bytes, $seconds)
 
         $gb = [math]::Round($bytes / 1GB, 2)
 
         if ($FormatNumbers) {
-            "{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB" -f $path, $files, $bytes, $gb
+            "{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB   {4,10:N2} sec" -f $path, $files, $bytes, $gb, $seconds
         }
         else {
-            "{0,-60} {1,12} files   {2,15} bytes   {3,10} GB" -f $path, $files, $bytes, $gb
+            "{0,-60} {1,12} files   {2,15} bytes   {3,10} GB   {4,10} sec" -f $path, $files, $bytes, $gb, $seconds
         }
     }
 
@@ -58,7 +59,13 @@ begin {
 
         Write-Progress -Activity "Calculating folder size" -Status $directory.FullName
 
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+
         $files = $directory | Get-ChildItem -Force -Recurse:$recurse -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer }
+
+        $sw.Stop()
+        $elapsed = $sw.Elapsed.TotalSeconds
+        $script:totaltime += $elapsed
 
         if ($files) {
             $measure = $files | Measure-Object -Sum -Property Length
@@ -73,7 +80,7 @@ begin {
         $script:totalcount += $count
         $script:totalbytes += $size
 
-        Output-Stats -path $directory.FullName -files $count -bytes $size
+        Output-Stats -path $directory.FullName -files $count -bytes $size -seconds $elapsed
     }
 }
 
@@ -112,10 +119,10 @@ end {
     if ($Total) {
         $gb = [math]::Round($script:totalbytes / 1GB, 2)
         if ($FormatNumbers) {
-            "`n{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB" -f "<Total>", $script:totalcount, $script:totalbytes, $gb
+            "`n{0,-60} {1,12:N0} files   {2,15:N0} bytes   {3,10:N2} GB   {4,10:N2} sec" -f "<Total>", $script:totalcount, $script:totalbytes, $gb, $script:totaltime
         }
         else {
-            "`n{0,-60} {1,12} files   {2,15} bytes   {3,10} GB" -f "<Total>", $script:totalcount, $script:totalbytes, $gb
+            "`n{0,-60} {1,12} files   {2,15} bytes   {3,10} GB   {4,10} sec" -f "<Total>", $script:totalcount, $script:totalbytes, $gb, $script:totaltime
         }
     }
 }

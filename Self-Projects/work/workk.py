@@ -1,25 +1,17 @@
-import requests
-from requests_ntlm import HttpNtlmAuth
+import pandas as pd
 
-site_url = "https://yourcompany.sharepoint.com/sites/YourSite"
-list_name = "YourListName"
+# 1️⃣ RR join to AOB on account_number
+merged = pd.merge(AOB, RR, on='account_number', how='left', suffixes=('_aob', '_rr'))
 
-url = f"{site_url}/_api/web/lists/getbytitle('{list_name}')/items?$expand=AttachmentFiles"
+# 2️⃣ SCM join to AOB on salescode ↔ title
+merged = pd.merge(merged, SCM, left_on='salescode', right_on='title', how='left')
 
-session = requests.Session()
-session.auth = HttpNtlmAuth('DOMAIN\\username', 'password')
+# 3️⃣ COB join to AOB on assigner_toid ↔ login_nameid
+merged = pd.merge(merged, COB, left_on='assigner_toid', right_on='login_nameid', how='left', suffixes=('', '_cob'))
 
-headers = {
-    "Accept": "application/json;odata=verbose"
-}
-
-response = session.get(url, headers=headers)
-
-if response.status_code == 200:
-    data = response.json()
-    for item in data['d']['results']:
-        for file in item['AttachmentFiles']['results']:
-            print(f"File Name: {file['FileName']}")
-            print(f"File URL: {file['ServerRelativeUrl']}")
-else:
-    print(f"Failed: {response.status_code}")
+final_df = merged[[
+    'account_number_rr',   # From RR
+    'account_name',        # From AOB (assuming column exists)
+    'RM_name',             # From SCM
+    'Title'                # From COB (this is the Title of assigner_toid)
+]]

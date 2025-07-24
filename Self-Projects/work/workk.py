@@ -139,3 +139,12 @@ VAR Result =
 
 RETURN Result
 
+
+Risk_Group = 
+SWITCH(
+    TRUE(),
+    'RR_Table'[Risk Category] = "High", "High",
+    'RR_Table'[Risk Category] IN {"Medium", "Low"}, "Medium/Low",
+    BLANK()
+)
+

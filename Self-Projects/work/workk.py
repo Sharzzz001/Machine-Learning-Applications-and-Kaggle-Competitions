@@ -387,3 +387,52 @@ UNION(
     )
 )
 
+RR_MatrixValues_NextMonth = 
+VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels_NextMonth'[Label])
+VAR TodayDate = TODAY()
+
+-- Base filters
+VAR NextMonthStart = DATE(YEAR(TodayDate), MONTH(TodayDate) + 1, 1)
+VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
+
+-- Handle static labels
+RETURN
+SWITCH(
+    TRUE(),
+    
+    SelectedLabel = "Total Due",
+        CALCULATE(
+            COUNTROWS(RRTable),
+            RRTable[Due Date] >= NextMonthStart &&
+            RRTable[Due Date] <= NextMonthEnd
+        ),
+    
+    SelectedLabel = "Completed",
+        CALCULATE(
+            COUNTROWS(RRTable),
+            RRTable[Due Date] >= NextMonthStart &&
+            RRTable[Due Date] <= NextMonthEnd,
+            RRTable[StatusCorpInd] = "KYC Completed",
+            MONTH(RRTable[Completion Date]) = MONTH(TodayDate) &&
+            YEAR(RRTable[Completion Date]) = YEAR(TodayDate)
+        ),
+
+    SelectedLabel = "Pending",
+        CALCULATE(
+            COUNTROWS(RRTable),
+            RRTable[Due Date] >= NextMonthStart &&
+            RRTable[Due Date] <= NextMonthEnd,
+            NOT(RRTable[StatusCorpInd] = "KYC Completed")
+            -- Add more conditions if needed for pending
+        ),
+
+    -- Handle dynamic date-based labels like "1 Aug", "2 Aug", ...
+    -- Try parsing the label into date
+    CALCULATE(
+        COUNTROWS(RRTable),
+        RRTable[Due Date] >= NextMonthStart &&
+        RRTable[Due Date] <= NextMonthEnd,
+        RRTable[StatusCorpInd] = "KYC Completed",
+        FORMAT(RRTable[Completion Date], "d MMM") = SelectedLabel
+    )
+)

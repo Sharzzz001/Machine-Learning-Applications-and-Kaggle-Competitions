@@ -116,5 +116,26 @@ RETURN
     
 
 
+RR_MatrixValue = 
+VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels'[Label])
+VAR TodayMonth = MONTH(TODAY())
+VAR TodayYear = YEAR(TODAY())
 
+VAR Result =
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR_TotalDue],
+        SelectedLabel = "Completed", [RR_Completed],
+        SelectedLabel = "Pending", [RR_Pending],
+        
+        -- Daily completions by matching actual Completion Date
+        CALCULATE(
+            COUNTROWS('RR_Table'),
+            'RR_Table'[IsDueThisMonth] = TRUE(),
+            'RR_Table'[StatusCorpInd] = "KYC Completed",
+            FORMAT('RR_Table'[Completion Date], "d MMM") = SelectedLabel
+        )
+    )
+
+RETURN Result
 

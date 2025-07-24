@@ -248,3 +248,109 @@ SWITCH(
         )
 )
 
+
+IsDueNextMonth = 
+VAR DueDate = RR_Table[DueDateCalculated]  -- Replace with your due date column
+VAR TodayDate = TODAY()
+RETURN 
+    NOT ISBLANK(DueDate) &&
+    MONTH(DueDate) = MONTH(EOMONTH(TodayDate, 1)) &&
+    YEAR(DueDate) = YEAR(EOMONTH(TodayDate, 1))
+    
+RR Total Due Next Month = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonth] = TRUE()
+)
+
+RR Completed NextMonth_DoneThisMonth = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonth] = TRUE(),
+    RR_Table[StatusCorpInd] = "KYC Completed",
+    MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+    YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
+)
+
+RR Pending NextMonth = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonth] = TRUE(),
+    NOT RR_Table[StatusCorpInd] = "KYC Completed"
+)
+
+RR Matrix NextMonth = 
+VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
+VAR SelectedDate =
+    CALCULATE(
+        MAX(DateTable[Date]),
+        FILTER(DateTable,
+            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
+        )
+    )
+VAR IsTotalCol = NOT ISINSCOPE(RR_ColumnLabels[Label])
+
+RETURN
+SWITCH(
+    TRUE(),
+    SelectedLabel = "Total Due", [RR Total Due Next Month],
+    SelectedLabel = "Completed", [RR Completed NextMonth_DoneThisMonth],
+    SelectedLabel = "Pending", [RR Pending NextMonth],
+
+    NOT IsTotalCol && NOT ISBLANK(SelectedDate),
+        CALCULATE(
+            COUNTROWS(RR_Table),
+            RR_Table[IsDueNextMonth] = TRUE(),
+            RR_Table[StatusCorpInd] = "KYC Completed",
+            RR_Table[CompletionDate] = SelectedDate
+        ),
+
+    IsTotalCol,
+        CALCULATE(
+            COUNTROWS(RR_Table),
+            RR_Table[IsDueNextMonth] = TRUE(),
+            RR_Table[StatusCorpInd] = "KYC Completed",
+            MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+            YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
+        )
+)
+
+RR_ColumnLabels_NextMonth = 
+VAR NextMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()) + 1, 1)
+VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
+
+RETURN
+UNION(
+    DATATABLE("Label", STRING, {
+        {"Total Due"},
+        {"Completed"},
+        {"Pending"}
+    }),
+    SELECTCOLUMNS(
+        FILTER(
+            DateTable,
+            DateTable[Date] >= NextMonthStart &&
+            DateTable[Date] <= NextMonthEnd
+        ),
+        "Label", FORMAT(DateTable[Date], "d MMM")
+    )
+)
+SortOrder_NextMonth = 
+SWITCH(
+    TRUE(),
+    RR_ColumnLabels_NextMonth[Label] = "Total Due", 1,
+    RR_ColumnLabels_NextMonth[Label] = "Completed", 2,
+    RR_ColumnLabels_NextMonth[Label] = "Pending", 3,
+    TRUE, 
+        3 + 
+        DAY(
+            DATEVALUE(
+                RR_ColumnLabels_NextMonth[Label] & " " &
+                FORMAT(EOMONTH(TODAY(), 1), "yyyy")
+            )
+        )
+)
+
+
+
+

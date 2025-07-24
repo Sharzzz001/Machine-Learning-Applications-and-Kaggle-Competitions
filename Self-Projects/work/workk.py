@@ -1,4 +1,4 @@
-IsDueThisMonth = 
+#IsDueThisMonth = 
 IF (
     MONTH('RR_Table'[Due Date Calculated]) = MONTH(TODAY()) &&
     YEAR('RR_Table'[Due Date Calculated]) = YEAR(TODAY()),
@@ -176,3 +176,36 @@ UNION(
         "SortOrder", [SortOrder]
     )
 )
+
+RR Completed Matrix Measure = 
+VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
+RETURN
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR Total Due],
+        SelectedLabel = "Completed", [RR Completed This Month],
+        SelectedLabel = "Pending", [RR Pending This Month],
+        -- Handle dates
+        ISINSCOPE(RR_ColumnLabels[Label]), 
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[CompletionDate] = 
+                    SELECTEDVALUE(DateTable[Date]),
+                RR_Table[IsDueThisMonth] = TRUE(),
+                RR_Table[RiskCategory] = SELECTEDVALUE(RR_Table[RiskCategory]),
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            ),
+        -- Grand Total across all days (horizontal total)
+        SUMX(
+            FILTER(RR_ColumnLabels, 
+                NOT RR_ColumnLabels[Label] IN { "Total Due", "Completed", "Pending" }
+            ),
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[IsDueThisMonth] = TRUE(),
+                FORMAT(RR_Table[CompletionDate], "d MMM") = RR_ColumnLabels[Label],
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            )
+        )
+    )
+

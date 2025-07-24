@@ -436,3 +436,44 @@ SWITCH(
         FORMAT(RRTable[Completion Date], "d MMM") = SelectedLabel
     )
 )
+
+RR Matrix Value Fixed =
+VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
+VAR SelectedDate =
+    CALCULATE(
+        MAX(DateTable[Date]),
+        FILTER(DateTable,
+            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
+        )
+    )
+VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
+
+VAR Result =
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR Total Due],
+        SelectedLabel = "Completed", [RR Completed This Month],
+        SelectedLabel = "Pending", [RR Pending This Month],
+        
+        // Individual day columns
+        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[CompletionDate] = SelectedDate,
+                RR_Table[IsDueNextMonth] = TRUE(),
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            ),
+
+        // Grand total column (sum of all days)
+        IsTotalRow,
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[IsDueNextMonth] = TRUE(),
+                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY()),
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            )
+    )
+
+RETURN
+    IF(ISBLANK(Result), 0, Result)

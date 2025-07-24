@@ -43,3 +43,78 @@ CALCULATE(
 )
 
 
+......
+
+RR_TotalDue = 
+CALCULATE(
+    COUNTROWS('RR_Table'),
+    'RR_Table'[IsDueThisMonth] = TRUE()
+)
+
+RR_Completed = 
+CALCULATE(
+    COUNTROWS('RR_Table'),
+    'RR_Table'[IsDueThisMonth] = TRUE(),
+    'RR_Table'[StatusCorpInd] = "KYC Completed"
+)
+
+RR_Pending = 
+CALCULATE(
+    COUNTROWS('RR_Table'),
+    'RR_Table'[IsDueThisMonth] = TRUE(),
+    'RR_Table'[StatusCorpInd] IN {
+        "In Progress", "Pending Review", "Documents Missing", "Awaiting Client"
+    }
+)
+
+RR_CompletedOnDate = 
+CALCULATE(
+    COUNTROWS('RR_Table'),
+    'RR_Table'[IsDueThisMonth] = TRUE(),
+    'RR_Table'[StatusCorpInd] = "KYC Completed"
+)
+
+RR_ColumnLabels = 
+UNION(
+    DATATABLE("Label", STRING, {
+        {"Total Due"},
+        {"Completed"},
+        {"Pending"}
+    }),
+    SELECTCOLUMNS(
+        FILTER(DateTable, 
+            MONTH(DateTable[Date]) = MONTH(TODAY()) &&
+            YEAR(DateTable[Date]) = YEAR(TODAY())
+        ),
+        "Label", FORMAT(DateTable[Date], "d MMM")
+    )
+)
+
+RR_MatrixValue = 
+VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels'[Label])
+VAR TodayMonth = MONTH(TODAY())
+VAR TodayYear = YEAR(TODAY())
+
+RETURN
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR_TotalDue],
+        SelectedLabel = "Completed", [RR_Completed],
+        SelectedLabel = "Pending", [RR_Pending],
+        -- Daily completions
+        CALCULATE(
+            [RR_CompletedOnDate],
+            FILTER(
+                DateTable,
+                FORMAT(DateTable[Date], "d MMM") = SelectedLabel &&
+                MONTH(DateTable[Date]) = TodayMonth &&
+                YEAR(DateTable[Date]) = TodayYear
+            )
+        )
+    )
+    
+    
+
+
+
+

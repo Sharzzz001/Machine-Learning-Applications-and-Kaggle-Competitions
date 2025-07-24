@@ -144,7 +144,6 @@ Risk_Group =
 SWITCH(
     TRUE(),
     'RR_Table'[Risk Category] = "High", "High",
-    'RR_Table'[Risk Category] IN {"Medium", "Low"}, "Medium/Low",
-    BLANK()
+    'RR_Table'[Risk Category] IN {"Medium", "Low"} || ISBLANK('RR_Table'[Risk Category]), "Medium/Low",
+    "Other"
 )
-

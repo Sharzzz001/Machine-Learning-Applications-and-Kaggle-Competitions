@@ -352,5 +352,38 @@ SWITCH(
 )
 
 
+RR_ColumnLabels_NextMonth = 
+VAR NextMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()) + 1, 1)
+VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
 
+RETURN
+UNION(
+    SELECTCOLUMNS(
+        DATATABLE("Label", STRING, {
+            {"Total Due"},
+            {"Completed"},
+            {"Pending"}
+        }),
+        "Label", [Label],
+        "SortOrder", 
+            SWITCH([Label],
+                "Total Due", 1,
+                "Completed", 2,
+                "Pending", 3
+            )
+    ),
+    SELECTCOLUMNS(
+        ADDCOLUMNS(
+            FILTER(
+                DateTable,
+                DateTable[Date] >= NextMonthStart &&
+                DateTable[Date] <= NextMonthEnd
+            ),
+            "Label", FORMAT([Date], "d MMM"),
+            "SortOrder", DAY([Date]) + 3
+        ),
+        "Label", [Label],
+        "SortOrder", [SortOrder]
+    )
+)
 

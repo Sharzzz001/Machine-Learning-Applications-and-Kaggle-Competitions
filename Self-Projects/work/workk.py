@@ -147,3 +147,32 @@ SWITCH(
     'RR_Table'[Risk Category] IN {"Medium", "Low"} || ISBLANK('RR_Table'[Risk Category]), "Medium/Low",
     "Other"
 )
+
+RR_ColumnLabels = 
+UNION(
+    SELECTCOLUMNS(
+        DATATABLE("Label", STRING, {
+            {"Total Due"},
+            {"Completed"},
+            {"Pending"}
+        }),
+        "Label", [Label],
+        "SortOrder", SWITCH([Label],
+            "Total Due", 1,
+            "Completed", 2,
+            "Pending", 3
+        )
+    ),
+    SELECTCOLUMNS(
+        ADDCOLUMNS(
+            FILTER(DateTable, 
+                MONTH(DateTable[Date]) = MONTH(TODAY()) &&
+                YEAR(DateTable[Date]) = YEAR(TODAY())
+            ),
+            "Label", FORMAT(DateTable[Date], "d MMM"),
+            "SortOrder", DAY(DateTable[Date]) + 3
+        ),
+        "Label", [Label],
+        "SortOrder", [SortOrder]
+    )
+)

@@ -1,96 +1,82 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime, date
+from datetime import datetime
 
-# Sample input
-data = {
-    'Title': ['ACC1', 'ACC1', 'ACC1', 'ACC2', 'ACC2'],
-    'Review Type': ['TypeA', 'TypeA', 'TypeA', 'TypeB', 'TypeB'],
-    'Screening Status': ['Initiated', 'In Progress', 'Completed', 'Initiated', 'Completed'],
-    'Document Review Status': ['Initiated', 'In Progress', 'Completed', 'Initiated', 'Completed'],
-    'Trigger Date': [date(2024, 6, 1)] * 5,
-    'File Date': [date(2024, 6, 1), date(2024, 6, 10), date(2024, 6, 20), date(2024, 6, 5), date(2024, 6, 25)],
-    'NS Checker Completion Date': [None, None, date(2024, 6, 25), None, date(2024, 6, 28)],
-    'Docs Completion Date': [None, None, date(2024, 6, 22), None, date(2024, 6, 27)],
-    'EKYCID': ['EKYC1', 'EKYC1', 'EKYC1', 'EKYC2', 'EKYC2'],
-    'Sales Code': ['S001', 'S001', 'S001', 'S002', 'S002'],
-    'Maker Name': ['MKR1', 'MKR1', 'MKR1', 'MKR2', 'MKR2'],
-    'Checker Name': ['CKR1', 'CKR1', 'CKR1', 'CKR2', 'CKR2']
-}
-df = pd.DataFrame(data)
+def calculate_status_ageing(df):
+    # Ensure proper dtypes
+    df['File Date'] = pd.to_datetime(df['File Date'])
+    df['Trigger Date'] = pd.to_datetime(df['Trigger Date'])
+    
+    # Create unique request ID
+    df['Request ID'] = df['Account ID'].astype(str) + '|' + df['Review Type'] + '|' + df['Trigger Date'].dt.strftime('%Y-%m-%d')
+    
+    # Get all unique statuses
+    doc_statuses = df['Doc Review Status'].dropna().unique()
+    ns_statuses = df['Name Screening Status'].dropna().unique()
 
-# Ensure date columns are date objects
-for col in ['Trigger Date', 'File Date', 'NS Checker Completion Date', 'Docs Completion Date']:
-    df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
+    # Sort by Request and File Date
+    df = df.sort_values(by=['Request ID', 'File Date']).reset_index(drop=True)
 
-today = date.today()
+    # Output list
+    results = []
 
-def business_days_between(start, end):
-    if pd.isna(start) or pd.isna(end):
-        return 0
-    return np.busday_count(start, end)
+    # Today's date for open cases
+    today = pd.to_datetime(datetime.today().date())
 
-results = []
-group_cols = ['Title', 'Review Type']
-df = df.sort_values(by=group_cols + ['File Date'])
+    for req_id, group in df.groupby('Request ID'):
+        group = group.sort_values(by='File Date').reset_index(drop=True)
+        trigger_date = group.loc[0, 'Trigger Date']
+        ekyc_id = group.loc[0, 'eKYC ID']
+        sales_code = group.loc[0, 'Sales Code']
+        account_id = group.loc[0, 'Account ID']
+        review_type = group.loc[0, 'Review Type']
 
-for (acct, review_type), group in df.groupby(group_cols):
-    group = group.sort_values('File Date')
-    prev_doc_status = None
-    prev_screen_status = None
-    prev_date = None
+        # Initialize ageing trackers
+        doc_age = {f'doc_{status}': 0 for status in doc_statuses}
+        ns_age = {f'ns_{status}': 0 for status in ns_statuses}
 
-    # Static columns pulled from last row in group
-    static_cols = group[['EKYCID', 'Sales Code', 'Maker Name', 'Checker Name']].iloc[-1].to_dict()
+        # Status processing
+        for i in range(len(group)):
+            row = group.loc[i]
+            curr_date = row['File Date']
 
-    for idx, row in group.iterrows():
-        file_date = row['File Date']
-        trigger_date = row['Trigger Date'] or file_date
+            # Determine end date for ageing
+            if i == 0:
+                start_date = trigger_date
+            else:
+                start_date = group.loc[i-1, 'File Date']
 
-        # --- DOC Review Process ---
-        doc_status = row['Document Review Status']
-        if doc_status != prev_doc_status:
-            start_date = prev_date or trigger_date
-            end_date = (
-                row['Docs Completion Date']
-                if str(doc_status).lower() == 'completed'
-                else file_date or today
-            ) or today
+            if i < len(group) - 1:
+                end_date = group.loc[i+1, 'File Date']
+            else:
+                end_date = today
 
-            if prev_doc_status:
-                results.append({
-                    'Title': acct,
-                    'Review Type': review_type,
-                    'Process': 'Doc Review',
-                    'Status': prev_doc_status,
-                    'Days': business_days_between(start_date, end_date),
-                    **static_cols
-                })
-            prev_doc_status = doc_status
+            # Calculate business days
+            days = np.busday_count(start_date.date(), end_date.date())
+            
+            # Add to appropriate status buckets
+            doc_col = f'doc_{row["Doc Review Status"]}'
+            ns_col = f'ns_{row["Name Screening Status"]}'
+            if doc_col in doc_age:
+                doc_age[doc_col] += days
+            if ns_col in ns_age:
+                ns_age[ns_col] += days
 
-        # --- Screening Process ---
-        screen_status = row['Screening Status']
-        if screen_status != prev_screen_status:
-            start_date = prev_date or trigger_date
-            end_date = (
-                row['NS Checker Completion Date']
-                if str(screen_status).lower() == 'completed'
-                else file_date or today
-            ) or today
+        total_ageing = np.busday_count(trigger_date.date(), today.date())
+        latest_row = group.iloc[-1]
+        
+        results.append({
+            'Account ID': account_id,
+            'Review Type': review_type,
+            'Trigger Date': trigger_date,
+            'eKYC ID': ekyc_id,
+            'Sales Code': sales_code,
+            'Total Ageing': total_ageing,
+            'Latest Doc Status': latest_row['Doc Review Status'],
+            'Latest Name Screening Status': latest_row['Name Screening Status'],
+            **doc_age,
+            **ns_age
+        })
 
-            if prev_screen_status:
-                results.append({
-                    'Title': acct,
-                    'Review Type': review_type,
-                    'Process': 'Screening',
-                    'Status': prev_screen_status,
-                    'Days': business_days_between(start_date, end_date),
-                    **static_cols
-                })
-            prev_screen_status = screen_status
-
-        prev_date = file_date
-
-# Final DataFrame
-result_df = pd.DataFrame(results)
-print(result_df)
+    result_df = pd.DataFrame(results)
+    return result_df

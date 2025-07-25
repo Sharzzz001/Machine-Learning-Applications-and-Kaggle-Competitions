@@ -1,479 +1,111 @@
-#IsDueThisMonth = 
-IF (
-    MONTH('RR_Table'[Due Date Calculated]) = MONTH(TODAY()) &&
-    YEAR('RR_Table'[Due Date Calculated]) = YEAR(TODAY()),
-    TRUE(), FALSE()
-)
+import pandas as pd
+from datetime import datetime, date
+import numpy as np
 
-RR_Status =
-SWITCH(
-    TRUE(),
-    'RR_Table'[StatusCorpInd] = "KYC Completed", "Completed",
-    'RR_Table'[StatusCorpInd] IN { "In Progress", "Pending Review", "Documents Missing", "Awaiting Client" }, "Pending",
-    "Other"
-)
+# Sample Data – replace this with your actual SharePoint-snapshot-concatenated DataFrame
+sample_data = {
+    'AccountNumber': ['A1', 'A1', 'A1', 'A2', 'A2'],
+    'Review Type': ['Annual', 'Annual', 'Annual', 'Quarterly', 'Quarterly'],
+    'Screening Status': ['Initiated', 'In Progress', 'Completed', 'Initiated', 'Completed'],
+    'Document Review Status': ['Initiated', 'In Progress', 'Completed', 'Initiated', 'Completed'],
+    'Trigger Date': [date(2024, 1, 1)] * 5,
+    'File Date': [date(2024, 1, 1), date(2024, 1, 10), date(2024, 1, 20), date(2024, 2, 1), date(2024, 2, 15)],
+    'NS Checker Completion Date': [None, None, date(2024, 1, 25), None, date(2024, 2, 20)],
+    'Docs Completion Date': [None, None, date(2024, 1, 22), None, date(2024, 2, 19)],
+    'Maker Name': ['John', 'John', 'John', 'Alice', 'Alice'],
+    'Checker Name': ['Mark', 'Mark', 'Mark', 'Bob', 'Bob'],
+    'Sales Code': ['S123', 'S123', 'S123', 'S456', 'S456'],
+}
+df = pd.DataFrame(sample_data)
 
-DateTable = CALENDAR(DATE(2024,1,1), DATE(2025,12,31))
+# Today's date
+today = date.today()
 
-RR_TotalDue = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE()
-)
+# Ensure dates are clean
+date_cols = ['Trigger Date', 'File Date', 'NS Checker Completion Date', 'Docs Completion Date']
+for col in date_cols:
+    df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
 
-RR_Completed = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE(),
-    'RR_Table'[RR_Status] = "Completed"
-)
+# Default missing trigger dates to file date
+df['Trigger Date'] = df['Trigger Date'].fillna(df['File Date'])
 
-RR_Pending = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE(),
-    'RR_Table'[RR_Status] = "Pending"
-)
+# Sort for processing
+df = df.sort_values(by=['AccountNumber', 'Review Type', 'File Date'])
 
-Daily_Completed = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[RR_Status] = "Completed",
-    'RR_Table'[IsDueThisMonth] = TRUE()
-)
+# Function to calculate business days
+def business_days_between(start_date, end_date):
+    if pd.isna(start_date) or pd.isna(end_date):
+        return 0
+    return np.busday_count(start_date, end_date)
 
+# Final results container
+results = []
 
-......
+# Group by Account Number and Review Type
+grouped = df.groupby(['AccountNumber', 'Review Type'])
 
-RR_TotalDue = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE()
-)
+for (account, review), group in grouped:
+    group = group.sort_values(by='File Date')
+    prev_doc = None
+    prev_ns = None
+    prev_date = None
 
-RR_Completed = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE(),
-    'RR_Table'[StatusCorpInd] = "KYC Completed"
-)
+    # Capture static fields like maker/checker/sales
+    static_fields = group[['Maker Name', 'Checker Name', 'Sales Code']].dropna().iloc[0].to_dict()
 
-RR_Pending = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE(),
-    'RR_Table'[StatusCorpInd] IN {
-        "In Progress", "Pending Review", "Documents Missing", "Awaiting Client"
-    }
-)
+    for i, row in group.iterrows():
+        file_date = row['File Date']
+        trigger_date = row['Trigger Date'] or file_date
 
-RR_CompletedOnDate = 
-CALCULATE(
-    COUNTROWS('RR_Table'),
-    'RR_Table'[IsDueThisMonth] = TRUE(),
-    'RR_Table'[StatusCorpInd] = "KYC Completed"
-)
+        # --- Document Review Aging ---
+        doc_status = row['Document Review Status']
+        if pd.notna(doc_status):
+            if doc_status != prev_doc:
+                start_date = prev_date or trigger_date
+                if 'completed' in str(doc_status).lower():
+                    end_date = row['Docs Completion Date']
+                else:
+                    end_date = file_date or today
+                if pd.isna(end_date):
+                    end_date = today
+                days = business_days_between(start_date, end_date)
+                results.append({
+                    'AccountNumber': account,
+                    'Review Type': review,
+                    'Process': 'Doc Review',
+                    'Status': prev_doc,
+                    'Days': days,
+                    **static_fields
+                })
+                prev_doc = doc_status
 
-RR_ColumnLabels = 
-UNION(
-    DATATABLE("Label", STRING, {
-        {"Total Due"},
-        {"Completed"},
-        {"Pending"}
-    }),
-    SELECTCOLUMNS(
-        FILTER(DateTable, 
-            MONTH(DateTable[Date]) = MONTH(TODAY()) &&
-            YEAR(DateTable[Date]) = YEAR(TODAY())
-        ),
-        "Label", FORMAT(DateTable[Date], "d MMM")
-    )
-)
+        # --- Screening Aging ---
+        ns_status = row['Screening Status']
+        if pd.notna(ns_status):
+            if ns_status != prev_ns:
+                start_date = prev_date or trigger_date
+                if 'completed' in str(ns_status).lower():
+                    end_date = row['NS Checker Completion Date']
+                else:
+                    end_date = file_date or today
+                if pd.isna(end_date):
+                    end_date = today
+                days = business_days_between(start_date, end_date)
+                results.append({
+                    'AccountNumber': account,
+                    'Review Type': review,
+                    'Process': 'Screening',
+                    'Status': prev_ns,
+                    'Days': days,
+                    **static_fields
+                })
+                prev_ns = ns_status
 
-RR_MatrixValue = 
-VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels'[Label])
-VAR TodayMonth = MONTH(TODAY())
-VAR TodayYear = YEAR(TODAY())
+        prev_date = file_date
 
-RETURN
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR_TotalDue],
-        SelectedLabel = "Completed", [RR_Completed],
-        SelectedLabel = "Pending", [RR_Pending],
-        -- Daily completions
-        CALCULATE(
-            [RR_CompletedOnDate],
-            FILTER(
-                DateTable,
-                FORMAT(DateTable[Date], "d MMM") = SelectedLabel &&
-                MONTH(DateTable[Date]) = TodayMonth &&
-                YEAR(DateTable[Date]) = TodayYear
-            )
-        )
-    )
-    
-    
+# Create final DataFrame
+result_df = pd.DataFrame(results)
+result_df = result_df[result_df['Status'].notna()]  # remove initial nulls
 
-
-RR_MatrixValue = 
-VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels'[Label])
-VAR TodayMonth = MONTH(TODAY())
-VAR TodayYear = YEAR(TODAY())
-
-VAR Result =
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR_TotalDue],
-        SelectedLabel = "Completed", [RR_Completed],
-        SelectedLabel = "Pending", [RR_Pending],
-        
-        -- Daily completions by matching actual Completion Date
-        CALCULATE(
-            COUNTROWS('RR_Table'),
-            'RR_Table'[IsDueThisMonth] = TRUE(),
-            'RR_Table'[StatusCorpInd] = "KYC Completed",
-            FORMAT('RR_Table'[Completion Date], "d MMM") = SelectedLabel
-        )
-    )
-
-RETURN Result
-
-
-Risk_Group = 
-SWITCH(
-    TRUE(),
-    'RR_Table'[Risk Category] = "High", "High",
-    'RR_Table'[Risk Category] IN {"Medium", "Low"} || ISBLANK('RR_Table'[Risk Category]), "Medium/Low",
-    "Other"
-)
-
-RR_ColumnLabels = 
-UNION(
-    SELECTCOLUMNS(
-        DATATABLE("Label", STRING, {
-            {"Total Due"},
-            {"Completed"},
-            {"Pending"}
-        }),
-        "Label", [Label],
-        "SortOrder", SWITCH([Label],
-            "Total Due", 1,
-            "Completed", 2,
-            "Pending", 3
-        )
-    ),
-    SELECTCOLUMNS(
-        ADDCOLUMNS(
-            FILTER(DateTable, 
-                MONTH(DateTable[Date]) = MONTH(TODAY()) &&
-                YEAR(DateTable[Date]) = YEAR(TODAY())
-            ),
-            "Label", FORMAT(DateTable[Date], "d MMM"),
-            "SortOrder", DAY(DateTable[Date]) + 3
-        ),
-        "Label", [Label],
-        "SortOrder", [SortOrder]
-    )
-)
-
-RR Completed Matrix Measure = 
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-RETURN
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR Total Due],
-        SelectedLabel = "Completed", [RR Completed This Month],
-        SelectedLabel = "Pending", [RR Pending This Month],
-        -- Handle dates
-        ISINSCOPE(RR_ColumnLabels[Label]), 
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[CompletionDate] = 
-                    SELECTEDVALUE(DateTable[Date]),
-                RR_Table[IsDueThisMonth] = TRUE(),
-                RR_Table[RiskCategory] = SELECTEDVALUE(RR_Table[RiskCategory]),
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            ),
-        -- Grand Total across all days (horizontal total)
-        SUMX(
-            FILTER(RR_ColumnLabels, 
-                NOT RR_ColumnLabels[Label] IN { "Total Due", "Completed", "Pending" }
-            ),
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[IsDueThisMonth] = TRUE(),
-                FORMAT(RR_Table[CompletionDate], "d MMM") = RR_ColumnLabels[Label],
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            )
-        )
-    )
-
-RR Matrix Value Fixed = 
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-VAR SelectedDate =
-    CALCULATE(
-        MAX(DateTable[Date]),
-        FILTER(DateTable,
-            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
-        )
-    )
-VAR IsTotalRow = 
-    NOT ISINSCOPE(RR_ColumnLabels[Label])
-
-RETURN
-SWITCH(
-    TRUE(),
-    SelectedLabel = "Total Due", [RR Total Due],
-    SelectedLabel = "Completed", [RR Completed This Month],
-    SelectedLabel = "Pending", [RR Pending This Month],
-    
-    // Individual day columns
-    NOT IsTotalRow && NOT ISBLANK(SelectedDate),
-        CALCULATE(
-            COUNTROWS(RR_Table),
-            RR_Table[CompletionDate] = SelectedDate,
-            RR_Table[IsDueThisMonth] = TRUE(),
-            RR_Table[StatusCorpInd] = "KYC Completed"
-        ),
-
-    // Grand total column (sum of all days)
-    IsTotalRow,
-        CALCULATE(
-            COUNTROWS(RR_Table),
-            RR_Table[IsDueThisMonth] = TRUE(),
-            MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-            YEAR(RR_Table[CompletionDate]) = YEAR(TODAY()),
-            RR_Table[StatusCorpInd] = "KYC Completed"
-        )
-)
-
-
-IsDueNextMonth = 
-VAR DueDate = RR_Table[DueDateCalculated]  -- Replace with your due date column
-VAR TodayDate = TODAY()
-RETURN 
-    NOT ISBLANK(DueDate) &&
-    MONTH(DueDate) = MONTH(EOMONTH(TodayDate, 1)) &&
-    YEAR(DueDate) = YEAR(EOMONTH(TodayDate, 1))
-    
-RR Total Due Next Month = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonth] = TRUE()
-)
-
-RR Completed NextMonth_DoneThisMonth = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonth] = TRUE(),
-    RR_Table[StatusCorpInd] = "KYC Completed",
-    MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-    YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
-)
-
-RR Pending NextMonth = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonth] = TRUE(),
-    NOT RR_Table[StatusCorpInd] = "KYC Completed"
-)
-
-RR Matrix NextMonth = 
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-VAR SelectedDate =
-    CALCULATE(
-        MAX(DateTable[Date]),
-        FILTER(DateTable,
-            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
-        )
-    )
-VAR IsTotalCol = NOT ISINSCOPE(RR_ColumnLabels[Label])
-
-RETURN
-SWITCH(
-    TRUE(),
-    SelectedLabel = "Total Due", [RR Total Due Next Month],
-    SelectedLabel = "Completed", [RR Completed NextMonth_DoneThisMonth],
-    SelectedLabel = "Pending", [RR Pending NextMonth],
-
-    NOT IsTotalCol && NOT ISBLANK(SelectedDate),
-        CALCULATE(
-            COUNTROWS(RR_Table),
-            RR_Table[IsDueNextMonth] = TRUE(),
-            RR_Table[StatusCorpInd] = "KYC Completed",
-            RR_Table[CompletionDate] = SelectedDate
-        ),
-
-    IsTotalCol,
-        CALCULATE(
-            COUNTROWS(RR_Table),
-            RR_Table[IsDueNextMonth] = TRUE(),
-            RR_Table[StatusCorpInd] = "KYC Completed",
-            MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-            YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
-        )
-)
-
-RR_ColumnLabels_NextMonth = 
-VAR NextMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()) + 1, 1)
-VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
-
-RETURN
-UNION(
-    DATATABLE("Label", STRING, {
-        {"Total Due"},
-        {"Completed"},
-        {"Pending"}
-    }),
-    SELECTCOLUMNS(
-        FILTER(
-            DateTable,
-            DateTable[Date] >= NextMonthStart &&
-            DateTable[Date] <= NextMonthEnd
-        ),
-        "Label", FORMAT(DateTable[Date], "d MMM")
-    )
-)
-SortOrder_NextMonth = 
-SWITCH(
-    TRUE(),
-    RR_ColumnLabels_NextMonth[Label] = "Total Due", 1,
-    RR_ColumnLabels_NextMonth[Label] = "Completed", 2,
-    RR_ColumnLabels_NextMonth[Label] = "Pending", 3,
-    TRUE, 
-        3 + 
-        DAY(
-            DATEVALUE(
-                RR_ColumnLabels_NextMonth[Label] & " " &
-                FORMAT(EOMONTH(TODAY(), 1), "yyyy")
-            )
-        )
-)
-
-
-RR_ColumnLabels_NextMonth = 
-VAR NextMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()) + 1, 1)
-VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
-
-RETURN
-UNION(
-    SELECTCOLUMNS(
-        DATATABLE("Label", STRING, {
-            {"Total Due"},
-            {"Completed"},
-            {"Pending"}
-        }),
-        "Label", [Label],
-        "SortOrder", 
-            SWITCH([Label],
-                "Total Due", 1,
-                "Completed", 2,
-                "Pending", 3
-            )
-    ),
-    SELECTCOLUMNS(
-        ADDCOLUMNS(
-            FILTER(
-                DateTable,
-                DateTable[Date] >= NextMonthStart &&
-                DateTable[Date] <= NextMonthEnd
-            ),
-            "Label", FORMAT([Date], "d MMM"),
-            "SortOrder", DAY([Date]) + 3
-        ),
-        "Label", [Label],
-        "SortOrder", [SortOrder]
-    )
-)
-
-RR_MatrixValues_NextMonth = 
-VAR SelectedLabel = SELECTEDVALUE('RR_ColumnLabels_NextMonth'[Label])
-VAR TodayDate = TODAY()
-
--- Base filters
-VAR NextMonthStart = DATE(YEAR(TodayDate), MONTH(TodayDate) + 1, 1)
-VAR NextMonthEnd = EOMONTH(NextMonthStart, 0)
-
--- Handle static labels
-RETURN
-SWITCH(
-    TRUE(),
-    
-    SelectedLabel = "Total Due",
-        CALCULATE(
-            COUNTROWS(RRTable),
-            RRTable[Due Date] >= NextMonthStart &&
-            RRTable[Due Date] <= NextMonthEnd
-        ),
-    
-    SelectedLabel = "Completed",
-        CALCULATE(
-            COUNTROWS(RRTable),
-            RRTable[Due Date] >= NextMonthStart &&
-            RRTable[Due Date] <= NextMonthEnd,
-            RRTable[StatusCorpInd] = "KYC Completed",
-            MONTH(RRTable[Completion Date]) = MONTH(TodayDate) &&
-            YEAR(RRTable[Completion Date]) = YEAR(TodayDate)
-        ),
-
-    SelectedLabel = "Pending",
-        CALCULATE(
-            COUNTROWS(RRTable),
-            RRTable[Due Date] >= NextMonthStart &&
-            RRTable[Due Date] <= NextMonthEnd,
-            NOT(RRTable[StatusCorpInd] = "KYC Completed")
-            -- Add more conditions if needed for pending
-        ),
-
-    -- Handle dynamic date-based labels like "1 Aug", "2 Aug", ...
-    -- Try parsing the label into date
-    CALCULATE(
-        COUNTROWS(RRTable),
-        RRTable[Due Date] >= NextMonthStart &&
-        RRTable[Due Date] <= NextMonthEnd,
-        RRTable[StatusCorpInd] = "KYC Completed",
-        FORMAT(RRTable[Completion Date], "d MMM") = SelectedLabel
-    )
-)
-
-RR Matrix Value Fixed =
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-VAR SelectedDate =
-    CALCULATE(
-        MAX(DateTable[Date]),
-        FILTER(DateTable,
-            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
-        )
-    )
-VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
-
-VAR Result =
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR Total Due],
-        SelectedLabel = "Completed", [RR Completed This Month],
-        SelectedLabel = "Pending", [RR Pending This Month],
-        
-        // Individual day columns
-        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[CompletionDate] = SelectedDate,
-                RR_Table[IsDueNextMonth] = TRUE(),
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            ),
-
-        // Grand total column (sum of all days)
-        IsTotalRow,
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[IsDueNextMonth] = TRUE(),
-                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY()),
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            )
-    )
-
-RETURN
-    IF(ISBLANK(Result), 0, Result)
+# Preview
+print(result_df.head())

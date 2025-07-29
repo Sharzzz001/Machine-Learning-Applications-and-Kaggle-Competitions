@@ -19,3 +19,11 @@ RETURN COALESCE(_count, 0)
 Action Comment Display = 
 VAR _count = [Pending Accounts by Bucket]
 RETURN IF(_count > 0, "Escalated to Team/ Group Head", "-")
+
+Action Comment Display =
+VAR _bucket = SELECTEDVALUE(AgingBucket[AgingBucket])
+VAR _comment = LOOKUPVALUE(AgingBucket[ActionComment], AgingBucket[AgingBucket], _bucket)
+VAR _count = [Pending Accounts by Bucket]  -- your existing measure
+
+RETURN 
+IF(_count > 0, _comment, "-")

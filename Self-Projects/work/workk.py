@@ -80,3 +80,21 @@ VAR _count =
         "NO_BUCKET", BLANK()
     )
 RETURN _count
+
+
+Action Comment Display =
+VAR _isTotalRow = NOT ISINSCOPE('AgingBuckets'[Bucket])
+VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
+VAR _comment =
+    LOOKUPVALUE(
+        'AgingBuckets'[ActionComment],
+        'AgingBuckets'[Bucket], _bucket
+    )
+VAR _count = [Pending Accounts by Bucket]
+RETURN
+SWITCH(
+    TRUE(),
+    _isTotalRow, BLANK(),         -- (Or "Total" if you want a label)
+    _count > 0, _comment,
+    "-"
+)

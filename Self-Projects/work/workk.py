@@ -98,3 +98,102 @@ SWITCH(
     _count > 0, _comment,
     "-"
 )
+
+
+Pending Accounts by Bucket = 
+VAR _hasBucket = HASONEVALUE('AgingBuckets'[Bucket])
+RETURN 
+IF(
+    _hasBucket,
+    SWITCH(
+        VALUES('AgingBuckets'[Bucket]),
+        "0-30 Days", 
+            COALESCE(
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] <= 30,
+                    'FactTable'[Status] = "Pending"
+                ), 
+                0
+            ),
+        ">30 Days with FCC Extension", 
+            COALESCE(
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 30,
+                    NOT(ISBLANK('FactTable'[ExtendedDeadline])), 
+                    'FactTable'[Status] = "Pending"
+                ), 
+                0
+            ),
+        ">30 Days without FCC Extension", 
+            COALESCE(
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 30,
+                    ISBLANK('FactTable'[ExtendedDeadline]), 
+                    'FactTable'[Status] = "Pending"
+                ), 
+                0
+            ),
+        ">100 Days", 
+            COALESCE(
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 100, 
+                    'FactTable'[Status] = "Pending"
+                ), 
+                0
+            ),
+        ">120 Days", 
+            COALESCE(
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 120, 
+                    'FactTable'[Status] = "Pending"
+                ), 
+                0
+            ),
+        BLANK()
+    ),
+    // Total row - sum of all visible buckets
+    SUMX(
+        VALUES('AgingBuckets'[Bucket]),
+        SWITCH(
+            'AgingBuckets'[Bucket],
+            "0-30 Days", 
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] <= 30,
+                    'FactTable'[Status] = "Pending"
+                ),
+            ">30 Days with FCC Extension", 
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 30,
+                    NOT(ISBLANK('FactTable'[ExtendedDeadline])), 
+                    'FactTable'[Status] = "Pending"
+                ),
+            ">30 Days without FCC Extension", 
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 30,
+                    ISBLANK('FactTable'[ExtendedDeadline]), 
+                    'FactTable'[Status] = "Pending"
+                ),
+            ">100 Days", 
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 100, 
+                    'FactTable'[Status] = "Pending"
+                ),
+            ">120 Days", 
+                CALCULATE(
+                    DISTINCTCOUNT('FactTable'[AccountID]), 
+                    'FactTable'[Days] > 120, 
+                    'FactTable'[Status] = "Pending"
+                ),
+            0
+        )
+    )
+)

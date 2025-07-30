@@ -1,4 +1,4 @@
-Pending Accounts by Bucket = 
+#Pending Accounts by Bucket = 
 VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
 VAR _count =
     SWITCH(
@@ -197,3 +197,33 @@ IF(
         )
     )
 )
+
+
+Pending Accounts by Bucket = 
+VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
+VAR _isTotal = NOT ISINSCOPE('AgingBuckets'[Bucket])
+
+VAR _count =
+    SWITCH(
+        TRUE(),
+        _bucket = "0-30 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] <= 30, 'FactTable'[Status] = "Pending"),
+        _bucket = ">30 Days with FCC Extension",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, NOT(ISBLANK('FactTable'[ExtendedDeadline])), 'FactTable'[Status] = "Pending"),
+        _bucket = ">30 Days without FCC Extension",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, ISBLANK('FactTable'[ExtendedDeadline]), 'FactTable'[Status] = "Pending"),
+        _bucket = ">100 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 100, 'FactTable'[Status] = "Pending"),
+        _bucket = ">120 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 120, 'FactTable'[Status] = "Pending")
+    )
+
+-- For totals, add up each bucket manually
+VAR _total =
+    CALCULATE(
+        DISTINCTCOUNT('FactTable'[AccountID]),
+        'FactTable'[Status] = "Pending"
+    )
+
+RETURN 
+    IF(_isTotal, _total, COALESCE(_count, 0))

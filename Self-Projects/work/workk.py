@@ -61,3 +61,22 @@ SWITCH(
     _count > 0, _comment,
     "-"
 )
+
+Pending Accounts by Bucket = 
+VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket], "NO_BUCKET")
+VAR _count =
+    SWITCH(
+        TRUE(),
+        _bucket = "0-30 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] <= 30, 'FactTable'[Status] = "Pending"),
+        _bucket = ">30 Days with FCC Extension",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, NOT(ISBLANK('FactTable'[ExtendedDeadline])), 'FactTable'[Status] = "Pending"),
+        _bucket = ">30 Days without FCC Extension",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, ISBLANK('FactTable'[ExtendedDeadline]), 'FactTable'[Status] = "Pending"),
+        _bucket = ">100 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 100, 'FactTable'[Status] = "Pending"),
+        _bucket = ">120 Days",
+            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 120, 'FactTable'[Status] = "Pending"),
+        "NO_BUCKET", BLANK()
+    )
+RETURN _count

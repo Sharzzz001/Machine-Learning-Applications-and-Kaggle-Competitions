@@ -227,3 +227,50 @@ VAR _total =
 
 RETURN 
     IF(_isTotal, _total, COALESCE(_count, 0))
+
+
+
+from PIL import Image
+from PyPDF2 import PdfMerger
+import os
+
+def convert_image_to_pdf(image_path):
+    image = Image.open(image_path).convert("RGB")
+    pdf_path = image_path + ".temp.pdf"
+    image.save(pdf_path)
+    return pdf_path
+
+def create_pdf_from_files(file_list, output_path):
+    merger = PdfMerger()
+    temp_files = []
+
+    for file in file_list:
+        ext = os.path.splitext(file)[1].lower()
+        
+        if ext in [".jpg", ".jpeg", ".png"]:
+            pdf_file = convert_image_to_pdf(file)
+            temp_files.append(pdf_file)
+            merger.append(pdf_file)
+        elif ext == ".pdf":
+            merger.append(file)
+        else:
+            print(f"Skipping unsupported file: {file}")
+
+    merger.write(output_path)
+    merger.close()
+
+    # Cleanup temp files
+    for temp_file in temp_files:
+        os.remove(temp_file)
+
+    print(f"Combined PDF saved to: {output_path}")
+
+# Example usage
+file_paths = [
+    "page1.jpg",
+    "scan2.jpeg",
+    "document3.pdf",
+    "image4.png"
+]
+
+create_pdf_from_files(file_paths, "merged_output.pdf")

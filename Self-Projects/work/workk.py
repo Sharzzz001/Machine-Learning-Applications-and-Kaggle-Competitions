@@ -230,14 +230,40 @@ RETURN
 
 
 
-from PIL import Image
+from PIL import Image, ExifTags
 from PyPDF2 import PdfMerger
 import os
 
+def correct_image_orientation(img):
+    try:
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
+
+        exif = img._getexif()
+        if exif is not None:
+            orientation_value = exif.get(orientation, None)
+
+            if orientation_value == 3:
+                img = img.rotate(180, expand=True)
+            elif orientation_value == 6:
+                img = img.rotate(270, expand=True)
+            elif orientation_value == 8:
+                img = img.rotate(90, expand=True)
+    except Exception as e:
+        pass
+    return img
+
 def convert_image_to_pdf(image_path):
-    image = Image.open(image_path).convert("RGB")
+    img = Image.open(image_path)
+    img = correct_image_orientation(img).convert("RGB")
+
+    # Rotate to portrait if it's in landscape
+    if img.width > img.height:
+        img = img.rotate(90, expand=True)
+
     pdf_path = image_path + ".temp.pdf"
-    image.save(pdf_path)
+    img.save(pdf_path)
     return pdf_path
 
 def create_pdf_from_files(file_list, output_path):
@@ -263,14 +289,13 @@ def create_pdf_from_files(file_list, output_path):
     for temp_file in temp_files:
         os.remove(temp_file)
 
-    print(f"Combined PDF saved to: {output_path}")
+    print(f"✅ PDF created at: {output_path}")
 
 # Example usage
 file_paths = [
-    "page1.jpg",
-    "scan2.jpeg",
-    "document3.pdf",
-    "image4.png"
+    "img1.jpg",
+    "page2.png",
+    "scan3.pdf"
 ]
 
-create_pdf_from_files(file_paths, "merged_output.pdf")
+create_pdf_from_files(file_paths, "final_combined.pdf")

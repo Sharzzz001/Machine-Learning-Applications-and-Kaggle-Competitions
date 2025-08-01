@@ -103,3 +103,20 @@ def calculate_status_ageing(df):
     result_df[doc_cols + ns_cols] = result_df[doc_cols + ns_cols].fillna(0).astype(int)
 
     return result_df
+    
+    
+Doc_Status_Bucket = 
+SWITCH(
+    TRUE(),
+    'YourTableName'[Latest_Doc_Status_Ageing] <= 5, "0–5 Days",
+    'YourTableName'[Latest_Doc_Status_Ageing] <= 10, "6–10 Days",
+    "11+ Days"
+)
+
+Screening_Status_Bucket = 
+SWITCH(
+    TRUE(),
+    'YourTableName'[Latest_Screening_Status_Ageing] <= 5, "0–5 Days",
+    'YourTableName'[Latest_Screening_Status_Ageing] <= 10, "6–10 Days",
+    "11+ Days"
+)

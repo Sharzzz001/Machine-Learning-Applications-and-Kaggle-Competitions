@@ -229,73 +229,42 @@ RETURN
     IF(_isTotal, _total, COALESCE(_count, 0))
 
 
+RR Matrix Value Fixed = 
+VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
+VAR SelectedDate =
+    CALCULATE(
+        MAX(DateTable[Date]),
+        FILTER(DateTable,
+            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
+        )
+    )
+VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
 
-from PIL import Image, ExifTags
-from PyPDF2 import PdfMerger
-import os
+VAR Result =
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR Total Due],
+        SelectedLabel = "Completed", [RR Completed This Month],
+        SelectedLabel = "Pending", [RR Pending This Month],
 
-def correct_image_orientation(img):
-    try:
-        for orientation in ExifTags.TAGS.keys():
-            if ExifTags.TAGS[orientation] == 'Orientation':
-                break
+        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[CompletionDate] = SelectedDate,
+                RR_Table[IsDueThisMonth] = TRUE(),
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            ),
 
-        exif = img._getexif()
-        if exif is not None:
-            orientation_value = exif.get(orientation, None)
+        IsTotalRow,
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[IsDueThisMonth] = TRUE(),
+                RR_Table[StatusCorpInd] = "KYC Completed",
+                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
+            )
+    )
 
-            if orientation_value == 3:
-                img = img.rotate(180, expand=True)
-            elif orientation_value == 6:
-                img = img.rotate(270, expand=True)
-            elif orientation_value == 8:
-                img = img.rotate(90, expand=True)
-    except Exception as e:
-        pass
-    return img
+RETURN
+    IF(ISBLANK(Result), 0, Result)
 
-def convert_image_to_pdf(image_path):
-    img = Image.open(image_path)
-    img = correct_image_orientation(img).convert("RGB")
-
-    # Rotate to portrait if it's in landscape
-    if img.width > img.height:
-        img = img.rotate(90, expand=True)
-
-    pdf_path = image_path + ".temp.pdf"
-    img.save(pdf_path)
-    return pdf_path
-
-def create_pdf_from_files(file_list, output_path):
-    merger = PdfMerger()
-    temp_files = []
-
-    for file in file_list:
-        ext = os.path.splitext(file)[1].lower()
-        
-        if ext in [".jpg", ".jpeg", ".png"]:
-            pdf_file = convert_image_to_pdf(file)
-            temp_files.append(pdf_file)
-            merger.append(pdf_file)
-        elif ext == ".pdf":
-            merger.append(file)
-        else:
-            print(f"Skipping unsupported file: {file}")
-
-    merger.write(output_path)
-    merger.close()
-
-    # Cleanup temp files
-    for temp_file in temp_files:
-        os.remove(temp_file)
-
-    print(f"✅ PDF created at: {output_path}")
-
-# Example usage
-file_paths = [
-    "img1.jpg",
-    "page2.png",
-    "scan3.pdf"
-]
-
-create_pdf_from_files(file_paths, "final_combined.pdf")

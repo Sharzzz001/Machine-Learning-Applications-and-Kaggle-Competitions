@@ -268,3 +268,74 @@ VAR Result =
 RETURN
     IF(ISBLANK(Result), 0, Result)
 
+
+
+
+IsDueNextMonthOrLater = 
+VAR DueDate = RR_Table[Due Date]
+RETURN
+    NOT ISBLANK(DueDate) &&
+    DueDate > EOMONTH(TODAY(), 0)
+    
+    
+RR Total Due NextMonth = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonthOrLater] = TRUE()
+)
+
+RR Completed This Month for NextMonthDue = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonthOrLater] = TRUE(),
+    RR_Table[StatusCorpInd] = "KYC Completed",
+    MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+    YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
+)
+
+RR Pending NextMonthDue = 
+CALCULATE(
+    COUNTROWS(RR_Table),
+    RR_Table[IsDueNextMonthOrLater] = TRUE(),
+    RR_Table[StatusCorpInd] <> "KYC Completed"
+)
+
+RR Matrix Value NextMonthDue = 
+VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
+VAR SelectedDate =
+    CALCULATE(
+        MAX(DateTable[Date]),
+        FILTER(DateTable,
+            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
+        )
+    )
+VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
+
+VAR Result =
+    SWITCH(
+        TRUE(),
+        SelectedLabel = "Total Due", [RR Total Due NextMonth],
+        SelectedLabel = "Completed", [RR Completed This Month for NextMonthDue],
+        SelectedLabel = "Pending", [RR Pending NextMonthDue],
+
+        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[IsDueNextMonthOrLater] = TRUE(),
+                RR_Table[CompletionDate] = SelectedDate,
+                RR_Table[StatusCorpInd] = "KYC Completed"
+            ),
+
+        IsTotalRow,
+            CALCULATE(
+                COUNTROWS(RR_Table),
+                RR_Table[IsDueNextMonthOrLater] = TRUE(),
+                RR_Table[StatusCorpInd] = "KYC Completed",
+                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
+                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
+            )
+    )
+
+RETURN
+    IF(ISBLANK(Result), 0, Result)
+

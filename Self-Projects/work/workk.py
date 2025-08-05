@@ -1,341 +1,62 @@
-#Pending Accounts by Bucket = 
-VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
-VAR _count =
-    SWITCH(
-        TRUE(),
-        _bucket = "0-30 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] <= 30, 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days with FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, NOT(ISBLANK('FactTable'[ExtendedDeadline])), 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days without FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, ISBLANK('FactTable'[ExtendedDeadline]), 'FactTable'[Status] = "Pending"),
-        _bucket = ">100 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 100, 'FactTable'[Status] = "Pending"),
-        _bucket = ">120 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 120, 'FactTable'[Status] = "Pending")
-    )
-RETURN COALESCE(_count, 0)
+import pandas as pd
+import datetime
 
-Action Comment Display = 
-VAR _count = [Pending Accounts by Bucket]
-RETURN IF(_count > 0, "Escalated to Team/ Group Head", "-")
+# === Load Input Files ===
+flat_df = pd.read_excel("flat_df.xlsx")
+mapping_df = pd.read_excel("mapping_df.xlsx")
 
-Action Comment Display =
-VAR _bucket = SELECTEDVALUE(AgingBucket[AgingBucket])
-VAR _comment = LOOKUPVALUE(AgingBucket[ActionComment], AgingBucket[AgingBucket], _bucket)
-VAR _count = [Pending Accounts by Bucket]  -- your existing measure
+# === Prepare flat_df with derived columns ===
+def calculate_age(start_date, extended_deadline):
+    today = datetime.date.today()
+    if pd.notnull(extended_deadline):
+        start = pd.to_datetime(extended_deadline, errors='coerce')
+    else:
+        start = pd.to_datetime(start_date, errors='coerce')
+    if pd.isnull(start):
+        return None
+    return (today - start.date()).days
 
-RETURN 
-IF(_count > 0, _comment, "-")
-
-Action Comment Display =
-VAR _isTotalRow = NOT ISINSCOPE(AgingBucket[AgingBucket])
-VAR _bucket = SELECTEDVALUE(AgingBucket[AgingBucket])
-VAR _comment =
-    LOOKUPVALUE(AgingBucket[ActionComment], AgingBucket[AgingBucket], _bucket)
-VAR _count = [Pending Accounts by Bucket]
-
-RETURN
-    SWITCH(
-        TRUE(),
-        _isTotalRow, BLANK(),  -- Or "Summary row" if you want
-        _count > 0, _comment,
-        "-"
-    )
-    
-Action Comment Display = 
-VAR _isTotalRow = NOT ISINSCOPE(AgingBucket[AgingBucket])
-VAR _bucket = SELECTEDVALUE(AgingBucket[AgingBucket])
-VAR _comment = 
-    LOOKUPVALUE(
-        AgingBucket[ActionComment],
-        AgingBucket[AgingBucket],
-        _bucket
-    )
-VAR _count = [Pending Accounts by Bucket]
-
-RETURN
-SWITCH(
-    TRUE(),
-    _isTotalRow, BLANK(),  // You can replace BLANK() with "Total Comment" if desired
-    _count > 0, _comment,
-    "-"
+flat_df['Age'] = flat_df.apply(
+    lambda row: calculate_age(row['DocDefiStartDate'], row['ExtendedDeadline']),
+    axis=1
 )
 
-Pending Accounts by Bucket = 
-VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket], "NO_BUCKET")
-VAR _count =
-    SWITCH(
-        TRUE(),
-        _bucket = "0-30 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] <= 30, 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days with FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, NOT(ISBLANK('FactTable'[ExtendedDeadline])), 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days without FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, ISBLANK('FactTable'[ExtendedDeadline]), 'FactTable'[Status] = "Pending"),
-        _bucket = ">100 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 100, 'FactTable'[Status] = "Pending"),
-        _bucket = ">120 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 120, 'FactTable'[Status] = "Pending"),
-        "NO_BUCKET", BLANK()
-    )
-RETURN _count
-
-
-Action Comment Display =
-VAR _isTotalRow = NOT ISINSCOPE('AgingBuckets'[Bucket])
-VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
-VAR _comment =
-    LOOKUPVALUE(
-        'AgingBuckets'[ActionComment],
-        'AgingBuckets'[Bucket], _bucket
-    )
-VAR _count = [Pending Accounts by Bucket]
-RETURN
-SWITCH(
-    TRUE(),
-    _isTotalRow, BLANK(),         -- (Or "Total" if you want a label)
-    _count > 0, _comment,
-    "-"
+flat_df['Fcc Extension received'] = flat_df['ExtendedDeadline'].apply(
+    lambda x: 'Yes' if pd.notnull(x) else 'No'
 )
 
+# === Prepare output DataFrame ===
+output_rows = []
 
-Pending Accounts by Bucket = 
-VAR _hasBucket = HASONEVALUE('AgingBuckets'[Bucket])
-RETURN 
-IF(
-    _hasBucket,
-    SWITCH(
-        VALUES('AgingBuckets'[Bucket]),
-        "0-30 Days", 
-            COALESCE(
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] <= 30,
-                    'FactTable'[Status] = "Pending"
-                ), 
-                0
-            ),
-        ">30 Days with FCC Extension", 
-            COALESCE(
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 30,
-                    NOT(ISBLANK('FactTable'[ExtendedDeadline])), 
-                    'FactTable'[Status] = "Pending"
-                ), 
-                0
-            ),
-        ">30 Days without FCC Extension", 
-            COALESCE(
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 30,
-                    ISBLANK('FactTable'[ExtendedDeadline]), 
-                    'FactTable'[Status] = "Pending"
-                ), 
-                0
-            ),
-        ">100 Days", 
-            COALESCE(
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 100, 
-                    'FactTable'[Status] = "Pending"
-                ), 
-                0
-            ),
-        ">120 Days", 
-            COALESCE(
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 120, 
-                    'FactTable'[Status] = "Pending"
-                ), 
-                0
-            ),
-        BLANK()
-    ),
-    // Total row - sum of all visible buckets
-    SUMX(
-        VALUES('AgingBuckets'[Bucket]),
-        SWITCH(
-            'AgingBuckets'[Bucket],
-            "0-30 Days", 
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] <= 30,
-                    'FactTable'[Status] = "Pending"
-                ),
-            ">30 Days with FCC Extension", 
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 30,
-                    NOT(ISBLANK('FactTable'[ExtendedDeadline])), 
-                    'FactTable'[Status] = "Pending"
-                ),
-            ">30 Days without FCC Extension", 
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 30,
-                    ISBLANK('FactTable'[ExtendedDeadline]), 
-                    'FactTable'[Status] = "Pending"
-                ),
-            ">100 Days", 
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 100, 
-                    'FactTable'[Status] = "Pending"
-                ),
-            ">120 Days", 
-                CALCULATE(
-                    DISTINCTCOUNT('FactTable'[AccountID]), 
-                    'FactTable'[Days] > 120, 
-                    'FactTable'[Status] = "Pending"
-                ),
-            0
-        )
-    )
-)
+for _, flat_row in flat_df.iterrows():
+    matched_rows = mapping_df[
+        (mapping_df['Process Type'].str.strip().str.upper() == flat_row['Request Type'].strip().upper()) &
+        (mapping_df['Doc Type'].str.strip().str.upper() == flat_row['DocDefiType'].strip().upper()) &
+        (
+            (mapping_df['Fcc Extension received'].str.upper() == flat_row['Fcc Extension received'].upper()) |
+            (mapping_df['Fcc Extension received'].str.upper() == 'ANY')
+        ) &
+        (flat_row['Age'] >= mapping_df['DueInMin']) &
+        (flat_row['Age'] <= mapping_df['DueInMax'])
+    ]
 
+    if matched_rows.empty:
+        # No match → add row with escalation columns as NaN
+        output_row = flat_row.to_dict()
+        output_row['Matched'] = 'No'
+        output_rows.append(output_row)
+    else:
+        # For each match, append result
+        for _, match in matched_rows.iterrows():
+            output_row = flat_row.to_dict()
+            output_row['Matched'] = 'Yes'
+            for col in match.index:
+                if col not in ['Process Type', 'Doc Type', 'DueInMin', 'DueInMax', 'Fcc Extension received']:
+                    output_row[col] = match[col]
+            output_rows.append(output_row)
 
-Pending Accounts by Bucket = 
-VAR _bucket = SELECTEDVALUE('AgingBuckets'[Bucket])
-VAR _isTotal = NOT ISINSCOPE('AgingBuckets'[Bucket])
+# === Save final output ===
+output_df = pd.DataFrame(output_rows)
+output_df.to_excel("protocol_mapping_output.xlsx", index=False)
 
-VAR _count =
-    SWITCH(
-        TRUE(),
-        _bucket = "0-30 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] <= 30, 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days with FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, NOT(ISBLANK('FactTable'[ExtendedDeadline])), 'FactTable'[Status] = "Pending"),
-        _bucket = ">30 Days without FCC Extension",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 30, ISBLANK('FactTable'[ExtendedDeadline]), 'FactTable'[Status] = "Pending"),
-        _bucket = ">100 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 100, 'FactTable'[Status] = "Pending"),
-        _bucket = ">120 Days",
-            CALCULATE(DISTINCTCOUNT('FactTable'[AccountID]), 'FactTable'[Days] > 120, 'FactTable'[Status] = "Pending")
-    )
-
--- For totals, add up each bucket manually
-VAR _total =
-    CALCULATE(
-        DISTINCTCOUNT('FactTable'[AccountID]),
-        'FactTable'[Status] = "Pending"
-    )
-
-RETURN 
-    IF(_isTotal, _total, COALESCE(_count, 0))
-
-
-RR Matrix Value Fixed = 
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-VAR SelectedDate =
-    CALCULATE(
-        MAX(DateTable[Date]),
-        FILTER(DateTable,
-            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
-        )
-    )
-VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
-
-VAR Result =
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR Total Due],
-        SelectedLabel = "Completed", [RR Completed This Month],
-        SelectedLabel = "Pending", [RR Pending This Month],
-
-        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[CompletionDate] = SelectedDate,
-                RR_Table[IsDueThisMonth] = TRUE(),
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            ),
-
-        IsTotalRow,
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[IsDueThisMonth] = TRUE(),
-                RR_Table[StatusCorpInd] = "KYC Completed",
-                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
-            )
-    )
-
-RETURN
-    IF(ISBLANK(Result), 0, Result)
-
-
-
-
-IsDueNextMonthOrLater = 
-VAR DueDate = RR_Table[Due Date]
-RETURN
-    NOT ISBLANK(DueDate) &&
-    DueDate > EOMONTH(TODAY(), 0)
-    
-    
-RR Total Due NextMonth = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonthOrLater] = TRUE()
-)
-
-RR Completed This Month for NextMonthDue = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonthOrLater] = TRUE(),
-    RR_Table[StatusCorpInd] = "KYC Completed",
-    MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-    YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
-)
-
-RR Pending NextMonthDue = 
-CALCULATE(
-    COUNTROWS(RR_Table),
-    RR_Table[IsDueNextMonthOrLater] = TRUE(),
-    RR_Table[StatusCorpInd] <> "KYC Completed"
-)
-
-RR Matrix Value NextMonthDue = 
-VAR SelectedLabel = SELECTEDVALUE(RR_ColumnLabels[Label])
-VAR SelectedDate =
-    CALCULATE(
-        MAX(DateTable[Date]),
-        FILTER(DateTable,
-            FORMAT(DateTable[Date], "d MMM") = SelectedLabel
-        )
-    )
-VAR IsTotalRow = NOT ISINSCOPE(RR_ColumnLabels[Label])
-
-VAR Result =
-    SWITCH(
-        TRUE(),
-        SelectedLabel = "Total Due", [RR Total Due NextMonth],
-        SelectedLabel = "Completed", [RR Completed This Month for NextMonthDue],
-        SelectedLabel = "Pending", [RR Pending NextMonthDue],
-
-        NOT IsTotalRow && NOT ISBLANK(SelectedDate),
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[IsDueNextMonthOrLater] = TRUE(),
-                RR_Table[CompletionDate] = SelectedDate,
-                RR_Table[StatusCorpInd] = "KYC Completed"
-            ),
-
-        IsTotalRow,
-            CALCULATE(
-                COUNTROWS(RR_Table),
-                RR_Table[IsDueNextMonthOrLater] = TRUE(),
-                RR_Table[StatusCorpInd] = "KYC Completed",
-                MONTH(RR_Table[CompletionDate]) = MONTH(TODAY()),
-                YEAR(RR_Table[CompletionDate]) = YEAR(TODAY())
-            )
-    )
-
-RETURN
-    IF(ISBLANK(Result), 0, Result)
-
+print("✅ Mapping complete. Output saved to 'protocol_mapping_output.xlsx'")

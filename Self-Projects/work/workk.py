@@ -1,17 +1,23 @@
-Due_Age_Bucket = 
-SWITCH(
-    TRUE(),
-    'YourTable'[Age_To_Completion] <= 30, "0–30 Days",
-    'YourTable'[Age_To_Completion] <= 60, "31–60 Days",
-    'YourTable'[Age_To_Completion] <= 90, "61–90 Days",
-    "90+ Days"
-)
-
-Due_Age_Bucket_Sort =
-SWITCH(
-    TRUE(),
-    'YourTable'[Due_Age_Bucket] = "0–30 Days", 1,
-    'YourTable'[Due_Age_Bucket] = "31–60 Days", 2,
-    'YourTable'[Due_Age_Bucket] = "61–90 Days", 3,
-    4
-)
+SLA_Percentage =
+VAR TotalRows =
+    CALCULATE(
+        COUNTROWS('Data'),
+        'Data'[Process] = "Account Lifecycle",              -- Process condition
+        NOT 'Data'[RequestType] IN { "TypeA", "TypeB" },     -- Exclusions
+        'Data'[RequestDate] <> BLANK(),                      -- Must have start date
+        'Data'[CompletionDate] <> BLANK()                    -- Must have end date
+    )
+VAR MetRows =
+    CALCULATE(
+        COUNTROWS('Data'),
+        'Data'[Process] = "Account Lifecycle",
+        NOT 'Data'[RequestType] IN { "TypeA", "TypeB" },
+        'Data'[RequestDate] <> BLANK(),
+        'Data'[CompletionDate] <> BLANK(),
+        VAR SLA_Days = IF('Data'[Urgent], 1, 3)
+        VAR ActualDays =
+            NETWORKDAYS('Data'[RequestDate], 'Data'[CompletionDate])
+        RETURN ActualDays <= SLA_Days
+    )
+RETURN
+DIVIDE(MetRows, TotalRows, 0)

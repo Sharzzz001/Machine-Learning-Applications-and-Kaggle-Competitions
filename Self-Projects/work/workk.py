@@ -55,3 +55,31 @@ UNION(
     ROW("Process", "Review",            "SLA_Percentage", [SLA_Percentage_Review]),
     ROW("Process", "XYZ",               "SLA_Percentage", [SLA_Percentage_XYZ])
 )
+
+RAG_Table =
+UNION(
+    ROW( "Team", "Account Opening", "Process", "Document Review (VIP/Non-VIP)", "SLA_Percentage", 0.98 ),
+    ROW( "Team", "Account Opening", "Process", "Name Screening (<30 hits, VIP/Non-VIP)", "SLA_Percentage", 0.92 ),
+    ROW( "Team", "Account Opening", "Process", "Name Screening (>30 hits, VIP/Non-VIP)", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Rolling Reviews", "Process", "Prospects Creation", "SLA_Percentage", 0.99 ),
+    ROW( "Team", "Rolling Reviews", "Process", "Static Setup", "SLA_Percentage", 0.83 ),
+    ROW( "Team", "Rolling Reviews", "Process", "Document Review", "SLA_Percentage", 0.875 ),
+    ROW( "Team", "Rolling Reviews", "Process", "Name Screening (<30 hits)", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Rolling Reviews", "Process", "Name Screening (>30 hits)", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Static Setup", "SLA_Percentage", 0.86 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Account Closures", "SLA_Percentage", 0.65 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Client Certification / Attestations", "SLA_Percentage", 0.655 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Products & Services enablement", "SLA_Percentage", 0.805 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Address/Contact details updates; Deceased a/cs", "SLA_Percentage", 0.85 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Blocking & Unblocking of Accounts", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Operational Client Updates", "SLA_Percentage", 0.845 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Document Review", "SLA_Percentage", 0.935 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Limit Setups", "SLA_Percentage", 0.755 ),
+    ROW( "Team", "Products & Services - Static", "Process", "Facility Cancellation", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Products & Services - LCO", "Process", "Letter Issuance (non-credit grp)", "SLA_Percentage", 0.755 ),
+    ROW( "Team", "Products & Services - LCO", "Process", "Letter Issuance (credit grp)", "SLA_Percentage", 0.675 ),
+    ROW( "Team", "Products & Services - LCO", "Process", "Insurance/Mortgage Financing", "SLA_Percentage", 0.00 ),
+    ROW( "Team", "Products & Services - LCO", "Process", "Limit Reduction", "SLA_Percentage", 1.00 ),
+    ROW( "Team", "Products & Services - LCO", "Process", "Renewal", "SLA_Percentage", BLANK() )
+)
+

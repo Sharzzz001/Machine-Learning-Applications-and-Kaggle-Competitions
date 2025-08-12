@@ -42,3 +42,5 @@ VAR MetRows =
     )
 RETURN
 DIVIDE(MetRows, TotalRows, 0)
+
+Al (investor class), Al (investor class) (No physicals required), IM Pack, Product features & Risk disclosure, IM Pack, Product features & Risk disclosure (Physicals required, IRPQ / Portfolio Waiver, IRPQ / Portfolio Waiver (No physicals required), IRPQ Attestation, IRPO Attestation (No physicals required), IRPQ Attestation Doc upload, IRPQ DOCM dates update, IRPQ DOCM dates update (No physicals required), IRPQ questionnaire (upgrade/ downgrade) (Physicals required), IRPQ upload, VC and Non VC, or VC and Non VC (No physicals required)

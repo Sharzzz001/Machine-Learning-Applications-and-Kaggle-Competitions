@@ -48,3 +48,10 @@ Al (investor class), Al (investor class) (No physicals required), IM Pack, Produ
 CDP/CDS, CDP/CDS (No physicals required), Commission, Commission (No physicals required), Custody Fees, Custody Fees (No physicals required), Sales Code Transfer (No physicals required), SSI Priority, SSI Priority (No physicals required), or Sales Code Transfer
 
 Audit Confirmation, Audit Confirmation (Physicals required), Bank Reference Letter, Bank Reference Letter (Physicals required), DEC avaloq, DEC avaloq (Physicals required), DEC Letter, DEC Letter creation (No physicals required), E-Platform, E-Platform hard token (Physicals required), E-Platform Hard token Acknowledgment form (Physicals required), E-Platform hard token removal (No physicals required), Platform Paperless Consent letter, E-Platform Paperless Consent letter (Physicals required), E-Platform Soft Token - Migration (No physicals required), E-Platform Soft Token - New (Physicals required), E-Platform Soft Token (migration), E-Platform Soft Token (new), IA Tagging (No physicals required), or IA Tagging
+
+SLA_Summary =
+UNION(
+    ROW("Process", "Account Lifecycle", "SLA_Percentage", [SLA_Percentage_AccountLifecycle]),
+    ROW("Process", "Review",            "SLA_Percentage", [SLA_Percentage_Review]),
+    ROW("Process", "XYZ",               "SLA_Percentage", [SLA_Percentage_XYZ])
+)

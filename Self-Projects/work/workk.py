@@ -44,3 +44,6 @@ RETURN
 DIVIDE(MetRows, TotalRows, 0)
 
 Al (investor class), Al (investor class) (No physicals required), IM Pack, Product features & Risk disclosure, IM Pack, Product features & Risk disclosure (Physicals required, IRPQ / Portfolio Waiver, IRPQ / Portfolio Waiver (No physicals required), IRPQ Attestation, IRPO Attestation (No physicals required), IRPQ Attestation Doc upload, IRPQ DOCM dates update, IRPQ DOCM dates update (No physicals required), IRPQ questionnaire (upgrade/ downgrade) (Physicals required), IRPQ upload, VC and Non VC, or VC and Non VC (No physicals required)
+
+CDP/CDS, CDP/CDS (No physicals required), Commission, Commission (No physicals required), Custody Fees, Custody Fees (No physicals required), Sales Code Transfer (No physicals required), SSI Priority, SSI Priority (No physicals required), or Sales Code Transfer
+

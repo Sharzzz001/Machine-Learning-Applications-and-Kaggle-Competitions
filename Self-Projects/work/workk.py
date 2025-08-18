@@ -83,10 +83,14 @@ UNION(
     ROW( "Team", "Products & Services - LCO", "Process", "Renewal", "SLA_Percentage", BLANK() )
 )
 
-SLA_Table =
-UNION (
-    ROW ( "Team", "Account Opening", "Process", "Document Review (VIP/Non-VIP)", "SLA_Percentage", [DocReview_VIP_SLA], "SortOrder", 1 ),
-    ROW ( "Team", "Rolling Reviews", "Process", "Prospects Creation", "SLA_Percentage", [Prospects_SLA], "SortOrder", 2 ),
-    ROW ( "Team", "Products & Services - Static", "Process", "Static Setup", "SLA_Percentage", [StaticSetup_SLA], "SortOrder", 3 ),
-    ROW ( "Team", "Products & Services - LCO", "Process", "Letter Issuance (non-credit grp)", "SLA_Percentage", [LetterIssuance_NonCredit_SLA], "SortOrder", 4 )
+TeamSort =
+DATATABLE (
+    "Team", STRING,
+    "SortOrder", INTEGER,
+    {
+        { "Account Opening", 1 },
+        { "Rolling Reviews", 2 },
+        { "Products & Services - Static", 3 },
+        { "Products & Services - LCO", 4 }
+    }
 )

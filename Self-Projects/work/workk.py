@@ -94,3 +94,93 @@ DATATABLE (
         { "Products & Services - LCO", 4 }
     }
 )
+
+RR Matrix Value NextMonthDue =
+VAR CurrentMonthStart =
+    DATE ( YEAR ( TODAY() ), MONTH ( TODAY() ), 1 )
+VAR CurrentMonthEnd =
+    EOMONTH ( TODAY(), 0 )
+VAR DueCutoff -- anything due AFTER end of current month
+    = CurrentMonthEnd
+
+VAR SelectedLabel =
+    SELECTEDVALUE ( RR_ColumnLabels[Label] )
+
+VAR IsTotalCol =
+    NOT ISINSCOPE ( RR_ColumnLabels[Label] )
+
+VAR IsStaticLabel =
+    CONTAINSROW ( { "Total Due", "Completed", "Pending" }, SelectedLabel )
+
+-- Only try to resolve a date when we are on a day label (not totals)
+VAR SelectedDate =
+    IF (
+        NOT IsStaticLabel && NOT IsTotalCol,
+        CALCULATE (
+            MAX ( DateTable[Date] ),
+            KEEPFILTERS (
+                FILTER (
+                    DateTable,
+                    DateTable[Date] >= CurrentMonthStart
+                        && DateTable[Date] <= CurrentMonthEnd
+                        && FORMAT ( DateTable[Date], "d MMM" ) = SelectedLabel
+                )
+            )
+        )
+    )
+
+-- Common filters
+VAR Filter_DueNextMonthOrLater =
+    RR_Table[Due Date] > DueCutoff
+
+VAR Filter_CompletedThisMonth =
+    RR_Table[StatusCorpInd] = "KYC Completed"
+        && RR_Table[CompletionDate] >= CurrentMonthStart
+        && RR_Table[CompletionDate] <= CurrentMonthEnd
+
+RETURN
+VAR Result =
+    SWITCH (
+        TRUE (),
+
+        /* Static columns */
+        SelectedLabel = "Total Due",
+            CALCULATE (
+                COUNTROWS ( RR_Table ),
+                Filter_DueNextMonthOrLater
+            ),
+
+        SelectedLabel = "Pending",
+            CALCULATE (
+                COUNTROWS ( RR_Table ),
+                Filter_DueNextMonthOrLater,
+                RR_Table[StatusCorpInd] <> "KYC Completed"
+            ),
+
+        SelectedLabel = "Completed",
+            CALCULATE (
+                COUNTROWS ( RR_Table ),
+                Filter_DueNextMonthOrLater,
+                Filter_CompletedThisMonth
+            ),
+
+        /* Day columns: one date in current month */
+        NOT IsStaticLabel && NOT IsTotalCol && NOT ISBLANK ( SelectedDate ),
+            CALCULATE (
+                COUNTROWS ( RR_Table ),
+                Filter_DueNextMonthOrLater,
+                RR_Table[StatusCorpInd] = "KYC Completed",
+                INT ( RR_Table[CompletionDate] ) = SelectedDate   -- strip time
+            ),
+
+        /* Rightmost grand total (sum of day columns) */
+        IsTotalCol,
+            CALCULATE (
+                COUNTROWS ( RR_Table ),
+                Filter_DueNextMonthOrLater,
+                Filter_CompletedThisMonth
+            )
+    )
+RETURN
+    COALESCE ( Result, 0 )
+

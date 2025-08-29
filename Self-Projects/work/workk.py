@@ -184,3 +184,9 @@ VAR Result =
 RETURN
     COALESCE ( Result, 0 )
 
+
+= if [DueDate] = null or Text.Trim([DueDate]) = "" then null 
+  else if Text.Contains([DueDate], "T") 
+    then DateTime.Date(DateTime.FromText([DueDate])) 
+  else try Date.FromText([DueDate]) otherwise Date.FromText(Text.Replace([DueDate],"/","-"))
+

@@ -190,3 +190,12 @@ RETURN
     then DateTime.Date(DateTime.FromText([DueDate])) 
   else try Date.FromText([DueDate]) otherwise Date.FromText(Text.Replace([DueDate],"/","-"))
 
+flag_due =
+VAR CurrentMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()), 1)
+VAR TwoMonthsAheadEnd = EDATE(CurrentMonthStart, 2) - 1
+RETURN
+IF(
+    'Table'[DueDate] <= TwoMonthsAheadEnd,
+    TRUE(),
+    FALSE()
+)

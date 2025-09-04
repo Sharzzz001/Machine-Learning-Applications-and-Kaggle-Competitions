@@ -199,3 +199,21 @@ IF(
     TRUE(),
     FALSE()
 )
+
+Ageing Bucket =
+VAR CurrentMonthStart = DATE(YEAR(TODAY()), MONTH(TODAY()), 1)        -- 1 Sept 2025
+VAR CurrentMonthEnd   = EOMONTH(CurrentMonthStart, 0)                 -- 30 Sept 2025
+VAR TwoMonthsBack     = EDATE(CurrentMonthStart, -2)                  -- 1 July 2025
+VAR OneMonthBack      = EDATE(CurrentMonthStart, -1)                  -- 1 Aug 2025
+RETURN
+SWITCH (
+    TRUE(),
+    'Table'[Due_Date] >= CurrentMonthStart && 'Table'[Due_Date] <= CurrentMonthEnd,
+        "0-30 days",
+    'Table'[Due_Date] >= TwoMonthsBack && 'Table'[Due_Date] < CurrentMonthStart,
+        "31-90 days",
+    'Table'[Due_Date] < TwoMonthsBack,
+        ">90 days",
+    'Table'[Due_Date] > CurrentMonthEnd,
+        "Future Due"
+)

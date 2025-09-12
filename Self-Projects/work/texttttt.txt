@@ -1,6 +1,61 @@
-Here’s a refined version of your key achievements with improved clarity and impact:
-	1.	Optimized System Integration & Automation – Successfully bridged the gap between two back-office systems (PCM and NEWS) and a front-office system (Spear) by developing a task-scheduled script to automate counterpart cash flow emails. This automation reduced approximately 65% of manual efforts in the Spear BAU process, enhancing operational efficiency.
-	2.	Data Analytics & Cost Reduction – Led multiple analytics projects focused on CDIT, Security Settlements, and WM, analyzing BAU processes within Nomura. Identified and implemented strategies to minimize manual efforts, operational costs, and financial expenses, resulting in improved process efficiency.
-	3.	Cash Management Process Enhancement – Automated the daily Nostro Long and Short account emails sent to various treasury teams. This significantly reduced manual workload, streamlining communication and optimizing resource allocation within the team.
+Key Achievements
+	•	Successfully deployed OCR and computer vision models to automate document handling processes, improving efficiency and accuracy.
+	•	Built and deployed MI dashboards for senior stakeholders, enabling better decision-making through real-time insights.
+	•	Applied LLMs/ML techniques to streamline data analysis and reduce manual intervention.
+	•	Collaborated across IWM SSG and CSG operations teams, gaining exposure to multiple functional areas.
+	•	Represented the India team in Singapore IWM Ops, contributing to regional projects and knowledge sharing.
 
-These refined points emphasize impact, efficiency, and strategic contribution while making them more structured and concise. Let me know if you’d like any further tweaks!
+⸻
+
+What went well (Work + overall)
+	•	Seamless collaboration across multiple teams, which broadened my domain knowledge in operations.
+	•	Ability to apply data science skills (OCR, ML, dashboards) to real operational challenges, delivering tangible value.
+	•	Strong support from both local and Singapore colleagues, which helped in quicker project turnarounds.
+
+⸻
+
+What you wanted to do but could not do
+	•	Wanted to explore advanced generative AI/LLM integration into more business workflows, but scope and priorities limited this so far.
+	•	Could not yet work on end-to-end automation (from ingestion to reporting) in some projects due to dependency on other teams.
+
+⸻
+
+Areas of your strength
+	•	Technical skills: ML, data analysis, OCR/vision models, dashboarding.
+	•	Problem-solving: Translating operational challenges into data-driven solutions.
+	•	Cross-team collaboration: Building rapport across India and Singapore teams.
+	•	Adaptability: Quickly picking up new processes across different sub-domains (SSG, CSG).
+
+⸻
+
+Your learning
+	•	Business: Gained deeper understanding of IWM operational workflows, especially around SSG and CSG.
+	•	Technical: Hands-on deployment of OCR and vision models, improved dashboard design skills, and exposure to integrating ML/LLMs with business processes.
+
+⸻
+
+Contribution to Team
+	•	Delivered scalable data science solutions that reduced manual effort.
+	•	Shared knowledge of ML/LLMs with colleagues through discussions and demos.
+	•	Acted as a bridge between teams in India and Singapore, aligning technical solutions with operational needs.
+
+⸻
+
+Areas of Improvement
+	•	Need to enhance stakeholder communication (simplifying technical explanations for non-technical users).
+	•	Improve time management while balancing multiple parallel projects.
+	•	Explore deeper automation opportunities using GenAI and predictive analytics.
+
+⸻
+
+Anything specific you want me to know
+	•	I’m motivated to take on more responsibility in end-to-end projects, not just the technical part but also stakeholder alignment and delivery.
+	•	Open to exploring cross-regional opportunities if they help drive AI/ML adoption across Nomura Ops.
+
+⸻
+
+Your plan for coming 6 months
+	•	Expand OCR and ML solutions to other teams/functions where manual processes can be optimized.
+	•	Work on a POC for LLM-based automation (e.g., SOP chatbot, text summarization for ops).
+	•	Upskill in cloud deployment and model monitoring to make solutions more production-ready.
+	•	Contribute more towards governance/standardization of data science practices within Ops.

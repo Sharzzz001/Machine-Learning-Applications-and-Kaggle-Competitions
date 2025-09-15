@@ -1,11 +1,19 @@
-Report Label =
 VAR TodayDate = TODAY()
-VAR FirstOfMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 1)
-VAR EndPrevMonth = EOMONTH(TodayDate, -1)
-VAR FifteenthThisMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 15)
-RETURN
+VAR FirstOfCurrentMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 1)
+VAR EndOfPrevMonth = EOMONTH(TodayDate, -1)
+VAR FirstOfPrevMonth = DATE(YEAR(TodayDate), MONTH(TodayDate) - 1, 1)
+VAR FifteenthOfCurrentMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 15)
+
+VAR PrevMonthStart =
     IF(
         DAY(TodayDate) <= 15,
-        "Report as of " & FORMAT(EndPrevMonth, "DD MMMM"),
-        "Report as of " & FORMAT(FifteenthThisMonth, "DD MMMM")
+        FirstOfPrevMonth,
+        FirstOfCurrentMonth
+    )
+
+VAR PrevMonthEnd =
+    IF(
+        DAY(TodayDate) <= 15,
+        EndOfPrevMonth,
+        FifteenthOfCurrentMonth
     )

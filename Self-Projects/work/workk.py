@@ -1,19 +1,15 @@
-VAR TodayDate = TODAY()
-VAR FirstOfCurrentMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 1)
-VAR EndOfPrevMonth = EOMONTH(TodayDate, -1)
-VAR FirstOfPrevMonth = DATE(YEAR(TodayDate), MONTH(TodayDate) - 1, 1)
-VAR FifteenthOfCurrentMonth = DATE(YEAR(TodayDate), MONTH(TodayDate), 15)
-
-VAR PrevMonthStart =
-    IF(
-        DAY(TodayDate) <= 15,
-        FirstOfPrevMonth,
-        FirstOfCurrentMonth
-    )
-
-VAR PrevMonthEnd =
-    IF(
-        DAY(TodayDate) <= 15,
-        EndOfPrevMonth,
-        FifteenthOfCurrentMonth
-    )
+ROW (
+    "Team", "Account Opening",
+    "Process", "Document Review (VIP/Non-VIP)",
+    "SLA_Percentage", [SLA_DocumentReview_VIP],
+    "Comments",
+        IF (
+            ISBLANK([SLA_DocumentReview_VIP]),
+            "No cases",
+            IF (
+                [SLA_DocumentReview_VIP] > 0.8,
+                "-",
+                "Your static comment here"
+            )
+        )
+)

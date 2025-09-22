@@ -1,53 +1,44 @@
-import pandas as pd
-from bertopic import BERTopic
+log_file = "Email_Log.xlsx"
 
-# =======================
-# Step 1: Load and filter data
-# =======================
-file_path = "your_file.xlsx"   # change to your file path
-df = pd.read_excel(file_path)
+if os.path.exists(log_file):
+    email_log = pd.read_excel(log_file)
+else:
+    email_log = pd.DataFrame(columns=[
+        "AccountNumber", "ReviewType", "DocumentName",
+        "Rule", "EmailDate", "To", "CC", "Subject"
+    ])
 
-# Keep only rows with remark = "Total Block" and non-null comments
-df_block = df[df["remark"].str.contains("Total Block", case=False, na=False)].copy()
-df_block = df_block[df_block["note_block_sp_status"].notna()].copy()
+account = group['AccountNumber'].iloc[0]
+review_type = group['Request Type'].iloc[0]
+doc_name = group['Document Name'].iloc[0]
+rule = group['Rule'].iloc[0]
 
-# Clean repetitive phrases like "total block"
-remove_phrases = ["total block", "blocked account", "account blocked"]
+# Check if this combination already logged
+already_logged = (
+    (email_log["AccountNumber"] == account) &
+    (email_log["ReviewType"] == review_type) &
+    (email_log["DocumentName"] == doc_name) &
+    (email_log["Rule"] == rule)
+).any()
 
-def clean_text(text):
-    text = str(text).lower()
-    for phrase in remove_phrases:
-        text = text.replace(phrase, "")
-    return text.strip()
+if not already_logged:
+    mail = outlook.CreateItem(0)
+    mail.Subject = f"Escalation: {account} - {review_type} - {doc_name} (Rule {rule})"
+    mail.To = rm_email
+    mail.CC = ";".join(cc_addresses)
+    mail.Body = f"This account has a document deficiency.\n\n"
+    mail.Save()
 
-df_block["clean_text"] = df_block["note_block_sp_status"].apply(clean_text)
+    new_entry = pd.DataFrame([{
+        "AccountNumber": account,
+        "ReviewType": review_type,
+        "DocumentName": doc_name,
+        "Rule": rule,
+        "EmailDate": datetime.now(),
+        "To": rm_email,
+        "CC": ";".join(cc_addresses),
+        "Subject": mail.Subject
+    }])
+    email_log = pd.concat([email_log, new_entry], ignore_index=True)
 
-# =======================
-# Step 2: Run BERTopic
-# =======================
-topic_model = BERTopic(verbose=True)
-topics, probs = topic_model.fit_transform(df_block["clean_text"].tolist())
-
-df_block["topic"] = topics
-
-# =======================
-# Step 3: Explore topics
-# =======================
-# Print discovered topics with top keywords
-print("\n=== Topics Discovered ===")
-print(topic_model.get_topic_info())
-
-# Show top keywords per topic
-for t in set(topics):
-    if t != -1:  # -1 is "outlier" cluster
-        print(f"\nTopic {t}:")
-        print(topic_model.get_topic(t))
-
-# =======================
-# Step 4: Save results
-# =======================
-df_block.to_excel("bertopic_total_block.xlsx", index=False)
-
-# Optional: Visualize topics (requires notebook or interactive window)
-# topic_model.visualize_topics().show()
-# topic_model.visualize_barchart(top_n_topics=10).show()
+email_log.to_excel(log_file, index=False)

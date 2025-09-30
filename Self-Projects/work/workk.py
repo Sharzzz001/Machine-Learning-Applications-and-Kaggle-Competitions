@@ -1,28 +1,26 @@
 import pandas as pd
+from upsetplot import UpSet, from_indicators
 from matplotlib import pyplot as plt
-from matplotlib_venn import venn2
 
-# Assuming df is already cleaned and has columns: Account, Remark
+# === Assume df has columns: Account, Remark ===
 
-# Step 1: Create flags for each remark type per account
-account_flags = df.groupby("Account")["Remark"].apply(list).reset_index()
+# Step 1: Deduplicate account × remark
+df_unique = df.drop_duplicates(subset=["Account", "Remark"])
 
-def get_flags(remark_list):
-    return pd.Series({
-        "Total_Block_Flag": int(any("Total Blocking" in r for r in remark_list)),
-        "Transfer_Block_Flag": int(any("Blocked for Transfer Transactions" in r for r in remark_list))
-    })
+# Step 2: Get list of block types dynamically
+block_types = df_unique["Remark"].unique().tolist()
 
-account_flags = account_flags.join(account_flags["Remark"].apply(get_flags))
+# Step 3: Create binary presence table per account
+account_flags = df_unique.groupby("Account")["Remark"].apply(list).reset_index()
+for b in block_types:
+    account_flags[b] = account_flags["Remark"].apply(lambda x: int(b in x))
 
-# Step 2: Count numbers for Venn diagram
-total_only = ((account_flags["Total_Block_Flag"] == 1) & (account_flags["Transfer_Block_Flag"] == 0)).sum()
-transfer_only = ((account_flags["Total_Block_Flag"] == 0) & (account_flags["Transfer_Block_Flag"] == 1)).sum()
-both = ((account_flags["Total_Block_Flag"] == 1) & (account_flags["Transfer_Block_Flag"] == 1)).sum()
+# Step 4: Create UpSet data
+indicator_df = account_flags.set_index("Account")[block_types]
+upset_data = from_indicators(indicator_df.columns, indicator_df)
 
-# Step 3: Plot Venn diagram
-plt.figure(figsize=(6,6))
-venn2(subsets=(total_only, transfer_only, both),
-      set_labels=("Total Block", "Transfer Block"))
-plt.title("Accounts with Total / Transfer Blocks")
+# Step 5: Plot UpSet
+upset = UpSet(upset_data, subset_size='count', show_counts='%d')
+upset.plot()
+plt.title("Overlap of Block Types Across Accounts")
 plt.show()

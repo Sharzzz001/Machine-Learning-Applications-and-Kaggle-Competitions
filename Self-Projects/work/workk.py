@@ -1,50 +1,77 @@
-def autofit_columns(writer, df, sheet_name):
-    """Auto-fit column widths in the given sheet based on df contents."""
-    worksheet = writer.sheets[sheet_name]
-    for idx, col in enumerate(df.columns):
-        # Convert all values to string length
-        series = df[col].astype(str)
-        max_len = max((
-            series.map(len).max(),
-            len(str(col))
-        )) + 2  # add a little extra padding
-        worksheet.set_column(idx, idx, max_len)
-        
+import pandas as pd
+import numpy as np
+import re
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
-with pd.ExcelWriter(out_filename, engine="xlsxwriter") as writer:
-    # Pivot
-    pivot.to_excel(writer, sheet_name="Pivot_Overview", startrow=0)
-    autofit_columns(writer, pivot.reset_index(), "Pivot_Overview")
+# Example: assuming df already processed with account_no, remark_combo, Keyword
+# And pivot_table already created
+pivot_table = pd.pivot_table(
+    df,
+    index="Keyword",
+    columns="remark_combo",
+    values="account_no",
+    aggfunc="count",
+    fill_value=0,
+)
 
-    # Add totals after pivot
-    workbook  = writer.book
-    worksheet = writer.sheets["Pivot_Overview"]
-    nrows = pivot.shape[0] + 1
-    insert_row = nrows + 2
-    worksheet.write(insert_row, 0, "Total unique accounts")
-    worksheet.write(insert_row, 1, agg["Account"].nunique())
-    worksheet.write(insert_row + 1, 0, "Total reasons for blocked accounts")
-    worksheet.write(insert_row + 1, 1, pivot["Total"].sum())
+# Prepare summary lines
+total_unique_accounts = df["account_no"].nunique()
+total_reasons = pivot_table.values.sum()
 
-    # Other sheets
-    agg.to_excel(writer, sheet_name="Account_Aggregated", index=False)
-    autofit_columns(writer, agg, "Account_Aggregated")
+# --- Unique account level remark_combo distribution ---
+# For each account, collapse into one remark_combo (same as you used earlier for remark_combos)
+remark_combos = (
+    df.groupby("account_no")["remark_combo"]
+    .unique()
+    .apply(lambda x: ", ".join(sorted(x)))
+    .reset_index(name="remark_combo")
+)
 
-    exploded.to_excel(writer, sheet_name="Account_Category", index=False)
-    autofit_columns(writer, exploded, "Account_Category")
+remark_combo_dist = remark_combos["remark_combo"].value_counts().reset_index()
+remark_combo_dist.columns = ["Remark Combo", "Unique Account Count"]
 
-    combo_map = []
-    for i, combo in enumerate(exploded["RemarkCombo"].unique(), start=1):
-        sheet = f"Combo_{i}"
-        subset_rows = exploded[exploded["RemarkCombo"] == combo].copy()
-        subset_rows.to_excel(writer, sheet_name=sheet, index=False)
-        autofit_columns(writer, subset_rows, sheet)
-        combo_map.append({
-            "Combo_Sheet": sheet,
-            "RemarkCombo": combo,
-            "Unique_Accounts": subset_rows["Account"].nunique()
-        })
+# Save to Excel
+output_file = "blocked_accounts_report.xlsx"
+with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
+    pivot_table.to_excel(writer, sheet_name="Pivot")
 
-    combo_df = pd.DataFrame(combo_map)
-    combo_df.to_excel(writer, sheet_name="Combo_Index", index=False)
-    autofit_columns(writer, combo_df, "Combo_Index")
+    # Access sheet to append lines
+    workbook = writer.book
+    sheet = writer.sheets["Pivot"]
+
+    # Find last row after pivot
+    startrow = pivot_table.shape[0] + 3  # leave 2 blank rows
+
+    # Write manual summary lines
+    sheet.cell(row=startrow, column=1, value="Total unique accounts")
+    sheet.cell(row=startrow, column=2, value=total_unique_accounts)
+
+    sheet.cell(row=startrow + 1, column=1, value="Total reasons for blocked accounts")
+    sheet.cell(row=startrow + 1, column=2, value=total_reasons)
+
+    # Leave one blank line
+    dist_start = startrow + 3
+    sheet.cell(row=dist_start, column=1, value="Remark Combo Distribution (Unique Accounts)")
+
+    # Write remark combo distribution below
+    for i, row in remark_combo_dist.iterrows():
+        sheet.cell(row=dist_start + i + 1, column=1, value=row["Remark Combo"])
+        sheet.cell(row=dist_start + i + 1, column=2, value=row["Unique Account Count"])
+
+# --- Auto-fit columns ---
+wb = load_workbook(output_file)
+ws = wb["Pivot"]
+
+for col in ws.columns:
+    max_length = 0
+    col_letter = get_column_letter(col[0].column)
+    for cell in col:
+        try:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        except:
+            pass
+    ws.column_dimensions[col_letter].width = max_length + 2
+
+wb.save(output_file)

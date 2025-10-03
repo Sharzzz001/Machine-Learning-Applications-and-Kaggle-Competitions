@@ -1,58 +1,66 @@
-from sentence_transformers import SentenceTransformer
-from scipy.spatial.distance import cosine
-import numpy as np
+from sentence_transformers import SentenceTransformer, util
+import pandas as pd
 
-# Load MiniLM model
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+# -----------------
+# 1. Load MiniLM
+# -----------------
+model = SentenceTransformer("all-MiniLM-L6-v2")  # use local path if downloaded
 
-# Example list of “keywords” you want to match to categories
+# -----------------
+# 2. Define Keyword Map (your existing categories)
+# -----------------
 keyword_map = {
-    "Overdue": ["overdue rr", "regulatory review overdue", "rr overdue"],
-    "Expired Doc": ["expired document", "document expired", "expiry"],
-    "KYC Issue": ["kyc not verified", "kyc missing", "kyc expired"],
+    "Overdue RR": ["overdue rr", "rolling review overdue", "rr overdue"],
+    "Doc Pending": ["pending documents", "docs missing", "document pending"],
+    "Screening": ["name screening", "screen check", "screening in progress"],
+    # add all your existing categories here...
 }
 
-# Precompute embeddings for all keyword phrases
-keyword_embeddings = {}
-for cat, phrases in keyword_map.items():
-    # You may choose to average phrase embeddings for a category
-    emb_list = model.encode(phrases)
-    # average the embeddings
-    keyword_embeddings[cat] = np.mean(emb_list, axis=0)
+# Flatten keywords and keep category
+keyword_df = pd.DataFrame([
+    {"category": cat, "keyword": kw}
+    for cat, kws in keyword_map.items()
+    for kw in kws
+])
 
-def find_best_category(note_text, threshold=0.6):
-    """
-    Given a free-flow note text, compute its embedding,
-    compare with each category embedding by cosine similarity,
-    and pick the best category if above threshold.
-    """
-    if not note_text or str(note_text).strip() == "":
-        return None
+# Precompute embeddings for keywords
+keyword_embeddings = model.encode(keyword_df["keyword"].tolist(), convert_to_tensor=True)
 
-    emb = model.encode([note_text])[0]
-
-    best_cat = None
-    best_score = -1
-    for cat, cat_emb in keyword_embeddings.items():
-        # cosine similarity = 1 - cosine distance
-        sim = 1 - cosine(emb, cat_emb)
-        if sim > best_score:
-            best_score = sim
-            best_cat = cat
-
+# -----------------
+# 3. Semantic Mapper
+# -----------------
+def map_text_to_category(text, threshold=0.6):
+    """Map free-flow text to nearest category using MiniLM similarity."""
+    if pd.isna(text) or not str(text).strip():
+        return "Uncategorized"
+    
+    text_emb = model.encode(str(text), convert_to_tensor=True)
+    cos_sim = util.cos_sim(text_emb, keyword_embeddings)[0]
+    best_idx = int(cos_sim.argmax())
+    best_score = float(cos_sim[best_idx])
+    
     if best_score >= threshold:
-        return best_cat, best_score
-    else:
-        return None
+        return keyword_df.iloc[best_idx]["category"]
+    return "Uncategorized"
 
-# Example usage
-notes = [
-    "client has rr overdue and pending",
-    "document has expired since last month",
-    "kyc docs are missing",
-    "something entirely unrelated"
-]
+# -----------------
+# 4. Apply to your dataframe
+# -----------------
+# Example: earlier you had agg["RemarkCombo"] or agg["Notes"]
+agg["Category"] = agg["Notes"].apply(map_text_to_category)
 
-for note in notes:
-    result = find_best_category(note, threshold=0.5)
-    print(f"Note: {note!r} -> Match: {result}")
+# -----------------
+# 5. Continue with your pivot pipeline
+# -----------------
+exploded = agg.explode("Category").copy()
+exploded = exploded.dropna(subset=["Category"])
+exploded = exploded.rename(columns={"Category": "Category"})
+exploded = exploded[["Account", "RemarkCombo", "Category", "Notes"]].reset_index(drop=True)
+
+pivot = exploded.pivot_table(
+    index="Category",
+    columns="RemarkCombo",
+    values="Account",
+    aggfunc=lambda x: x.nunique(),
+    fill_value=0
+)

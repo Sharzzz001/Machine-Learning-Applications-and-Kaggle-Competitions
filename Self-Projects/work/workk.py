@@ -1,53 +1,58 @@
-# -----------------------
-# Only create sheets for non-NTS RemarkCombos used in pivot
-# -----------------------
-combo_map = []
+from sentence_transformers import SentenceTransformer
+from scipy.spatial.distance import cosine
+import numpy as np
 
-# Get list of RemarkCombos used in pivot (exclude NTS)
-combo_list_included = included_non_nts["RemarkCombo"].dropna().unique().tolist()
+# Load MiniLM model
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-for i, combo in enumerate(combo_list_included, start=1):
-    sheet_name = f"Combo_{i}"
+# Example list of “keywords” you want to match to categories
+keyword_map = {
+    "Overdue": ["overdue rr", "regulatory review overdue", "rr overdue"],
+    "Expired Doc": ["expired document", "document expired", "expiry"],
+    "KYC Issue": ["kyc not verified", "kyc missing", "kyc expired"],
+}
 
-    # Select rows for this combo (exclude NTS)
-    subset = exploded[
-        (exploded["RemarkCombo"] == combo) & (~exploded["is_nts"])
-    ].copy()
+# Precompute embeddings for all keyword phrases
+keyword_embeddings = {}
+for cat, phrases in keyword_map.items():
+    # You may choose to average phrase embeddings for a category
+    emb_list = model.encode(phrases)
+    # average the embeddings
+    keyword_embeddings[cat] = np.mean(emb_list, axis=0)
 
-    # Ensure non-empty DataFrame
-    if subset.empty:
-        subset = pd.DataFrame(columns=exploded.columns)
+def find_best_category(note_text, threshold=0.6):
+    """
+    Given a free-flow note text, compute its embedding,
+    compare with each category embedding by cosine similarity,
+    and pick the best category if above threshold.
+    """
+    if not note_text or str(note_text).strip() == "":
+        return None
 
-    # Write the sheet
-    subset.to_excel(writer, sheet_name=sheet_name, index=False)
-    autofit_columns(writer, subset, sheet_name)
-    writer.sheets[sheet_name].freeze_panes(1, 0)
+    emb = model.encode([note_text])[0]
 
-    # Build mapping info safely
-    unique_all = agg.loc[agg["RemarkCombo"] == combo, "Account"].nunique() if not agg.empty else 0
-    unique_included = agg_cat.loc[agg_cat["RemarkCombo"] == combo, "Account"].nunique() if not agg_cat.empty else 0
-    unique_excluded = agg.loc[(agg["RemarkCombo"] == combo) & mask_exclude, "Account"].nunique() if not agg.empty else 0
-    nts_in_combo = agg_cat.loc[(agg_cat["RemarkCombo"] == combo) & agg_cat["is_nts"], "Account"].nunique() if not agg_cat.empty else 0
+    best_cat = None
+    best_score = -1
+    for cat, cat_emb in keyword_embeddings.items():
+        # cosine similarity = 1 - cosine distance
+        sim = 1 - cosine(emb, cat_emb)
+        if sim > best_score:
+            best_score = sim
+            best_cat = cat
 
-    combo_map.append({
-        "Combo_Sheet": sheet_name,
-        "RemarkCombo": str(combo),
-        "Unique_Accounts_All": int(unique_all),
-        "Unique_Accounts_IncludedForCategorization": int(unique_included),
-        "Unique_Accounts_Excluded": int(unique_excluded),
-        "NTS_Accounts_in_Combo": int(nts_in_combo)
-    })
+    if best_score >= threshold:
+        return best_cat, best_score
+    else:
+        return None
 
-# -----------------------
-# Combo_Index sheet
-# -----------------------
-combo_df = pd.DataFrame(combo_map)
-if combo_df.empty:
-    combo_df = pd.DataFrame(columns=[
-        "Combo_Sheet", "RemarkCombo", "Unique_Accounts_All",
-        "Unique_Accounts_IncludedForCategorization",
-        "Unique_Accounts_Excluded", "NTS_Accounts_in_Combo"
-    ])
-combo_df.to_excel(writer, sheet_name="Combo_Index", index=False)
-autofit_columns(writer, combo_df, "Combo_Index")
-writer.sheets["Combo_Index"].freeze_panes(1, 0)
+# Example usage
+notes = [
+    "client has rr overdue and pending",
+    "document has expired since last month",
+    "kyc docs are missing",
+    "something entirely unrelated"
+]
+
+for note in notes:
+    result = find_best_category(note, threshold=0.5)
+    print(f"Note: {note!r} -> Match: {result}")

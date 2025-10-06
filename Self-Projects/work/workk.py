@@ -124,8 +124,6 @@ agg_cat = agg.loc[~mask_exclude].copy()
 keyword_map = {
     "Overdue RR": ["overdue rr"],
     "IRPQ Attestation": ["irpq attestation", "irpa"],
-    "NON-AI": ["ai proof", "ai supp doc", "ai documentary proof"],
-    "DLA": ["dla"],
     "Doc deficiency": ["doc deficiency"],
     "Physical document": ["physical document"],
     "Deceased": ["deceased", "death", "demise"],
@@ -133,10 +131,7 @@ keyword_map = {
     "Court Hearing": ["court", "legal"],
     "FCC/CAC": ["cac"],
     "Sanction": ["sanction"],
-    "Pending DIF": ["dif", "co proof"],
-    "UAE PI PROOF": ["uae pi"],
     "Address Proof": ["address proof"],
-    "NON-KYC Doc Defi": ["non kyc doc defi", "non-kyc defi"],
     "Initial funding": ["initial funding"],
     "Expired document": ["expired document"],
     "India Domiciled Client": ["india domiciled client"],
@@ -145,9 +140,13 @@ keyword_map = {
 
 
 def categories_for_account(row):
+    # If NTS → force category as NTS
+    if row["is_nts"]:
+        return ["NTS"]
+
     reason_text = str(row["Notes"]).lower().strip()
     if reason_text == "" or reason_text == "nan":
-        return ["Blank"]   # <-- Blank category
+        return ["Blank"]
     matches = []
     for cat_name, kw_list in keyword_map.items():
         for kw in kw_list:
@@ -197,9 +196,8 @@ def clean_combo(combo_str):
 exploded["RemarkCombo_Clean"] = exploded["RemarkCombo"].apply(clean_combo)
 
 # ---------- BUILD PIVOT ----------
-main_subset = exploded[~exploded["is_nts"]].copy()
 pivot = (
-    main_subset.pivot_table(
+    exploded.pivot_table(
         index="Category",
         columns="RemarkCombo_Clean",
         values="Account",
@@ -207,13 +205,6 @@ pivot = (
         fill_value=0,
     )
 )
-
-nts_subset = exploded[exploded["is_nts"]].copy()
-if not nts_subset.empty:
-    nts_counts = nts_subset.groupby("Category")["Account"].nunique()
-    pivot["NTS"] = pivot.index.to_series().map(lambda idx: int(nts_counts.get(idx, 0)))
-else:
-    pivot["NTS"] = 0
 
 pivot["Total"] = pivot.sum(axis=1)
 

@@ -53,9 +53,9 @@ def normalize_remark(r):
     if low.startswith("dormant"):
         return "Dormant"
     if "total block" in low or "total blocking" in low:
-        return "Total Blocking (exclude Security Event)"
+        return "Total Blocking"
     if "transfer" in low and "block" in low:
-        return "Blocked for Transfer Transactions"
+        return "Transfer Blocking"
     return s
 
 
@@ -146,6 +146,8 @@ keyword_map = {
 
 def categories_for_account(row):
     reason_text = str(row["Notes"]).lower().strip()
+    if reason_text == "" or reason_text == "nan":
+        return ["Blank"]   # <-- Blank category
     matches = []
     for cat_name, kw_list in keyword_map.items():
         for kw in kw_list:
@@ -153,7 +155,7 @@ def categories_for_account(row):
                 matches.append(cat_name)
                 break
     if not matches:
-        matches = ["Uncategorized"]
+        matches = ["Uncategorised"]
     seen = set()
     out = []
     for m in matches:
@@ -184,12 +186,22 @@ exploded = exploded[
     ]
 ].reset_index(drop=True)
 
+# ---------- CLEAN COMBOS FOR PIVOT (ignore Dormant in combo names) ----------
+def clean_combo(combo_str):
+    if not combo_str or combo_str == "(No Remark)":
+        return "(No Remark)"
+    parts = [p.strip() for p in combo_str.split("+")]
+    cleaned = [p for p in parts if "dormant" not in p.lower()]
+    return " + ".join(sorted(cleaned)) if cleaned else "Dormant Only"
+
+exploded["RemarkCombo_Clean"] = exploded["RemarkCombo"].apply(clean_combo)
+
 # ---------- BUILD PIVOT ----------
 main_subset = exploded[~exploded["is_nts"]].copy()
 pivot = (
     main_subset.pivot_table(
         index="Category",
-        columns="RemarkCombo",
+        columns="RemarkCombo_Clean",
         values="Account",
         aggfunc=lambda x: x.nunique(),
         fill_value=0,
@@ -267,7 +279,7 @@ with pd.ExcelWriter(out_filename, engine="xlsxwriter") as writer:
     autofit_columns(writer, exploded, "Account_Category")
     writer.sheets["Account_Category"].freeze_panes(1, 0)
 
-    # Combo Sheets
+    # Combo Sheets (original combos, not cleaned)
     combo_map = []
     combo_list_included = agg_cat["RemarkCombo"].dropna().unique().tolist()
     for i, combo in enumerate(combo_list_included, start=1):

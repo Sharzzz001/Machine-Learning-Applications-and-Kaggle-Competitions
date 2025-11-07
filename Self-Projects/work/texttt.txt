@@ -1,37 +1,7 @@
-Optuna is a tool that helps optimize the performance of machine learning models like LightGBM and CatBoost by automatically finding the best settings for these models. Here's a simple explanation of how it works and its benefits, suitable for business heads:
+So just to set the context — during the day, we’re processing payments across multiple currencies, and our balances in each of those agent bank accounts are constantly moving up and down. Now, if one of those currency accounts goes negative intraday, the agent bank usually allows us to use their funds for free, as long as we bring the balance back to zero before end-of-day. The catch is that regulators look at this in real-time, not end-of-day. So if we use that intraday credit for more than a minute, we’re required to hold collateral against it.
 
-### What is Optuna?
+Right now, to stay compliant, we maintain about $9 billion in collateral, and since we borrow that collateral, it costs us roughly 1.25%, which works out to around $70 to $74 million a year. The whole point of the optimization we’re discussing is to reduce how much collateral we actually need.
 
-Optuna is like a smart assistant that helps data scientists fine-tune machine learning models. It tries different combinations of settings (also known as hyperparameters) to find the best ones that make the model as accurate as possible.
+The idea is that, when we have surplus in one currency and deficits in another during the day, instead of letting one currency sit idle and another go negative, we can do short-term intraday swaps — basically lending out the surplus currency and borrowing the short currency for just those few hours. And in cases where multiple currencies are all in surplus at the same time, we can actually lend that liquidity out to other banks on an intraday basis and earn something on it, instead of leaving it idle.
 
-### Why is Tuning Important?
-
-Machine learning models have many settings that can significantly impact their performance. Finding the right combination of these settings can be very challenging and time-consuming. This process is called hyperparameter tuning. Proper tuning can mean the difference between a model that works well and one that doesn't.
-
-### How Does Optuna Help?
-
-1. **Automatic Optimization**:
-   - Instead of manually trying out different settings, which can be tedious and inefficient, Optuna automatically explores various combinations. It's like having an expert who can quickly test different options to see what works best.
-
-2. **Efficient Search**:
-   - Optuna uses advanced techniques to efficiently search through the possible settings. It learns from each attempt and gets better at finding the best settings over time. This means it can often find the best combination faster than a human could.
-
-3. **Better Model Performance**:
-   - By finding the optimal settings, Optuna helps ensure that the LightGBM and CatBoost models are performing at their best. This leads to more accurate predictions, which can be critical for business decisions.
-
-### Example Scenario
-
-Imagine you're running a marketing campaign and you want to predict which customers are most likely to respond. You have a lot of data and decide to use LightGBM or CatBoost to build your predictive model. However, getting the best predictions depends heavily on setting the model's parameters correctly.
-
-- **Without Optuna**: A data scientist might manually test different settings, which is time-consuming and might not find the best combination.
-- **With Optuna**: The tool automatically tests and finds the best settings quickly. As a result, your model is more accurate, helping you better target your marketing efforts and improve campaign results.
-
-### Key Benefits
-
-- **Saves Time and Effort**: Automates the complex and time-consuming task of hyperparameter tuning.
-- **Improves Accuracy**: Finds the best settings to enhance model performance, leading to better predictions.
-- **Optimizes Resources**: Makes efficient use of computational resources by smartly searching for the best settings.
-
-### Conclusion
-
-Optuna helps optimize machine learning models like LightGBM and CatBoost by automatically finding the best settings for them. This leads to better model performance, saving time and resources, and ultimately providing more accurate predictions that can significantly benefit business operations and decision-making.
+Both of these approaches help us rely less on intraday overdraft from agent banks, which in turn means we can reduce the amount of collateral we need to hold — and that’s where the real cost savings come from.

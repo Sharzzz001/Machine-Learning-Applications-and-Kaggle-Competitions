@@ -1,43 +1,5 @@
-Sure — here’s a clean, structured version you can speak in a meeting or put on a slide.
-
-⸻
-
-Overview
-	•	We needed a way to ensure that client accounts requiring transfer/total blocks were being accurately identified and maintained based on free-text block comments.
-	•	Since there are 2,000+ high-net-worth client accounts and the comments are not standardized, manual review was slow and prone to error.
-	•	After an escalation highlighted this gap, I developed an NLP-based automation to categorize and surface accounts needing review.
-
-⸻
-
-Solution (What the model does)
-	1.	I used topic modeling to identify the major reasons why accounts are placed under transfer or total block.
-	2.	Then I applied a Sentence Transformer embedding model to semantically analyze the free-text block comments for all client accounts.
-	3.	The approach allows us to group accounts based on meaning, not just keyword matches — this handles spelling variations, phrasing differences, and free-form text.
-	4.	The script outputs:
-	•	Top recurring block reasons
-	•	How many accounts fall under each reason
-	•	And most importantly, which cases remain unclassified and need manual review
-	5.	This reduces the review set from ~2,000 comments down to ~40–50 prioritized cases.
-	6.	The process is now repeatable and can be re-run monthly/weekly to maintain ongoing controls.
-
-⸻
-
-Benefits
-	•	Massive time savings: Manual review reduced by ~95%.
-	•	Higher accuracy and consistency in identifying accounts that require blocking.
-	•	Provides clear audit trail of how decisions were made based on text interpretation.
-	•	Reduces operational and compliance risk by making sure no required block is missed.
-	•	Helps avoid future audit escalations, since block decisions are now systematic, reviewed, and explainable.
-
-⸻
-
-One-Line Summary to Say in Meeting
-
-“We automated the interpretation of free-text block comments using topic modeling and sentence-transformer NLP, reducing the review workload from ~2,000 accounts to ~40–50 and improving both control accuracy and audit defensibility.”
-
-⸻
-
-If you want, I can now also prepare:
-✔ Slide version
-✔ 60-second spoken pitch
-✔ A version tailored for senior management vs tech team
+	•	Applied topic modeling to identify and define the key themes associated with account blocking conditions.
+	•	Utilized Sentence Transformer embeddings to interpret free-form block comments based on semantic meaning, not just keyword matching.
+	•	Grouped accounts according to block reason categories, enabling clear visibility into the distribution of accounts across reason codes.
+	•	Flagged accounts that could not be matched to any known category, producing a focused exception list for manual review.
+	•	Designed the workflow to be repeatable and easily re-run at regular intervals, supporting continuous monitoring.

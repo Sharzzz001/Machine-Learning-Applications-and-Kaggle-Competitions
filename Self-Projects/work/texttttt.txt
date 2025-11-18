@@ -1,61 +1,38 @@
-Key Achievements
-	•	Successfully deployed OCR and computer vision models to automate document handling processes, improving efficiency and accuracy.
-	•	Built and deployed MI dashboards for senior stakeholders, enabling better decision-making through real-time insights.
-	•	Applied LLMs/ML techniques to streamline data analysis and reduce manual intervention.
-	•	Collaborated across IWM SSG and CSG operations teams, gaining exposure to multiple functional areas.
-	•	Represented the India team in Singapore IWM Ops, contributing to regional projects and knowledge sharing.
+One of the challenges we faced with block notes was that they were all free-text inputs. Different users wrote different styles of notes — some typed full sentences, some used abbreviations, and some just wrote one or two words. For example, the same situation could be described as ‘KYC missing,’ ‘Docs not received,’ ‘Pending documents,’ or even ‘Awaiting KYC.’
+
+To a human, all of these clearly mean the same thing. But to a computer, unless we define every possible variation, they look unrelated. Traditional keyword-based search struggles here because it only looks for exact matching words — it doesn’t understand meaning.
+
+So instead of keyword matching, I used a modern NLP technique called BERTopic. BERTopic helps identify natural groupings or topics in unstructured text using something called context-aware embeddings.
+
+To explain that simply: context-aware embeddings convert sentences into numbers — or vectors — that represent meaning, not the literal wording. So instead of storing text as letters or keywords, the system stores it as a kind of numerical ‘fingerprint’ of the idea.
+
+This works because BERTopic is based on a type of AI model called a Transformer. Transformers are very good at understanding the meaning of language because of two key design elements:
+
+The first is something called self-attention.
+Self-attention allows the model to look at all the words in a sentence and understand how they relate to each other. So if I say:
+‘The client couldn’t submit documents because the passport expired,’
+the model learns that ‘documents’ and ‘passport expired’ are connected, even though they’re far apart in the sentence.
+
+The second key piece is positional encoding.
+Because transformers don’t read text left-to-right like older models, they need a way to understand the order of the words. Positional encoding gives each word a sense of where it appears in the sentence. This helps the model distinguish meaning differences like:
+‘Screening pending for approval’ versus ‘Approval pending screening.’
+The words are the same, but the meaning is different.
+
+Finally, behind all of this are word embeddings, which are the building blocks that turn text into numeric vectors. Embeddings allow the model to understand that words like ‘passport’ and ‘ID proof’ are related concepts, even though they’re spelled differently.
+
+Using these concepts together, BERTopic analyzed all the historical free-text block notes and automatically grouped them into 13 meaningful topics. Importantly, these topics were not manually created — they emerged naturally based on meaning patterns in the text.
+
+After identifying the topics, the next question was: how do we assign new incoming free-text notes to the correct topic?
+
+For that, I used a mathematical method called cosine similarity.
+Every block note — past or future — gets converted into a vector. Each topic also has its own representative vector. Cosine similarity then measures how close the new note is to each topic vector — almost like checking which cluster it ‘belongs’ to in this meaning-based space.
+
+The closest match wins, and that’s how the new entry gets categorized. So instead of manually tagging or relying on questionably consistent keywords, the system now understands meaning and classifies automatically — even if users type differently.
+
+The result is that we now have structured, consistent, and searchable data. We can easily run reporting, trend analysis, or controls — and we’ve reduced manual interpretation. In short, we turned unstructured human language into standardized operational insights using meaning-based AI rather than keyword rules.”
 
 ⸻
 
-What went well (Work + overall)
-	•	Seamless collaboration across multiple teams, which broadened my domain knowledge in operations.
-	•	Ability to apply data science skills (OCR, ML, dashboards) to real operational challenges, delivering tangible value.
-	•	Strong support from both local and Singapore colleagues, which helped in quicker project turnarounds.
+✨ One-Sentence Closing (optional)
 
-⸻
-
-What you wanted to do but could not do
-	•	Wanted to explore advanced generative AI/LLM integration into more business workflows, but scope and priorities limited this so far.
-	•	Could not yet work on end-to-end automation (from ingestion to reporting) in some projects due to dependency on other teams.
-
-⸻
-
-Areas of your strength
-	•	Technical skills: ML, data analysis, OCR/vision models, dashboarding.
-	•	Problem-solving: Translating operational challenges into data-driven solutions.
-	•	Cross-team collaboration: Building rapport across India and Singapore teams.
-	•	Adaptability: Quickly picking up new processes across different sub-domains (SSG, CSG).
-
-⸻
-
-Your learning
-	•	Business: Gained deeper understanding of IWM operational workflows, especially around SSG and CSG.
-	•	Technical: Hands-on deployment of OCR and vision models, improved dashboard design skills, and exposure to integrating ML/LLMs with business processes.
-
-⸻
-
-Contribution to Team
-	•	Delivered scalable data science solutions that reduced manual effort.
-	•	Shared knowledge of ML/LLMs with colleagues through discussions and demos.
-	•	Acted as a bridge between teams in India and Singapore, aligning technical solutions with operational needs.
-
-⸻
-
-Areas of Improvement
-	•	Need to enhance stakeholder communication (simplifying technical explanations for non-technical users).
-	•	Improve time management while balancing multiple parallel projects.
-	•	Explore deeper automation opportunities using GenAI and predictive analytics.
-
-⸻
-
-Anything specific you want me to know
-	•	I’m motivated to take on more responsibility in end-to-end projects, not just the technical part but also stakeholder alignment and delivery.
-	•	Open to exploring cross-regional opportunities if they help drive AI/ML adoption across Nomura Ops.
-
-⸻
-
-Your plan for coming 6 months
-	•	Expand OCR and ML solutions to other teams/functions where manual processes can be optimized.
-	•	Work on a POC for LLM-based automation (e.g., SOP chatbot, text summarization for ops).
-	•	Upskill in cloud deployment and model monitoring to make solutions more production-ready.
-	•	Contribute more towards governance/standardization of data science practices within Ops.
+“So instead of forcing users or systems to think in exact words, we now let the model understand what was meant — just like a human would.”

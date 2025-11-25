@@ -1,95 +1,213 @@
-import win32com.client as win32
+import os
+import warnings
+from datetime import datetime
+
 import pandas as pd
+import win32com.client as win32
+import logging
 
-def build_html_table(df: pd.DataFrame, columns):
-    """Builds a simple HTML table from df[columns]."""
-    if df.empty:
-        return "<p>Nothing to report.</p>"
 
-    # Start table
-    html = [
-        '<table border="1" cellspacing="0" cellpadding="3">',
-        "<tr>" + "".join(f"<th>{col}</th>" for col in columns) + "</tr>"
-    ]
+def draft_emails(df):
+    logging.info("Drafting emails in Outlook (drafts only)...")
+    outlook = win32.Dispatch("Outlook.Application")
 
-    # Rows
-    for _, row in df.iterrows():
-        html.append(
-            "<tr>" +
-            "".join(f"<td>{row.get(col, '')}</td>" for col in columns) +
-            "</tr>"
+    # --- Load email log ---
+    if os.path.exists(EMAIL_LOG_FILE):
+        email_log = pd.read_excel(EMAIL_LOG_FILE)
+    else:
+        email_log = pd.DataFrame(
+            columns=[
+                "AccountNumber",
+                "ReviewType",
+                "DocumentName",
+                "Rule",
+                "EmailDate",
+                "To",
+                "CC",
+                "Subject",
+                "Status",
+                "Comments",  # user-editable comments column
+            ]
         )
 
-    html.append("</table>")
-    return "\n".join(html)
+    # --- Load escalation contact mapping (Sheet2) ---
+    special_conditions = pd.read_excel(MAPPINGS_FILE, sheet_name="Sheet2")
 
+    # Only rows that actually matched a rule
+    df1 = df[df["Matched"].astype(str).str.startswith("Yes")].copy()
 
-def draft_email_for_group(group: pd.DataFrame,
-                          account_number: str,
-                          request_type: str,
-                          to_address: str = "",
-                          cc_addresses=None):
-    """
-    group: dataframe for a single (AccountNumber, RequestType) combo.
-    Assumes group has at least 'DocumentName' and whatever columns
-    you want to show in the tables.
-    """
-    if cc_addresses is None:
+    # --- Group by AccountNumber (as in your original function) ---
+    for account, group in df1.groupby("AccountNumber"):
+        # --- Find already logged entries for this account ---
+        already_logged = email_log[
+            (email_log["AccountNumber"].astype(str) == str(account))
+            & (email_log["ReviewType"].isin(group["RequestType"]))
+            & (email_log["Rule"].isin(group["Rule"]))
+            & (email_log["DocumentName"].isin(group["DocumentName"]))
+        ]
+
+        # --- Normalize datatypes for merge (AccountNumber as string) ---
+        for x in (group, already_logged):
+            if "AccountNumber" in x.columns and x["AccountNumber"].dtype != "O":
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=FutureWarning)
+                    x.loc[:, "AccountNumber"] = x["AccountNumber"].apply(
+                        lambda y: str(int(y)) if pd.notnull(y) else ""
+                    )
+
+        match_columns = ["AccountNumber", "ReviewType", "DocumentName", "Rule"]
+
+        merged = group.merge(
+            already_logged,
+            how="left",
+            left_on=["AccountNumber", "RequestType", "DocumentName", "Rule"],
+            right_on=match_columns,
+            indicator=True,
+        )
+
+        # --- Keep only new docs ---
+        new_docs = merged[merged["_merge"] == "left_only"].drop(
+            columns=["_merge"], errors="ignore"
+        )
+
+        if new_docs.empty:
+            logging.info(f"Skipping account {account}: already logged previously.")
+            continue
+
+        # --- FULL ACCOUNT VIEW for tables (all rows for this account) ---
+        account_full = df1[df1["AccountNumber"] == account].copy()
+
+        # --------- SPLIT INTO TWO TABLES BASED ON DocumentName ----------
+
+        # Treat NaN / empty / whitespace-only as "blank"
+        docname_series = account_full.get("DocumentName", pd.Series(index=account_full.index))
+        docname_str = docname_series.astype(str).str.strip()
+
+        # Table 1: DocumentName NOT blank
+        mask_doc = (docname_str != "") & (~docname_str.isna())
+        table1_df = account_full[mask_doc].copy()
+
+        # Table 2: DocumentName blank (NaN or empty)
+        table2_df = account_full[~mask_doc].copy()
+
+        # --- Helper to build HTML table or "Nothing to report" ---
+        def build_table(d):
+            if d.empty:
+                return "<p>Nothing to report.</p>"
+
+            html = """
+<table border="1" cellspacing="0" cellpadding="3">
+<tr>
+  <th>Account Number</th>
+  <th>Request Type</th>
+  <th>Document Name</th>
+  <th>Document Description</th>
+  <th>Overdue (Days)</th>
+</tr>
+"""
+            for _, r in d.iterrows():
+                html += f"""
+<tr>
+  <td>{r.get('AccountNumber', '')}</td>
+  <td>{r.get('RequestType', '')}</td>
+  <td>{r.get('DocumentName', '')}</td>
+  <td>{r.get('DocDesc', '')}</td>
+  <td>{r.get('Due In (Days)', '')}</td>
+</tr>
+"""
+            html += "</table>"
+            return html
+
+        table1_html = build_table(table1_df)
+        table2_html = build_table(table2_df)
+
+        # ------------------ RECIPIENTS (To / CC) ------------------
+        rm_email = group["RM"].iloc[0] if "RM" in group.columns else None
+        to_address = clean_rm(rm_email)
+
         cc_addresses = []
 
-    # --- 1) Split into two sets based on DocumentName blank / not blank ---
+        if (
+            "Escalation TH" in group.columns
+            and "Team Head" in group.columns
+            and "Yes" in group["Escalation TH"].values
+            and pd.notnull(group["Team Head"].iloc[0])
+        ):
+            cc_addresses.append(str(group["Team Head"].iloc[0]).strip())
 
-    # Treat NaN and "" and "   " as blank
-    docname_series = group["DocumentName"].astype(str)
-    mask_nonblank = docname_series.str.strip() != ""
-    mask_blank = ~mask_nonblank
+        if (
+            "Escalation GH" in group.columns
+            and "Group Head" in group.columns
+            and "Yes" in group["Escalation GH"].values
+            and pd.notnull(group["Group Head"].iloc[0])
+        ):
+            cc_addresses.append(str(group["Group Head"].iloc[0]).strip())
 
-    df_defi = group[mask_nonblank].copy()   # Table 1: normal deficiencies
-    df_phys = group[mask_blank].copy()      # Table 2: AO Physical docs (DocumentName blank)
+        # Special FCC / BM escalation emails from Sheet2
+        # (assumes special_conditions has those emails in [0,1] and [1,1])
+        if (
+            "Escalation FCC" in group.columns
+            and "Yes" in group["Escalation FCC"].values
+            and pd.notnull(special_conditions.iloc[0, 1])
+        ):
+            cc_addresses.append(str(special_conditions.iloc[0, 1]).strip())
 
-    # --- 2) Build HTML for both tables ---
+        if (
+            "Escalation BM" in group.columns
+            and "Yes" in group["Escalation BM"].values
+            and pd.notnull(special_conditions.iloc[1, 1])
+        ):
+            cc_addresses.append(str(special_conditions.iloc[1, 1]).strip())
 
-    # Decide which columns to show in each table (adjust to your real columns)
-    cols_table1 = ["AccountNumber", "RequestType", "DocumentName", "DocDefiType", "DocDesc", "DueDays"]
-    cols_table2 = ["AccountNumber", "RequestType", "DocDefiType", "DocDesc", "DueDays"]
+        cc_addresses = list(set(cc_addresses))  # dedupe
 
-    # Filter columns that actually exist to avoid KeyErrors
-    cols_table1 = [c for c in cols_table1 if c in group.columns]
-    cols_table2 = [c for c in cols_table2 if c in group.columns]
+        # ------------------ BUILD EMAIL BODY (TWO TABLES) ------------------
+        body = f"""
+<p>Dear {rm_email or ''},</p>
 
-    table1_html = build_html_table(df_defi, cols_table1)
-    table2_html = build_html_table(df_phys, cols_table2)
+<p>The following account has pending document deficiencies:</p>
+{table1_html}
 
-    # --- 3) Build full email body ---
+<p>The following account has pending AO Physical Documents:</p>
+{table2_html}
 
-    body_parts = []
+<p>Please resolve the outstanding requirements as soon as possible, before consequential actions on the affected account takes place.</p>
 
-    # Section 1: normal deficiencies
-    body_parts.append("<p>The following account has pending document deficiencies:</p>")
-    body_parts.append(table1_html)
+<p>Thank You.<br><br>
+Regards,<br>
+CDD / IWM Operations CSG</p>
+"""
 
-    # Section 2: AO Physical documents
-    body_parts.append("<br><p>The following account has pending AO Physical Documents:</p>")
-    body_parts.append(table2_html)
+        # ------------------ CREATE DRAFT EMAIL ------------------
+        mail = outlook.CreateItem(0)  # MailItem
+        mail.Subject = f"Document Deficiency (For Your Attention) - Account {account}"
+        if to_address:
+            mail.To = to_address
+        if cc_addresses:
+            mail.CC = ";".join(cc_addresses)
+        mail.HTMLBody = body
+        mail.SentonBehalfOfName = "iwmkycops@nomura.com"
+        mail.Save()  # Draft only; no send, no timestamp logic
 
-    body_html = "\n".join(body_parts)
+        logging.info(
+            f"Draft created for account {account} - To: {to_address} CC: {cc_addresses}"
+        )
 
-    # --- 4) Draft Outlook email (no timestamp handling, just Save) ---
+        # ------------------ UPDATE EMAIL LOG (ONLY NEW DOCS) ------------------
+        for _, row in new_docs.iterrows():
+            new_entry = {
+                "AccountNumber": account,
+                "ReviewType": row.get("RequestType"),
+                "DocumentName": row.get("DocumentName"),
+                "Rule": row.get("Rule"),
+                "EmailDate": datetime.now(),
+                "To": to_address,
+                "CC": ";".join(cc_addresses),
+                "Subject": mail.Subject,
+                "Status": "Drafted",
+                "Comments": "",  # user can fill manually later
+            }
+            email_log = pd.concat([email_log, pd.DataFrame([new_entry])], ignore_index=True)
 
-    outlook = win32.Dispatch("Outlook.Application")
-    mail = outlook.CreateItem(0)  # 0 = Mail item
-
-    mail.Subject = f"Document Deficiency (For Your Attention) - Account {account_number} ({request_type})"
-    if to_address:
-        mail.To = to_address
-    if cc_addresses:
-        mail.CC = ";".join(cc_addresses)
-
-    mail.HTMLBody = body_html
-    # Optional: sent on behalf, if you use a shared mailbox
-    # mail.SentOnBehalfOfName = "iwmkycops@nomura.com"
-
-    mail.Save()  # draft only, no send
-
-    # You can return something if you want to log outside
-    return mail
+        # Save updated log after each account
+        email_log.to_excel(EMAIL_LOG_FILE, index=False)

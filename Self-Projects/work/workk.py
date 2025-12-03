@@ -2,27 +2,32 @@ CASE_COL = "case_report"
 STATUS_COL = "Pending with Status"
 FILE_DATE_COL = "File Date"
 
-df_snapshots = simulated_df  # from previous step
+df_snapshots = simulated_df  # from earlier step
 
-# Count how many times each status appears per case
+
+# 1. Status counts per case (wide)
 status_counts = (
     df_snapshots
     .groupby([CASE_COL, STATUS_COL])
     .size()
-    .unstack(fill_value=0)      # make statuses into columns
+    .unstack(fill_value=0)
     .reset_index()
 )
 
-# Optional: rename columns to be nicer (e.g., prefix with 'status_')
-# status_counts = status_counts.rename(columns=lambda c: f"status_{c}" if c != CASE_COL else c)
+# 2. Add Total_Ageing as sum of all status columns
+status_cols = [c for c in status_counts.columns if c != CASE_COL]
+status_counts["Total_Ageing"] = status_counts[status_cols].sum(axis=1)
 
-# Sort so latest date per case is last
+
+# 3. Base static row per case (latest snapshot, no File Date)
 base_df = (
     df_snapshots
-    .sort_values([CASE_COL, FILE_DATE_COL])
+    .sort_values([CASE_COL, FILE_DATE_COL])     # oldest → newest
     .drop_duplicates(subset=[CASE_COL], keep="last")
-    .drop(columns=[FILE_DATE_COL])   # remove File Date from final
+    .drop(columns=[FILE_DATE_COL])             # File Date not needed in final df
 )
 
+# 4. Merge static info + status counts + total ageing
 final_df = base_df.merge(status_counts, on=CASE_COL, how="left")
 
+print(final_df.head())

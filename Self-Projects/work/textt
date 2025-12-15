@@ -1,97 +1,11 @@
-Slide 3: The Problem
-Wide variance in revenue even for clients with similar onboarding durations.
+Dear HR-CSR Team,
 
-Examples:
+I hope you are doing well.
 
-Client A: 200 days to deposit | Revenue: $500
+I am writing to seek some clarification regarding the selection for the Powai Run 2026 (10K category). I had received the invitation email and submitted the registration form almost immediately—within approximately five minutes of receiving the link. I also have a downloaded copy of my form response, which reflects the submission timestamp.
 
-Client B: 200 days to deposit | Revenue: $1M
+However, I later received a communication stating that I was not selected. I wanted to understand how the selection process works—specifically, whether registrations are evaluated on a first-come-first-serve basis, through a lucky draw, or via some other criteria.
 
-No current visibility on whether clients are exceeding cost-to-serve.
+Additionally, in case of any dropouts or cancellations, I wanted to check if there is a waiting list or if my application could be considered for prioritisation, given the early submission.
 
-Slide 4: Proposed Approach
-Calculate per-day cost of servicing a client.
-
-Tag clients based on delay in first deposit.
-
-Compare revenue vs cost to flag unprofitable clients.
-
-Analyze cost differentiators (region, client type, etc.).
-
-Build dashboard for monitoring.
-
-Slide 5: Step 1 – Estimate Cost Per Day
-Work with Finance/Operations to determine:
-
-Fixed costs (platform, RM salaries, tech).
-
-Variable costs (client interactions, compliance checks).
-
-Calculate:
-
-Cost per client per day (Avg across segments or customized by segment).
-
-Slide 6: Step 2 – Revenue vs Cost Analysis
-Join client revenue with onboarding-to-deposit timelines.
-
-Calculate:
-
-Total cost incurred until first deposit.
-
-Net contribution (Revenue – Cost).
-
-Define thresholds (e.g., negative net contribution after X days).
-
-Slide 7: Step 3 – Identify Cost Drivers
-Explore:
-
-Region/Nationality
-
-Client segment/type (HNI, NRI, etc.)
-
-Relationship manager
-
-Product mix
-
-Use statistical analysis / segmentation to identify trends.
-
-Slide 8: Step 4 – Dashboard Design
-Dashboard KPIs:
-
-Days since onboarding
-
-Revenue generated
-
-Cost accrued
-
-Profitability status (Red/Amber/Green)
-
-Filters: Region, RM, Client Type, Time Bucket
-
-Auto-alert for red zone clients
-
-Slide 9: Sample Dashboard (Mockup)
-Include a simple mockup:
-
-Table or bar chart
-
-Profitability flag
-
-Breakdown of costs and revenue
-
-Slide 10: Next Steps
-Finalize cost estimation with Finance.
-
-Gather additional dimensions (region, RM, etc.).
-
-Create and test dashboard prototype.
-
-Roll out to IWM business team.
-
-Slide 11: Appendix (Optional)
-Definitions
-
-Data sources
-
-Assumptions
-
+I would appreciate any clarification you can provide. Thank you for your time and support.

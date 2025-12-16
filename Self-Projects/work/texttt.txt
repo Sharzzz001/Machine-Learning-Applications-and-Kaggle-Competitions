@@ -1,3 +1,49 @@
-To improve transparency around account blocks, our team introduced an AI-driven approach to standardise the free-text block notes recorded across IWM Operations. These notes vary widely in wording, making manual review and reporting time-consuming. Using BERTopic, we analysed historical entries and identified 13 recurring themes by understanding the context behind each note rather than relying on keywords.
-New block notes are now classified automatically using semantic embeddings and cosine similarity, which measure how closely a new entry aligns with each topic’s meaning. If a note doesn’t match any topic confidently, it is marked as Uncategorized instead of being forced into an incorrect group.
-This solution reduces manual effort, increases consistency, and provides clearer insight into the operational drivers behind account blocks—enhancing both efficiency and governance.
+Context
+
+Name screening is a mandatory control in IWM onboarding and periodic reviews to identify adverse media risks.
+The current ASAM-based screening approach generates a high volume of false positives due to conservative relevance thresholds, common names, and multilingual news sources.
+This results in significant manual effort and inconsistent outcomes across reviewers.
+
+⸻
+
+Problem Statement
+
+ASAM relies primarily on name-matching logic, leading to many irrelevant alerts despite using verified client data in AVQ and KYC-E.
+Operations teams must manually review each article to confirm identity relevance and adverse nature, impacting turnaround times and scalability.
+
+⸻
+
+High-Level Solution
+
+Introduce an AI-assisted screening layer using the firm’s LLM platform Chinou to augment ASAM outputs.
+Chinou will analyse article content against client attributes from AVQ and KYC-E to determine identity relevance and adverse classification.
+AI outputs will support, not replace, analyst decision-making.
+
+⸻
+
+Project Scope
+
+In-scope:
+	•	Adverse media articles received from ASAM
+	•	Client data from AVQ and KYC-E
+	•	Identity relevance assessment, adverse categorisation, and evidence highlighting
+
+Out-of-scope:
+	•	Replacement of ASAM
+	•	Automated final decisioning without human oversight
+
+⸻
+
+Systems Impact
+	•	AVQ / KYC-E: Source of verified client attributes for contextual matching
+	•	ASAM: Continues as the primary adverse media provider
+	•	Chinou (LLM): New analytical layer for relevance assessment, classification, and explainability
+	•	Ops UI / Workflow: Minor enhancement to display AI rationale and highlighted evidence
+
+⸻
+
+Key Benefits
+	•	Reduction in false positives and manual article reviews
+	•	Faster turnaround times with improved analyst productivity
+	•	Consistent and explainable adverse media assessments
+	•	Scalable solution aligned with firm-wide AI strategy and compliance governance

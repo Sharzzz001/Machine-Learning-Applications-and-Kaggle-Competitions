@@ -1,49 +1,18 @@
 Context
+Intraday liquidity strain is often driven by payment timing and sequencing rather than an absolute shortage of cash. Rule-based or first-come payment processing can create unnecessary intraday low points, increasing reliance on overdrafts and collateral.
 
-Name screening is a mandatory control in IWM onboarding and periodic reviews to identify adverse media risks.
-The current ASAM-based screening approach generates a high volume of false positives due to conservative relevance thresholds, common names, and multilingual news sources.
-This results in significant manual effort and inconsistent outcomes across reviewers.
-
-⸻
-
-Problem Statement
-
-ASAM relies primarily on name-matching logic, leading to many irrelevant alerts despite using verified client data in AVQ and KYC-E.
-Operations teams must manually review each article to confirm identity relevance and adverse nature, impacting turnaround times and scalability.
-
-⸻
-
-High-Level Solution
-
-Introduce an AI-assisted screening layer using the firm’s LLM platform Chinou to augment ASAM outputs.
-Chinou will analyse article content against client attributes from AVQ and KYC-E to determine identity relevance and adverse classification.
-AI outputs will support, not replace, analyst decision-making.
-
-⸻
-
-Project Scope
-
-In-scope:
-	•	Adverse media articles received from ASAM
-	•	Client data from AVQ and KYC-E
-	•	Identity relevance assessment, adverse categorisation, and evidence highlighting
-
-Out-of-scope:
-	•	Replacement of ASAM
-	•	Automated final decisioning without human oversight
-
-⸻
+Scope
+The scope covers optimization of inter-entity and selected external payment releases using algorithmic sequencing, while adhering to settlement cutoffs, regulatory requirements, counterparty priorities, and operational risk controls.
 
 Systems Impact
-	•	AVQ / KYC-E: Source of verified client attributes for contextual matching
-	•	ASAM: Continues as the primary adverse media provider
-	•	Chinou (LLM): New analytical layer for relevance assessment, classification, and explainability
-	•	Ops UI / Workflow: Minor enhancement to display AI rationale and highlighted evidence
-
-⸻
+	•	Introduces an optimization layer on top of existing payment and treasury platforms
+	•	Consumes intraday balances, payment queues, cutoff times, and forecast inflows
+	•	Outputs optimized payment sequencing and release timing without altering core settlement systems
+	•	Minimal disruption to existing operational workflows
 
 Key Benefits
-	•	Reduction in false positives and manual article reviews
-	•	Faster turnaround times with improved analyst productivity
-	•	Consistent and explainable adverse media assessments
-	•	Scalable solution aligned with firm-wide AI strategy and compliance governance
+	•	Reduces intraday low points and peak overdraft usage
+	•	Lowers collateral and reserve requirements
+	•	Improves liquidity utilization across currencies and entities
+	•	Reduces manual intervention and reactive liquidity management
+	•	Enhances regulatory resilience without impacting client service levels

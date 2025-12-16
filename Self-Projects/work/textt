@@ -5,3 +5,39 @@ Our firm processes large volumes of cross-currency payments throughout the day, 
 Another ILM use case we’re exploring is around actively sequencing and timing payments to both inter-entity accounts and external counterparties using optimization algorithms. Today, a large part of our payment flow is processed on a first-come or rule-based basis, which often creates unnecessary intraday low points even though sufficient inflows are expected later in the day. What we can do instead is treat intraday payments as an optimization problem — where the objective is to minimize the lowest intraday balance across currencies while still meeting settlement cutoffs, regulatory constraints, and business priorities.
 
 Using evolutionary algorithms like DEAP, we can continuously evaluate different payment ordering and timing combinations based on expected inflows, cutoff times, counterparty criticality, and currency correlations. The algorithm learns which payment sequences reduce intraday overdrafts and shifts non-urgent inter-entity or lower-priority external payments to later windows, while ensuring time-critical payments are still released on time. By smoothing intraday balance troughs rather than reacting to them, we can materially reduce peak overdraft usage, which directly lowers the amount of collateral we need to hold. The outcome is better liquidity utilization, fewer artificial low points, and a structurally lower intraday reserve requirement — all without changing settlement outcomes or increasing operational risk.
+
+
+AI-Assisted Name Screening for Adverse Media
+
+Problem Statement
+
+Name screening is a critical control within the IWM client onboarding and periodic review process to identify potential involvement in illegal or reputationally adverse activities. Currently, name screening is performed through a third-party vendor, ASAM, which surfaces news articles based on name-matching algorithms and a defined relevance score threshold. To avoid missing true adverse cases, the relevance threshold is conservatively set, which results in a high volume of false positives, particularly for common names and multilingual articles (English and Chinese).
+
+As a result, operations teams are required to manually review a large number of articles to determine whether they are truly related to the client and whether they represent adverse media. This process is time-consuming, inconsistent across analysts, and increasingly unsustainable as volumes grow. Source systems AVQ and KYC-E contain verified client attributes, but these are not systematically leveraged to reduce false positives at the article-review stage.
+
+⸻
+
+High-Level Solution
+
+We propose implementing an AI-assisted adverse media screening layer using the firm’s internally developed LLM platform, Chinou, to augment existing ASAM name-screening outputs.
+
+The solution will ingest:
+	•	Client attributes from AVQ and KYC-E
+	•	News articles and metadata from ASAM
+
+Chinou will be used to:
+	1.	Assess identity relevance by comparing client attributes (e.g., name, geography, role, age indicators) against article content to determine whether the article refers to the same individual.
+	2.	Classify adverse content by analysing the article context and categorising it into predefined adverse media themes (e.g., fraud, corruption, sanctions, litigation) or identifying it as non-adverse.
+	3.	Provide explainability by highlighting specific sentences from the article that support the relevance and classification decision.
+
+The AI output will act as a decision-support layer, enabling straight-through clearance of low-risk false positives while routing genuinely relevant or uncertain cases to analysts for review. Final decision authority remains with Operations, ensuring compliance governance is preserved.
+
+⸻
+
+Anticipated Benefits
+	•	Reduction in false positives: Significant decrease in irrelevant articles requiring manual review, especially for common names and multilingual sources.
+	•	Operational efficiency: Material reduction in analyst reading time, allowing capacity to be redirected to higher-risk cases.
+	•	Improved consistency: Standardised interpretation of adverse media across regions and reviewers.
+	•	Enhanced auditability: Evidence-based explanations and traceable AI outputs support regulatory scrutiny and internal audits.
+	•	Scalability: The solution scales with volume growth without proportional headcount increase and can be extended to additional languages or screening use cases.
+

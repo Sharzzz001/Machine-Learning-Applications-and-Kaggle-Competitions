@@ -1,11 +1,3 @@
-Dear HR-CSR Team,
+Business Case Summary
 
-I hope you are doing well.
-
-I am writing to seek some clarification regarding the selection for the Powai Run 2026 (10K category). I had received the invitation email and submitted the registration form almost immediately—within approximately five minutes of receiving the link. I also have a downloaded copy of my form response, which reflects the submission timestamp.
-
-However, I later received a communication stating that I was not selected. I wanted to understand how the selection process works—specifically, whether registrations are evaluated on a first-come-first-serve basis, through a lucky draw, or via some other criteria.
-
-Additionally, in case of any dropouts or cancellations, I wanted to check if there is a waiting list or if my application could be considered for prioritisation, given the early submission.
-
-I would appreciate any clarification you can provide. Thank you for your time and support.
+Our firm processes large volumes of cross-currency payments throughout the day, which results in continuous fluctuations in our intraday cash balances across different agent bank accounts. When a currency account temporarily goes negative during the day, our agent banks provide intraday overdraft liquidity at no direct cost, provided the balance is restored before end-of-day. However, regulators assess liquidity usage in real time, and any intraday overdraft that lasts longer than one minute must be fully collateralized. To comply, we currently maintain approximately $9 billion of collateral, financed externally at roughly 125 bps, resulting in an annual cost of $70–$74 million. The objective of this initiative is to optimize how we manage intraday balances across currencies to reduce unnecessary reliance on collateral. This can be achieved through (1) strategically using intraday cross-currency swaps to offset surplus and deficit positions across currencies during different settlement windows, and (2) deploying temporary surplus liquidity into the intraday lending market when multiple currencies move in the same direction. Both approaches aim to reduce peak intraday overdraft exposure and improve utilization of available liquidity, ultimately lowering our collateral requirements and reducing overall cost while remaining within regulatory expectations.

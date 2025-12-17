@@ -116,39 +116,34 @@ plt.show()
 
 current_mean = last_1m_df["Max_Age"].mean()
 previous_mean = prev_3m_df["Max_Age"].mean()
-
-target_mean = min(previous_mean, 10)  # configurable
-
 n = len(last_1m_df)
 
-current_total_age = last_1m_df["Max_Age"].sum()
-target_total_age = target_mean * n
+if current_mean > previous_mean:
+    target_mean = previous_mean
 
-reduction_required = current_total_age - target_total_age
-avg_reduction_per_uti = reduction_required / n
+    current_total_age = last_1m_df["Max_Age"].sum()
+    target_total_age = target_mean * n
 
-flip_metrics = {
-    "Current Avg Age": round(current_mean, 2),
-    "Previous Avg Age": round(previous_mean, 2),
-    "Target Avg Age": round(target_mean, 2),
-    "UTI Count": n,
-    "Total Aging Reduction Needed (Days)": round(reduction_required, 1),
-    "Avg Reduction per UTI (Days)": round(avg_reduction_per_uti, 2)
-}
+    reduction_required = current_total_age - target_total_age
+    avg_reduction_per_uti = reduction_required / n
 
-flip_metrics
+    print(
+        f"In the last month, the average ageing of ‘Awaiting Radar Approval’ cases "
+        f"({current_mean:.1f} business days) is higher than the previous three-month "
+        f"average ({previous_mean:.1f} business days). To reverse this trend, the current "
+        f"population needs to reduce its average ageing below {previous_mean:.1f} business "
+        f"days, which implies eliminating approximately {reduction_required:.0f} total "
+        f"ageing-days across {n} UTIs, or about {avg_reduction_per_uti:.1f} business days "
+        f"per UTI on average."
+    )
 
-
-
-print(
-    f"In the last month, the average ageing of ‘Awaiting Radar Approval’ cases "
-    f"({current_mean:.1f} business days) increased versus the previous three-month trend "
-    f"({previous_mean:.1f} business days). To reverse this at a population level, we need "
-    f"to reduce the average ageing to {target_mean:.1f} business days, which implies "
-    f"eliminating approximately {reduction_required:.0f} total ageing-days across {n} UTIs, "
-    f"or roughly {avg_reduction_per_uti:.1f} business days per UTI on average. "
-    f"This indicates that addressing only a few extreme cases will not be sufficient and "
-    f"that broad-based ageing reduction is required."
-)
-
+else:
+    print(
+        f"The average ageing of ‘Awaiting Radar Approval’ cases in the last month "
+        f"({current_mean:.1f} business days) is better than the previous three-month "
+        f"average ({previous_mean:.1f} business days). This indicates an improvement in "
+        f"overall ageing performance, and no population-level ageing reduction is "
+        f"required to maintain a favorable trend."
+    )
+    
 

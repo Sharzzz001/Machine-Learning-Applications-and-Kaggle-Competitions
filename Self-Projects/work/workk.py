@@ -140,3 +140,15 @@ flip_metrics
 
 
 
+print(
+    f"In the last month, the average ageing of ‘Awaiting Radar Approval’ cases "
+    f"({current_mean:.1f} business days) increased versus the previous three-month trend "
+    f"({previous_mean:.1f} business days). To reverse this at a population level, we need "
+    f"to reduce the average ageing to {target_mean:.1f} business days, which implies "
+    f"eliminating approximately {reduction_required:.0f} total ageing-days across {n} UTIs, "
+    f"or roughly {avg_reduction_per_uti:.1f} business days per UTI on average. "
+    f"This indicates that addressing only a few extreme cases will not be sufficient and "
+    f"that broad-based ageing reduction is required."
+)
+
+

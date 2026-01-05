@@ -1,14 +1,20 @@
 import pandas as pd
 import numpy as np
-from datetime import date
 
-# ---------------------------------------
+# =====================================================
 # USER INPUTS
-# ---------------------------------------
+# =====================================================
 
-ACCESS_TABLE = "RR_SOW_Snapshots"
+# Data already loaded from Access
+# df must contain at least:
+# AccountNumber, FileDate, SOWStatus
+df = sow_df.copy()
 
-# Columns you want to carry forward (latest snapshot value)
+# Consolidation mapping file
+# Columns: Value, Consolidated SOW Status
+consolidation_df = pd.read_excel("SOW_Status_Consolidation.xlsx")
+
+# Columns to carry forward from latest snapshot
 LATEST_VALUE_COLUMNS = [
     # Example:
     # "Risk",
@@ -19,25 +25,14 @@ LATEST_VALUE_COLUMNS = [
 
 OUTPUT_FILE = "SOW_Ageing_PowerBI.xlsx"
 
-# ---------------------------------------
-# LOAD DATA
-# ---------------------------------------
+# =====================================================
+# PREPARE DATA
+# =====================================================
 
-# Assuming you already read this from Access
-df = sow_df.copy()  # replace with your actual dataframe
-
-# Ensure correct dtypes
-df["FileDate"] = pd.to_datetime(df["FileDate"]).dt.date
 df["AccountNumber"] = df["AccountNumber"].astype(str)
+df["FileDate"] = pd.to_datetime(df["FileDate"]).dt.date
 
-# ---------------------------------------
-# LOAD CONSOLIDATION MAPPING
-# ---------------------------------------
-
-# Example structure:
-# Value | Consolidated SOW Status
-consolidation_df = pd.read_excel("SOW_Status_Consolidation.xlsx")
-
+# Build consolidation map
 consolidation_map = dict(
     zip(
         consolidation_df["Value"],
@@ -45,48 +40,52 @@ consolidation_map = dict(
     )
 )
 
-# ---------------------------------------
-# CREATE FINAL STATUS
-# ---------------------------------------
-
+# Apply consolidation
 df["FinalStatus"] = df["SOWStatus"].map(consolidation_map)
 df["FinalStatus"] = df["FinalStatus"].fillna(df["SOWStatus"])
 
-# ---------------------------------------
-# CALCULATE STATUS AGEING
-# ---------------------------------------
+# =====================================================
+# BUILD STATUS RUNS & AGEING
+# =====================================================
 
-ageing_records = []
+records = []
 
 for acc, g in df.groupby("AccountNumber"):
     g = g.sort_values("FileDate").reset_index(drop=True)
 
-    for i in range(len(g)):
-        start_date = g.loc[i, "FileDate"]
-        status = g.loc[i, "FinalStatus"]
+    # Identify status changes
+    g["IsNewRun"] = g["FinalStatus"] != g["FinalStatus"].shift(1)
+    g["RunID"] = g["IsNewRun"].cumsum()
 
-        # Determine end date
-        if i + 1 < len(g) and g.loc[i + 1, "FinalStatus"] != status:
-            end_date = g.loc[i + 1, "FileDate"]
+    last_file_date = g["FileDate"].iloc[-1]
+
+    for run_id, r in g.groupby("RunID"):
+        status = r["FinalStatus"].iloc[0]
+        run_start = r["FileDate"].iloc[0]
+
+        # Determine run end (exclusive)
+        if r.index.max() < g.index.max():
+            run_end = g.loc[r.index.max() + 1, "FileDate"]
         else:
-            end_date = g.loc[len(g) - 1, "FileDate"] + pd.Timedelta(days=1)
+            # last run → include last snapshot day
+            run_end = last_file_date + pd.Timedelta(days=1)
 
-        # Business days (inclusive of start date)
-        days = np.busday_count(start_date, end_date)
+        ageing = np.busday_count(run_start, run_end)
 
-        if days > 0:
-            ageing_records.append({
-                "AccountNumber": acc,
-                "FinalStatus": status,
-                "Ageing": days,
-                "IsLatest": i == len(g) - 1
-            })
+        records.append({
+            "AccountNumber": acc,
+            "FinalStatus": status,
+            "RunStart": run_start,
+            "RunEnd": run_end,
+            "Ageing": ageing,
+            "IsLatestRun": r.index.max() == g.index.max()
+        })
 
-ageing_df = pd.DataFrame(ageing_records)
+ageing_df = pd.DataFrame(records)
 
-# ---------------------------------------
-# OVERALL AGEING PER STATUS
-# ---------------------------------------
+# =====================================================
+# OVERALL AGEING PER STATUS (BACK & FORTH SUPPORTED)
+# =====================================================
 
 overall_ageing = (
     ageing_df
@@ -104,14 +103,12 @@ pivot_df = (
     .fillna(0)
 )
 
-# ---------------------------------------
-# LATEST STATUS & AGEING
-# ---------------------------------------
+# =====================================================
+# LATEST STATUS & LATEST STATUS AGEING
+# =====================================================
 
 latest_status_df = (
-    ageing_df[ageing_df["IsLatest"]]
-    .sort_values(["AccountNumber"])
-    .drop_duplicates("AccountNumber", keep="last")
+    ageing_df[ageing_df["IsLatestRun"]]
     [["AccountNumber", "FinalStatus", "Ageing"]]
     .rename(columns={
         "FinalStatus": "LatestStatus",
@@ -119,9 +116,9 @@ latest_status_df = (
     })
 )
 
-# ---------------------------------------
-# LATEST SNAPSHOT VALUES
-# ---------------------------------------
+# =====================================================
+# LATEST SNAPSHOT ATTRIBUTES
+# =====================================================
 
 latest_snapshot = (
     df.sort_values("FileDate")
@@ -130,9 +127,9 @@ latest_snapshot = (
       [["AccountNumber"] + LATEST_VALUE_COLUMNS]
 )
 
-# ---------------------------------------
-# FINAL DATASET
-# ---------------------------------------
+# =====================================================
+# FINAL POWER BI DATASET
+# =====================================================
 
 final_df = (
     pivot_df
@@ -141,10 +138,10 @@ final_df = (
     .merge(latest_snapshot, on="AccountNumber", how="left")
 )
 
-# ---------------------------------------
+# =====================================================
 # EXPORT
-# ---------------------------------------
+# =====================================================
 
 final_df.to_excel(OUTPUT_FILE, index=False)
 
-print(f"Power BI dataset saved to {OUTPUT_FILE}")
+print(f"Power BI dataset created: {OUTPUT_FILE}")

@@ -1,147 +1,53 @@
 import pandas as pd
-import numpy as np
+from pathlib import Path
+import re
+from datetime import datetime
 
-# =====================================================
-# USER INPUTS
-# =====================================================
+# -----------------------------
+# CONFIG
+# -----------------------------
+INPUT_FOLDER = Path(r"D:\RR_SOW_Files")   # change this
+OUTPUT_FILE = Path(r"D:\RR_SOW_MERGED.xlsx")
 
-# Data already loaded from Access
-# df must contain at least:
-# AccountNumber, FileDate, SOWStatus
-df = sow_df.copy()
+FILENAME_PATTERN = r"RR_SOW_(\d{2}-\d{2}-\d{4})\.xlsx"
 
-# Consolidation mapping file
-# Columns: Value, Consolidated SOW Status
-consolidation_df = pd.read_excel("SOW_Status_Consolidation.xlsx")
+# -----------------------------
+# PROCESS FILES
+# -----------------------------
+all_dfs = []
 
-# Columns to carry forward from latest snapshot
-LATEST_VALUE_COLUMNS = [
-    # Example:
-    # "Risk",
-    # "RM",
-    # "GH",
-    # "ReviewType"
-]
+for file in INPUT_FOLDER.glob("*.xlsx"):
+    match = re.match(FILENAME_PATTERN, file.name)
+    if not match:
+        print(f"Skipping file (name format mismatch): {file.name}")
+        continue
 
-OUTPUT_FILE = "SOW_Ageing_PowerBI.xlsx"
+    # Extract date from filename
+    file_date = datetime.strptime(match.group(1), "%d-%m-%Y").date()
 
-# =====================================================
-# PREPARE DATA
-# =====================================================
+    # Read Excel
+    df = pd.read_excel(file)
 
-df["AccountNumber"] = df["AccountNumber"].astype(str)
-df["FileDate"] = pd.to_datetime(df["FileDate"]).dt.date
+    # Rename Title → AccountNumber
+    if "Title" not in df.columns:
+        raise ValueError(f"'Title' column missing in {file.name}")
 
-# Build consolidation map
-consolidation_map = dict(
-    zip(
-        consolidation_df["Value"],
-        consolidation_df["Consolidated SOW Status"]
-    )
-)
+    df = df.rename(columns={"Title": "AccountNumber"})
 
-# Apply consolidation
-df["FinalStatus"] = df["SOWStatus"].map(consolidation_map)
-df["FinalStatus"] = df["FinalStatus"].fillna(df["SOWStatus"])
+    # Add file date column
+    df["FileDate"] = file_date
 
-# =====================================================
-# BUILD STATUS RUNS & AGEING
-# =====================================================
+    all_dfs.append(df)
 
-records = []
+# -----------------------------
+# MERGE & SAVE
+# -----------------------------
+if not all_dfs:
+    raise RuntimeError("No valid files found to merge.")
 
-for acc, g in df.groupby("AccountNumber"):
-    g = g.sort_values("FileDate").reset_index(drop=True)
-
-    # Identify status changes
-    g["IsNewRun"] = g["FinalStatus"] != g["FinalStatus"].shift(1)
-    g["RunID"] = g["IsNewRun"].cumsum()
-
-    last_file_date = g["FileDate"].iloc[-1]
-
-    for run_id, r in g.groupby("RunID"):
-        status = r["FinalStatus"].iloc[0]
-        run_start = r["FileDate"].iloc[0]
-
-        # Determine run end (exclusive)
-        if r.index.max() < g.index.max():
-            run_end = g.loc[r.index.max() + 1, "FileDate"]
-        else:
-            # last run → include last snapshot day
-            run_end = last_file_date + pd.Timedelta(days=1)
-
-        ageing = np.busday_count(run_start, run_end)
-
-        records.append({
-            "AccountNumber": acc,
-            "FinalStatus": status,
-            "RunStart": run_start,
-            "RunEnd": run_end,
-            "Ageing": ageing,
-            "IsLatestRun": r.index.max() == g.index.max()
-        })
-
-ageing_df = pd.DataFrame(records)
-
-# =====================================================
-# OVERALL AGEING PER STATUS (BACK & FORTH SUPPORTED)
-# =====================================================
-
-overall_ageing = (
-    ageing_df
-    .groupby(["AccountNumber", "FinalStatus"], as_index=False)["Ageing"]
-    .sum()
-)
-
-pivot_df = (
-    overall_ageing
-    .pivot(
-        index="AccountNumber",
-        columns="FinalStatus",
-        values="Ageing"
-    )
-    .fillna(0)
-)
-
-# =====================================================
-# LATEST STATUS & LATEST STATUS AGEING
-# =====================================================
-
-latest_status_df = (
-    ageing_df[ageing_df["IsLatestRun"]]
-    [["AccountNumber", "FinalStatus", "Ageing"]]
-    .rename(columns={
-        "FinalStatus": "LatestStatus",
-        "Ageing": "LatestStatusAgeing"
-    })
-)
-
-# =====================================================
-# LATEST SNAPSHOT ATTRIBUTES
-# =====================================================
-
-latest_snapshot = (
-    df.sort_values("FileDate")
-      .groupby("AccountNumber", as_index=False)
-      .tail(1)
-      [["AccountNumber"] + LATEST_VALUE_COLUMNS]
-)
-
-# =====================================================
-# FINAL POWER BI DATASET
-# =====================================================
-
-final_df = (
-    pivot_df
-    .reset_index()
-    .merge(latest_status_df, on="AccountNumber", how="left")
-    .merge(latest_snapshot, on="AccountNumber", how="left")
-)
-
-# =====================================================
-# EXPORT
-# =====================================================
+final_df = pd.concat(all_dfs, ignore_index=True)
 
 final_df.to_excel(OUTPUT_FILE, index=False)
 
-print(f"Power BI dataset created: {OUTPUT_FILE}")
+print(f"Merged file saved to: {OUTPUT_FILE}")
+print(f"Total rows: {len(final_df)}")

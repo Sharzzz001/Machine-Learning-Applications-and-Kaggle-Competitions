@@ -1,129 +1,103 @@
-CASE_COL        = "Name"
-LIFECYCLE_COL   = "Status"                  # In progress / Completed
-SUB_STATUS_COL  = "Pending with Status"     # only for In progress
-DATE_COL        = "File Date"
+import os
+import re
+from datetime import datetime, date
+import pandas as pd
+import pyodbc
 
-IN_PROGRESS_VAL = "In progress"
-COMPLETED_VAL   = "Completed"
+# ---------------- CONFIG ----------------
+FOLDER_PATH = r"D:\RR_SOW_FILES"
+ACCESS_DB_PATH = r"D:\RR_DB\rr_data.accdb"
+TABLE_NAME = "RR_SOW_Snapshots"
 
-df = df_snapshots.copy()
-df[DATE_COL] = pd.to_datetime(df[DATE_COL])
-df = df.sort_values([CASE_COL, DATE_COL])
+FILE_PATTERN = r"RR_SOW_(\d{2}-\d{2}-\d{4})\.xlsx"
+# ----------------------------------------
 
-latest_lifecycle = (
-    df
-    .sort_values([CASE_COL, DATE_COL])
-    .groupby(CASE_COL)
-    .tail(1)
-    [[CASE_COL, LIFECYCLE_COL]]
-)
-
-active_cases = latest_lifecycle[
-    latest_lifecycle[LIFECYCLE_COL] == IN_PROGRESS_VAL
-][CASE_COL]
-
-df_ip = df[
-    (df[LIFECYCLE_COL] == IN_PROGRESS_VAL) &
-    (df[CASE_COL].isin(active_cases))
-].copy()
-
-
-df_ip["Prev_Status"] = df_ip.groupby(CASE_COL)[SUB_STATUS_COL].shift(1)
-df_ip["Status_Change"] = df_ip[SUB_STATUS_COL] != df_ip["Prev_Status"]
-df_ip.loc[df_ip["Prev_Status"].isna(), "Status_Change"] = True
-
-
-
-intervals = (
-    df_ip[df_ip["Status_Change"]]
-    .assign(
-        Start_Date=lambda x: x[DATE_COL],
-        End_Date=lambda x: x.groupby(CASE_COL)[DATE_COL].shift(-1)
+def get_access_connection():
+    conn_str = (
+        r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
+        f"DBQ={ACCESS_DB_PATH};"
     )
-)
+    return pyodbc.connect(conn_str)
 
-latest_ip_date = df_ip.groupby(CASE_COL)[DATE_COL].max()
-intervals["End_Date"] = intervals["End_Date"].fillna(
-    intervals[CASE_COL].map(latest_ip_date)
-)
+def extract_date_from_filename(filename: str) -> date:
+    match = re.search(FILE_PATTERN, filename)
+    if not match:
+        raise ValueError(f"Invalid filename: {filename}")
+    return datetime.strptime(match.group(1), "%d-%m-%Y").date()
 
+def get_max_file_date_from_access() -> date | None:
+    conn = get_access_connection()
+    cursor = conn.cursor()
 
-import numpy as np
+    cursor.execute(f"SELECT MAX(FileDate) FROM {TABLE_NAME}")
+    result = cursor.fetchone()[0]
 
-def business_days(start, end):
-    return np.busday_count(start.date(), end.date())
+    conn.close()
+    return result  # None if table is empty
 
-intervals["Ageing"] = intervals.apply(
-    lambda r: business_days(r["Start_Date"], r["End_Date"]),
-    axis=1
-)
+def load_incremental_files(folder_path: str, last_loaded_date: date | None) -> pd.DataFrame:
+    dfs = []
 
+    for file in os.listdir(folder_path):
+        if not file.endswith(".xlsx"):
+            continue
 
+        try:
+            file_date = extract_date_from_filename(file)
+        except ValueError:
+            continue  # ignore unrelated files
 
-status_ageing = (
-    intervals
-    .groupby([CASE_COL, SUB_STATUS_COL])["Ageing"]
-    .sum()
-    .unstack(fill_value=0)
-    .reset_index()
-)
+        if last_loaded_date and file_date <= last_loaded_date:
+            continue  # incremental filter
 
-status_cols = [c for c in status_ageing.columns if c != CASE_COL]
-status_ageing["Total_Ageing"] = status_ageing[status_cols].sum(axis=1)
+        file_path = os.path.join(folder_path, file)
+        df = pd.read_excel(file_path)
 
+        # Rename and standardize
+        df = df.rename(columns={"Title": "AccountNumber"})
+        df["AccountNumber"] = df["AccountNumber"].astype(str).str.strip()
 
-latest_ip_snapshot = (
-    df_ip
-    .sort_values([CASE_COL, DATE_COL])
-    .groupby(CASE_COL)
-    .tail(1)
-    [[CASE_COL, SUB_STATUS_COL, DATE_COL]]
-    .rename(columns={
-        SUB_STATUS_COL: "Latest_Status",
-        DATE_COL: "Latest_File_Date"
-    })
-)
+        df["FileDate"] = file_date
+        df["LoadTimestamp"] = datetime.now()
 
-def latest_status_ageing(case_df):
-    case_df = case_df.sort_values(DATE_COL)
-    latest_status = case_df[SUB_STATUS_COL].iloc[-1]
-    latest_date = case_df[DATE_COL].iloc[-1]
+        dfs.append(df)
 
-    reversed_df = case_df.iloc[::-1]
+    if not dfs:
+        return pd.DataFrame()
 
-    start_date = latest_date
-    for _, row in reversed_df.iterrows():
-        if row[SUB_STATUS_COL] == latest_status:
-            start_date = row[DATE_COL]
-        else:
-            break
+    return pd.concat(dfs, ignore_index=True)
 
-    return np.busday_count(start_date.date(), latest_date.date())
-    
-    
-latest_status_ageing_df = (
-    df_ip
-    .groupby(CASE_COL)
-    .apply(latest_status_ageing)
-    .reset_index(name="Latest_Status_Ageing")
-)
+def insert_into_access(df: pd.DataFrame):
+    if df.empty:
+        print("No new files to load.")
+        return
 
-static_cols_df = (
-    df
-    .sort_values([CASE_COL, DATE_COL])
-    .drop_duplicates(subset=[CASE_COL], keep="last")
-)
+    conn = get_access_connection()
+    cursor = conn.cursor()
 
-static_cols_df = static_cols_df[
-    static_cols_df[CASE_COL].isin(active_cases)
-].drop(columns=[DATE_COL])
+    columns = list(df.columns)
+    placeholders = ",".join(["?"] * len(columns))
+    column_str = ",".join(columns)
 
+    insert_sql = f"""
+        INSERT INTO {TABLE_NAME} ({column_str})
+        VALUES ({placeholders})
+    """
 
-final_df = (
-    static_cols_df
-    .merge(status_ageing, on=CASE_COL, how="left")
-    .merge(latest_ip_snapshot[[CASE_COL, "Latest_Status"]], on=CASE_COL, how="left")
-    .merge(latest_status_ageing_df, on=CASE_COL, how="left")
-)
+    cursor.fast_executemany = True
+    cursor.executemany(insert_sql, df.values.tolist())
 
+    conn.commit()
+    conn.close()
 
+    print(f"Inserted {len(df)} rows")
+
+def main():
+    last_loaded_date = get_max_file_date_from_access()
+    print(f"Last loaded FileDate in Access: {last_loaded_date}")
+
+    df = load_incremental_files(FOLDER_PATH, last_loaded_date)
+    insert_into_access(df)
+
+if __name__ == "__main__":
+    main()

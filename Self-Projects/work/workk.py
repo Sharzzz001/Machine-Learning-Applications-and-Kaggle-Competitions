@@ -1,291 +1,144 @@
-import os
-import re
-from datetime import datetime, date
 import pandas as pd
-import pyodbc
+import numpy as np
 
-# ---------------- CONFIG ----------------
-FOLDER_PATH = r"D:\RR_SOW_FILES"
-ACCESS_DB_PATH = r"D:\RR_DB\rr_data.accdb"
-TABLE_NAME = "RR_SOW_Snapshots"
+# =====================================================
+# USER INPUTS
+# =====================================================
 
-FILE_PATTERN = r"RR_SOW_(\d{2}-\d{2}-\d{4})\.xlsx"
-# ----------------------------------------
+# Snapshot data from Access
+df = sow_df.copy()
 
-TEXT_COLUMNS = [
-    "UID",
-    "AccountNumber",
-    "ClientName",
-    "Grouping",
-    "ReviewType",
-    "Risk",
-    "PEP",
-    "ekycID",
-    "RM",
-    "GH",
-    "SOWStatus",
-    "SOWMaker",
-    "SOWChecker",
-    "SOWComments",
-    "RiskChange",
-    "Item Type",
-    "Path"
+# Consolidation mapping
+# Columns: Value | Consolidated SOW Status
+consolidation_df = pd.read_excel("SOW_Status_Consolidation.xlsx")
+
+# Columns to carry forward (latest snapshot only)
+LATEST_VALUE_COLUMNS = [
+    # Example:
+    # "Risk",
+    # "RM",
+    # "GH",
+    # "ReviewType"
 ]
 
-DATE_COLUMNS = [
-    "DueDate",
-    "eKYCDate",
-    "AssignDate",
-    "ApprovalDate",
-    "FirstReviewDate",
-    "FileDate"
-]
+OUTPUT_FILE = "SOW_Ageing_PowerBI.xlsx"
 
-DATETIME_COLUMNS = [
-    "Created",
-    "LoadTimestamp"
-]
+# =====================================================
+# PREPARE DATA
+# =====================================================
 
-ALL_COLUMNS = (
-    TEXT_COLUMNS
-    + DATE_COLUMNS
-    + DATETIME_COLUMNS
+df["UID"] = df["UID"].astype(str)
+df["FileDate"] = pd.to_datetime(df["FileDate"]).dt.date
+
+# Build consolidation map
+consolidation_map = dict(
+    zip(
+        consolidation_df["Value"],
+        consolidation_df["Consolidated SOW Status"]
+    )
 )
 
-# ----------------------------------------
+# Apply consolidation
+df["FinalStatus"] = df["SOWStatus"].map(consolidation_map)
+df["FinalStatus"] = df["FinalStatus"].fillna(df["SOWStatus"])
 
-def get_access_connection():
-    conn_str = (
-        r"DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};"
-        f"DBQ={ACCESS_DB_PATH};"
+# =====================================================
+# BUILD STATUS RUNS & AGEING (UID LEVEL)
+# =====================================================
+
+records = []
+
+for uid, g in df.groupby("UID"):
+    g = g.sort_values("FileDate").reset_index(drop=True)
+
+    # Identify status change points
+    g["IsNewRun"] = g["FinalStatus"] != g["FinalStatus"].shift(1)
+    g["RunID"] = g["IsNewRun"].cumsum()
+
+    last_file_date = g["FileDate"].iloc[-1]
+
+    for run_id, r in g.groupby("RunID"):
+        status = r["FinalStatus"].iloc[0]
+        run_start = r["FileDate"].iloc[0]
+
+        # End date (exclusive)
+        if r.index.max() < g.index.max():
+            run_end = g.loc[r.index.max() + 1, "FileDate"]
+        else:
+            run_end = last_file_date + pd.Timedelta(days=1)
+
+        ageing = np.busday_count(run_start, run_end)
+
+        records.append({
+            "UID": uid,
+            "FinalStatus": status,
+            "RunStart": run_start,
+            "RunEnd": run_end,
+            "Ageing": ageing,
+            "IsLatestRun": r.index.max() == g.index.max()
+        })
+
+ageing_df = pd.DataFrame(records)
+
+# =====================================================
+# OVERALL AGEING PER STATUS (BACK & FORTH)
+# =====================================================
+
+overall_ageing = (
+    ageing_df
+    .groupby(["UID", "FinalStatus"], as_index=False)["Ageing"]
+    .sum()
+)
+
+pivot_df = (
+    overall_ageing
+    .pivot(
+        index="UID",
+        columns="FinalStatus",
+        values="Ageing"
     )
-    return pyodbc.connect(conn_str)
+    .fillna(0)
+)
 
+# =====================================================
+# LATEST STATUS & LATEST STATUS AGEING
+# =====================================================
 
-def extract_date_from_filename(filename: str) -> date:
-    match = re.search(FILE_PATTERN, filename)
-    if not match:
-        raise ValueError("Invalid filename format")
-    return datetime.strptime(match.group(1), "%d-%m-%Y").date()
+latest_status_df = (
+    ageing_df[ageing_df["IsLatestRun"]]
+    [["UID", "FinalStatus", "Ageing"]]
+    .rename(columns={
+        "FinalStatus": "LatestStatus",
+        "Ageing": "LatestStatusAgeing"
+    })
+)
 
+# =====================================================
+# LATEST SNAPSHOT ATTRIBUTES
+# =====================================================
 
-# ---------- TABLE CREATION ----------
+latest_snapshot = (
+    df.sort_values("FileDate")
+      .groupby("UID", as_index=False)
+      .tail(1)
+      [["UID"] + LATEST_VALUE_COLUMNS]
+)
 
-def ensure_table_exists():
-    conn = get_access_connection()
-    cursor = conn.cursor()
+# =====================================================
+# FINAL POWER BI DATASET
+# =====================================================
 
-    create_sql = f"""
-    CREATE TABLE {TABLE_NAME} (
-        UID TEXT(100),
-        AccountNumber TEXT(50),
-        ClientName TEXT(255),
-        Grouping TEXT(255),
-        ReviewType TEXT(255),
-        Risk TEXT(50),
-        PEP TEXT(50),
-        ekycID TEXT(100),
-        RM TEXT(100),
-        GH TEXT(100),
-        SOWStatus TEXT(50),
-        SOWMaker TEXT(100),
-        SOWChecker TEXT(100),
-        SOWComments TEXT(255),
-        RiskChange TEXT(50),
-        [Item Type] TEXT(100),
-        Path TEXT(255),
+final_df = (
+    pivot_df
+    .reset_index()
+    .merge(latest_status_df, on="UID", how="left")
+    .merge(latest_snapshot, on="UID", how="left")
+)
 
-        DueDate DATE,
-        eKYCDate DATE,
-        AssignDate DATE,
-        ApprovalDate DATE,
-        FirstReviewDate DATE,
+# =====================================================
+# EXPORT
+# =====================================================
 
-        Created DATETIME,
-        FileDate DATE,
-        LoadTimestamp DATETIME
-    )
-    """
+final_df.to_excel(OUTPUT_FILE, index=False)
 
-    try:
-        cursor.execute(create_sql)
-        conn.commit()
-        print(f"Created table {TABLE_NAME}")
-    except pyodbc.Error:
-        pass
-
-    conn.close()
-
-
-def ensure_unique_index():
-    conn = get_access_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(f"""
-            CREATE UNIQUE INDEX ux_uid_filedate
-            ON {TABLE_NAME} (UID, FileDate)
-        """)
-        conn.commit()
-        print("Created unique index on (UID, FileDate)")
-    except pyodbc.Error:
-        pass
-
-    conn.close()
-
-
-# ---------- INCREMENTAL CHECK ----------
-
-def get_max_file_date():
-    conn = get_access_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(f"SELECT MAX(FileDate) FROM {TABLE_NAME}")
-        result = cursor.fetchone()[0]
-    except pyodbc.Error:
-        result = None
-
-    conn.close()
-
-    if isinstance(result, datetime):
-        return result.date()
-
-    return result
-
-
-# ---------- DATA CLEANING ----------
-
-def clean_text_columns(df):
-    for col in TEXT_COLUMNS:
-        if col in df.columns:
-            df[col] = (
-                df[col]
-                .astype(str)
-                .replace({"nan": None, "None": None})
-                .str.strip()
-            )
-    return df
-
-
-def clean_date_columns(df):
-    for col in DATE_COLUMNS:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
-            df[col] = df[col].where(df[col].notna(), None)
-    return df
-
-
-def clean_datetime_columns(df):
-    for col in DATETIME_COLUMNS:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-            df.loc[
-                (df[col].dt.year < 100) | (df[col].dt.year > 9999),
-                col
-            ] = pd.NaT
-            df[col] = df[col].where(df[col].notna(), None)
-    return df
-
-
-# ---------- LOAD FILES ----------
-
-def load_incremental_files(last_loaded_date):
-    dfs = []
-
-    for file in os.listdir(FOLDER_PATH):
-        if not file.endswith(".xlsx") or file.startswith("~$"):
-            continue
-
-        try:
-            file_date = extract_date_from_filename(file)
-        except ValueError:
-            continue
-
-        if last_loaded_date and file_date <= last_loaded_date:
-            continue
-
-        df = pd.read_excel(os.path.join(FOLDER_PATH, file))
-        df = df.rename(columns={"Title": "AccountNumber"})
-
-        df["AccountNumber"] = df["AccountNumber"].astype(str).str.strip()
-        df["DueDate"] = pd.to_datetime(df["DueDate"], errors="coerce").dt.date
-
-        # CREATE UID (CRITICAL)
-        df["UID"] = (
-            df["AccountNumber"]
-            + "|"
-            + df["DueDate"].astype(str)
-        )
-
-        df["FileDate"] = file_date
-        df["LoadTimestamp"] = datetime.now()
-
-        # Ensure all columns exist
-        for col in ALL_COLUMNS:
-            if col not in df.columns:
-                df[col] = None
-
-        df = df[ALL_COLUMNS]
-        dfs.append(df)
-
-    if not dfs:
-        return pd.DataFrame()
-
-    return pd.concat(dfs, ignore_index=True)
-
-
-# ---------- INSERT ----------
-
-def insert_into_access(df):
-    if df.empty:
-        print("No new data to insert.")
-        return
-
-    conn = get_access_connection()
-    cursor = conn.cursor()
-
-    columns_sql = ",".join(f"[{c}]" for c in ALL_COLUMNS)
-    placeholders = ",".join("?" for _ in ALL_COLUMNS)
-
-    insert_sql = f"""
-        INSERT INTO {TABLE_NAME} ({columns_sql})
-        VALUES ({placeholders})
-    """
-
-    inserted = 0
-    skipped = 0
-
-    for row in df.itertuples(index=False, name=None):
-        try:
-            cursor.execute(insert_sql, row)
-            inserted += 1
-        except pyodbc.IntegrityError:
-            skipped += 1
-
-    conn.commit()
-    conn.close()
-
-    print(f"Inserted {inserted} rows, skipped {skipped} duplicates")
-
-
-# ---------- MAIN ----------
-
-def main():
-    ensure_table_exists()
-    ensure_unique_index()
-
-    last_loaded_date = get_max_file_date()
-    print(f"Last loaded FileDate: {last_loaded_date}")
-
-    df = load_incremental_files(last_loaded_date)
-
-    df = clean_text_columns(df)
-    df = clean_date_columns(df)
-    df = clean_datetime_columns(df)
-
-    insert_into_access(df)
-
-
-if __name__ == "__main__":
-    main()
+print(f"Power BI dataset created: {OUTPUT_FILE}")

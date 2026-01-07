@@ -21,3 +21,12 @@ final_df = (
     .reset_index()
 )
 
+UID =
+VAR TriggerDateText =
+    FORMAT ( 'YourTable'[Trigger Date], "yyyy-MM-dd" )
+RETURN
+    'YourTable'[Request Title]
+        & "|"
+        & 'YourTable'[Review Type]
+        & "|"
+        & TriggerDateText

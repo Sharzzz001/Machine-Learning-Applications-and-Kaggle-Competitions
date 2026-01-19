@@ -98,5 +98,24 @@ DATATABLE(
 )
 
 
+IsPhysicalDoc :=
+IF(
+    DocDeficiency_Fact[DocDefiType] = "Physical Doc"
+        ||
+    DocDeficiency_Fact[PhysicalRequired] = TRUE(),
+    TRUE(),
+    FALSE()
+)
+
+PhysicalDoc_Pending_Accounts :=
+COALESCE(
+    CALCULATE(
+        DISTINCTCOUNT(DocDeficiency_Fact[AccountNumber]),
+        DocDeficiency_Fact[RequestType] = "Rolling Review",
+        DocDeficiency_Fact[IsPhysicalDoc] = TRUE()
+    ),
+    0
+)
+
 
 

@@ -83,3 +83,20 @@ DISTINCTCOUNT(
     DocDeficiency_Fact[AccountNumber]
 )
 
+Account_Age_Action_Dim =
+DATATABLE(
+    "Account_Age_Bucket", STRING,
+    "Mitigating_Action", STRING,
+    "Sort_Order", INTEGER,
+    {
+        { "<30 Days", "New account – monitoring stage.", 1 },
+        { "30–90 Days", "Follow-up with onboarding team.", 2 },
+        { "91–180 Days", "Escalation to compliance and relationship manager.", 3 },
+        { ">180 Days", "High-risk vintage – senior management review.", 4 },
+        { "No Start Date", "Account open date missing – data remediation required.", 5 }
+    }
+)
+
+
+
+

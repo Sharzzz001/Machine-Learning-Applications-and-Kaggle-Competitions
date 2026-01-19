@@ -1,25 +1,146 @@
-import re
 import pandas as pd
 import numpy as np
 
-def extract_and_sum_numbers(text):
-    if pd.isna(text):
-        return 0
+# ======================================================
+# CONFIG
+# ======================================================
 
-    numbers = re.findall(r"\d+", str(text))
-    return sum(map(int, numbers))
-    
-df["Total_Securities"] = df["Securities"].apply(extract_and_sum_numbers)
-df["Pending_Securities_Count"] = df["Pending securities"].apply(extract_and_sum_numbers)
+INPUT_FILE  = r"daily_updates.xlsx"
+OUTPUT_FILE = r"case_ageing_output.xlsx"
 
+CASE_COL   = "Case Number"
+STATUS_COL = "Pending with Status"
+DATE_COL   = "Business Date"
 
-df["Securities_Completed"] = (
-    df["Total_Securities"] - df["Pending_Securities_Count"]
+# ======================================================
+# LOAD DATA
+# ======================================================
+
+df = pd.read_excel(INPUT_FILE)
+
+df[DATE_COL] = pd.to_datetime(df[DATE_COL])
+df = df.sort_values([CASE_COL, DATE_COL])
+
+# ======================================================
+# IDENTIFY LATEST BUSINESS DATE & OPEN CASES
+# ======================================================
+
+latest_business_date = df[DATE_COL].max()
+
+open_cases = df.loc[
+    df[DATE_COL] == latest_business_date,
+    CASE_COL
+].unique()
+
+# ======================================================
+# NEXT SNAPSHOT DATE PER CASE
+# ======================================================
+
+df["Next_Date"] = df.groupby(CASE_COL)[DATE_COL].shift(-1)
+
+# ======================================================
+# BUSINESS-DAY AGEING BETWEEN SNAPSHOTS
+# ======================================================
+
+def business_day_diff(d1, d2):
+    if pd.isna(d2):
+        return 1
+    return np.busday_count(d1.date(), d2.date())
+
+df["Row_Ageing"] = df.apply(
+    lambda r: business_day_diff(r[DATE_COL], r["Next_Date"]),
+    axis=1
 )
 
-df["Securities_Completion_%"] = np.where(
-    df["Total_Securities"] > 0,
-    (df["Securities_Completed"] / df["Total_Securities"]) * 100,
-    np.nan
+# ======================================================
+# STATUS-WISE AGEING (HISTORICAL)
+# ======================================================
+
+status_ageing = (
+    df
+    .groupby([CASE_COL, STATUS_COL])["Row_Ageing"]
+    .sum()
+    .unstack(fill_value=0)
+    .reset_index()
 )
 
+status_cols = [c for c in status_ageing.columns if c != CASE_COL]
+status_ageing["Total_Ageing"] = status_ageing[status_cols].sum(axis=1)
+
+# ======================================================
+# LATEST STATUS
+# ======================================================
+
+latest_status_df = (
+    df
+    .sort_values([CASE_COL, DATE_COL])
+    .groupby(CASE_COL)
+    .tail(1)
+    [[CASE_COL, STATUS_COL]]
+    .rename(columns={STATUS_COL: "Latest_Status"})
+)
+
+# ======================================================
+# LATEST STATUS AGEING (CONTINUOUS)
+# ======================================================
+
+def compute_latest_status_ageing(case_df):
+    case_df = case_df.sort_values(DATE_COL)
+
+    latest_status = case_df[STATUS_COL].iloc[-1]
+    reversed_df = case_df.iloc[::-1]
+
+    ageing = 0
+    for _, row in reversed_df.iterrows():
+        if row[STATUS_COL] == latest_status:
+            ageing += row["Row_Ageing"]
+        else:
+            break
+
+    return ageing
+
+
+latest_status_ageing_df = (
+    df
+    .groupby(CASE_COL)
+    .apply(compute_latest_status_ageing)
+    .reset_index(name="Latest_Status_Ageing")
+)
+
+# ======================================================
+# STATIC COLUMNS (LATEST SNAPSHOT VALUES)
+# ======================================================
+
+static_cols_df = (
+    df
+    .sort_values([CASE_COL, DATE_COL])
+    .drop_duplicates(subset=[CASE_COL], keep="last")
+    .drop(columns=["Next_Date", "Row_Ageing"])
+)
+
+# ======================================================
+# FINAL DATASET
+# ======================================================
+
+final_df = (
+    static_cols_df
+    .merge(status_ageing, on=CASE_COL, how="left")
+    .merge(latest_status_df, on=CASE_COL, how="left")
+    .merge(latest_status_ageing_df, on=CASE_COL, how="left")
+)
+
+# KEEP ONLY CURRENTLY OPEN CASES
+final_df = final_df[final_df[CASE_COL].isin(open_cases)]
+
+# ======================================================
+# OUTPUT
+# ======================================================
+
+final_df.to_excel(OUTPUT_FILE, index=False)
+
+print("===================================================")
+print("Ageing calculation completed successfully")
+print(f"Latest Business Date : {latest_business_date.date()}")
+print(f"Open cases included  : {len(open_cases)}")
+print(f"Output file          : {OUTPUT_FILE}")
+print("===================================================")

@@ -1,146 +1,85 @@
-import pandas as pd
-import numpy as np
-
-# ======================================================
-# CONFIG
-# ======================================================
-
-INPUT_FILE  = r"daily_updates.xlsx"
-OUTPUT_FILE = r"case_ageing_output.xlsx"
-
-CASE_COL   = "Case Number"
-STATUS_COL = "Pending with Status"
-DATE_COL   = "Business Date"
-
-# ======================================================
-# LOAD DATA
-# ======================================================
-
-df = pd.read_excel(INPUT_FILE)
-
-df[DATE_COL] = pd.to_datetime(df[DATE_COL])
-df = df.sort_values([CASE_COL, DATE_COL])
-
-# ======================================================
-# IDENTIFY LATEST BUSINESS DATE & OPEN CASES
-# ======================================================
-
-latest_business_date = df[DATE_COL].max()
-
-open_cases = df.loc[
-    df[DATE_COL] == latest_business_date,
-    CASE_COL
-].unique()
-
-# ======================================================
-# NEXT SNAPSHOT DATE PER CASE
-# ======================================================
-
-df["Next_Date"] = df.groupby(CASE_COL)[DATE_COL].shift(-1)
-
-# ======================================================
-# BUSINESS-DAY AGEING BETWEEN SNAPSHOTS
-# ======================================================
-
-def business_day_diff(d1, d2):
-    if pd.isna(d2):
-        return 1
-    return np.busday_count(d1.date(), d2.date())
-
-df["Row_Ageing"] = df.apply(
-    lambda r: business_day_diff(r[DATE_COL], r["Next_Date"]),
-    axis=1
+AgeingDays =
+DATEDIFF(
+    DocDeficiency_Fact[DocDefiStartDate],
+    TODAY(),
+    DAY
 )
 
-# ======================================================
-# STATUS-WISE AGEING (HISTORICAL)
-# ======================================================
-
-status_ageing = (
-    df
-    .groupby([CASE_COL, STATUS_COL])["Row_Ageing"]
-    .sum()
-    .unstack(fill_value=0)
-    .reset_index()
+AgeingDays =
+NETWORKDAYS(
+    DocDeficiency_Fact[DocDefiStartDate],
+    TODAY()
 )
 
-status_cols = [c for c in status_ageing.columns if c != CASE_COL]
-status_ageing["Total_Ageing"] = status_ageing[status_cols].sum(axis=1)
-
-# ======================================================
-# LATEST STATUS
-# ======================================================
-
-latest_status_df = (
-    df
-    .sort_values([CASE_COL, DATE_COL])
-    .groupby(CASE_COL)
-    .tail(1)
-    [[CASE_COL, STATUS_COL]]
-    .rename(columns={STATUS_COL: "Latest_Status"})
+HasFCCExtension =
+IF(
+    NOT ISBLANK(DocDeficiency_Fact[ExtendedDeadline]),
+    "Yes",
+    "No"
 )
 
-# ======================================================
-# LATEST STATUS AGEING (CONTINUOUS)
-# ======================================================
+AgeingBucket =
+VAR Age = DocDeficiency_Fact[AgeingDays]
+VAR HasExt =
+    NOT ISBLANK(DocDeficiency_Fact[ExtendedDeadline])
+RETURN
+SWITCH(
+    TRUE(),
 
-def compute_latest_status_ageing(case_df):
-    case_df = case_df.sort_values(DATE_COL)
+    Age <= 30,
+        "0–30 Days",
 
-    latest_status = case_df[STATUS_COL].iloc[-1]
-    reversed_df = case_df.iloc[::-1]
+    Age > 30 && HasExt,
+        ">30 Days – With FCC Extension",
 
-    ageing = 0
-    for _, row in reversed_df.iterrows():
-        if row[STATUS_COL] == latest_status:
-            ageing += row["Row_Ageing"]
-        else:
-            break
+    Age > 30 && NOT HasExt && Age <= 100,
+        ">30 Days – Without FCC Extension",
 
-    return ageing
+    Age > 100 && Age <= 120,
+        ">100 Days",
 
+    Age > 120,
+        ">120 Days",
 
-latest_status_ageing_df = (
-    df
-    .groupby(CASE_COL)
-    .apply(compute_latest_status_ageing)
-    .reset_index(name="Latest_Status_Ageing")
+    "Unknown"
 )
 
-# ======================================================
-# STATIC COLUMNS (LATEST SNAPSHOT VALUES)
-# ======================================================
-
-static_cols_df = (
-    df
-    .sort_values([CASE_COL, DATE_COL])
-    .drop_duplicates(subset=[CASE_COL], keep="last")
-    .drop(columns=["Next_Date", "Row_Ageing"])
+MitigatingActions =
+DATATABLE(
+    "AgeingBucket", STRING,
+    "MitigatingAction", STRING,
+    {
+        {
+            "0–30 Days",
+            "Full block. Escalated to Team Head and Group Head."
+        },
+        {
+            ">30 Days – With FCC Extension",
+            "Full block. Escalated to Team Head, Group Head, Compliance and BM."
+        },
+        {
+            ">30 Days – Without FCC Extension",
+            "Full block. Escalated to Team Head and Group Head."
+        },
+        {
+            ">100 Days",
+            "Full block. Senior management escalation initiated."
+        },
+        {
+            ">120 Days",
+            "Critical breach. Immediate remediation and regulatory escalation."
+        }
+    }
 )
 
-# ======================================================
-# FINAL DATASET
-# ======================================================
+link
+DocDeficiency_Fact[AgeingBucket]
+        ↓
+MitigatingActions[AgeingBucket]
 
-final_df = (
-    static_cols_df
-    .merge(status_ageing, on=CASE_COL, how="left")
-    .merge(latest_status_df, on=CASE_COL, how="left")
-    .merge(latest_status_ageing_df, on=CASE_COL, how="left")
+
+PendingAccounts :=
+DISTINCTCOUNT(
+    DocDeficiency_Fact[AccountNumber]
 )
 
-# KEEP ONLY CURRENTLY OPEN CASES
-final_df = final_df[final_df[CASE_COL].isin(open_cases)]
-
-# ======================================================
-# OUTPUT
-# ======================================================
-
-final_df.to_excel(OUTPUT_FILE, index=False)
-
-print("===================================================")
-print("Ageing calculation completed successfully")
-print(f"Latest Business Date : {latest_business_date.date()}")
-print(f"Open cases included  : {len(open_cases)}")
-print(f"Output file          : {OUTPUT_FILE}")
-print("===================================================")

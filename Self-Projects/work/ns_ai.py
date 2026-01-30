@@ -20,7 +20,7 @@ def build_discounting_prompt(
 You are performing name-screening analysis in an Investment & Wealth Management context.
 Your task is to evaluate whether a news article is relevant to a client using STRICT discounting protocols.
 
-IMPORTANT GLOBAL RULES:
+GLOBAL RULES:
 - Evaluate each protocol independently.
 - A False Hit (Discounted) conclusion is allowed ONLY if:
   - At least TWO independent discounting factors apply, OR
@@ -49,38 +49,57 @@ NEWS ARTICLE
 {article_text}
 
 ---------------------------------
-NAME DISCOUNTING PROTOCOL
+PROTOCOL 0 – ARTICLE SUBJECT ATTRIBUTION
+---------------------------------
+
+Determine whether the screened subject is the PRIMARY subject of the article.
+
+Definitions:
+- Primary Subject: The article is mainly about this person/entity.
+- Secondary Subject: Directly involved in the described events.
+- Incidental Mention: Named only in passing, list, comparison, or background context.
+  No actions, allegations, or decisions are attributed.
+
+RULE:
+- If the screened subject is an INCIDENTAL MENTION,
+  this MAY be used as a SOLE discounting factor.
+
+---------------------------------
+PROTOCOL 1 – NAME MATCHING
 ---------------------------------
 
 FOR INDIVIDUALS:
-- Name mismatch CAN be used as a SOLE discounting factor EXCEPT when:
-  1. Names are known aliases (e.g., Tim vs Timothy, Muhd vs Mohammed)
-  2. Transliteration differences (1–2 character variance common in some languages)
-  3. Only middle name differs or is missing → THIS CAN be used as sole discount
-  4. Name sequence differs (Western vs Mandarin) → NOT a discounting factor
+- Name mismatch CAN be sole discount EXCEPT when:
+  - Known aliases
+  - Transliteration variants (1–2 character variance)
+  - Name order differences
+- Middle name mismatch → CAN be sole discount
 
 FOR ENTITIES:
-- Name mismatch CAN be used as a discounting factor EXCEPT when:
-  1. Company suffix differs (Ltd / LLC / Pvt Ltd / Private Limited, etc.)
-  2. Names suggest related entities → MUST be flagged as "Related Entity", NOT discounted
+- Company suffix differences must be ignored
+- Related entities → FLAG as related, NOT discounted
 
 ---------------------------------
-OTHER DISCOUNTING PROTOCOLS
+PROTOCOL 2 – YEAR OF BIRTH
 ---------------------------------
-
-YEAR OF BIRTH:
 - Variance ≤ 2 years → cannot be sole discount
 - Variance > 2 years → can discount
 
-GENDER:
+---------------------------------
+PROTOCOL 3 – GENDER
+---------------------------------
 - Mismatch → can discount
 
-NATIONALITY:
+---------------------------------
+PROTOCOL 4 – NATIONALITY
+---------------------------------
 - Cannot be sole discount
 - Only usable if no nexus exists
 - C/O or P/O Box addresses must NOT be used
 
-PROFILE:
+---------------------------------
+PROTOCOL 5 – PROFILE
+---------------------------------
 - Cannot be sole discount
 
 ---------------------------------
@@ -88,12 +107,18 @@ REQUIRED OUTPUT FORMAT (JSON)
 ---------------------------------
 
 {{
+  "article_subject_attribution": {{
+    "primary_subjects": ["<names>"],
+    "screened_subject_role": "Primary | Secondary | Incidental",
+    "can_discount": true/false,
+    "reasoning": "Explain with article evidence"
+  }},
   "name_matching": {{
     "client_name": "{client_name}",
     "article_name": "<value or Unknown>",
     "assessment": "Match | Mismatch | Possible Alias | Transliteration Variant | Related Entity",
     "can_discount": true/false,
-    "reasoning": "Explain strictly per protocol"
+    "reasoning": "Explain"
   }},
   "year_of_birth": {{
     "client_year": {client_year},
@@ -112,7 +137,7 @@ REQUIRED OUTPUT FORMAT (JSON)
     "client_nationality": "{client_nationality}",
     "article_nationality": "<value or Unknown>",
     "can_discount": true/false,
-    "reasoning": "Explain nexus logic"
+    "reasoning": "Explain"
   }},
   "profile": {{
     "client_profile": "{client_profile}",
@@ -160,8 +185,7 @@ with col2:
     client_nationality = st.text_input("Nationality")
     client_profile = st.text_area(
         "Profile / Employment",
-        height=120,
-        placeholder="Free-text profile or employment history"
+        height=120
     )
 
 st.divider()
@@ -179,13 +203,13 @@ if st.button("Generate LLM Prompt"):
         st.error("Client name and article text are mandatory.")
     else:
         prompt = build_discounting_prompt(
-            subject_type=subject_type,
-            client_name=client_name,
-            client_dob=client_dob,
-            client_gender=client_gender,
-            client_nationality=client_nationality,
-            client_profile=client_profile,
-            article_text=article_text
+            subject_type,
+            client_name,
+            client_dob,
+            client_gender,
+            client_nationality,
+            client_profile,
+            article_text
         )
 
         st.subheader("Prompt to Send to LLM")
@@ -193,5 +217,5 @@ if st.button("Generate LLM Prompt"):
 
         st.info(
             "Send this prompt to your self-hosted LLM API. "
-            "Parse the response as JSON for UI rendering and audit storage."
+            "Articles where the subject is INCIDENTAL can now be correctly discounted."
         )

@@ -3,3 +3,12 @@ Enabled Desk and Sales teams with structured, data-driven insights to support op
 Designed and implemented KRIs and KPIs to measure productivity, operational risk, and process performance. These metrics improved auditability, strengthened controls, and provided management with objective visibility into workload distribution, aging, and efficiency trends.
 
 
+Embedding the Group Purpose into daily work
+Actively align AI/ML and analytics initiatives with the Group Purpose by focusing on solutions that improve transparency, reduce operational risk, and enhance the quality and reliability of client outcomes. By strengthening controls, auditability, and efficiency in critical operational processes, my work contributes to building trust in financial markets and supporting sustainable, responsible growth.
+Addressing gaps between current and desired state
+Recognize that while automation and analytics are increasingly adopted, there remains a gap in consistent, scalable, and explainable AI usage across operations. I plan to address this by developing standardized frameworks for validation, monitoring, and governance of AI/ML solutions, ensuring they are not only efficient but also robust, interpretable, and compliant with regulatory expectations.
+Continuous skill development in a rapidly changing environment
+Proactively invest in expanding my technical and domain expertise across areas such as advanced ML techniques, LLM-based solutions, data governance, and model risk management. In parallel, deepen business and operational understanding to better translate complex analytics into practical, value-driven outcomes for stakeholders.
+
+
+

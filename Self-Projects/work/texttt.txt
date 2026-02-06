@@ -12,3 +12,25 @@ Proactively invest in expanding my technical and domain expertise across areas s
 
 
 
+Ethics
+
+Commitment & actions:
+Demonstrate professional ethics by designing AI/ML solutions that reinforce transparency, accountability, and responsible decision-making in operations. A key example is the development of an AI-based validation framework that reviews BAU user commentary for client account blocks and validates whether the correct blocks are applied. This helps reduce subjectivity, strengthens control integrity, and supports fair and consistent treatment of clients.
+•	Ensure AI/ML solutions adhere to internal policies, data handling standards, and regulatory expectations.
+	•	Design validation frameworks that improve consistency in block placement, reducing compliance risk arising from human error or interpretation gaps.
+	•	Reinforce that analytics outputs are aligned with the Nomura Group Code of Conduct, Risk Appetite Statement, and applicable regulations.
+
+Forward plan:
+	•	Partner more closely with Compliance during solution design to incorporate regulatory considerations upfront.
+
+
+Conduct
+
+Standards & behavior:
+	•	Go beyond minimum regulatory requirements by promoting responsible, fair, and transparent use of data and AI.
+	•	Encourage ethical conduct by ensuring tools are used to improve decision quality, client fairness, and process integrity—not to penalize individuals.
+
+Forward plan:
+	•	Actively share best practices on ethical AI usage with colleagues.
+
+

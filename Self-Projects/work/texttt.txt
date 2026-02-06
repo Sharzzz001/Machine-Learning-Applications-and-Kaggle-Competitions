@@ -1,18 +1,5 @@
-Context
-Intraday liquidity strain is often driven by payment timing and sequencing rather than an absolute shortage of cash. Rule-based or first-come payment processing can create unnecessary intraday low points, increasing reliance on overdrafts and collateral.
+Worked closely with Operations, Desk, and Sales stakeholders to gather feedback, understand pain points, and refine solutions. Regular engagement ensured that analytics outputs were actionable and aligned with real business needs rather than theoretical models.
+Enabled Desk and Sales teams with structured, data-driven insights to support operational decision-making. Delivered clear metrics and validation outputs that improved transparency, reduced follow-ups, and supported quicker resolution of client-related issues.
+Designed and implemented KRIs and KPIs to measure productivity, operational risk, and process performance. These metrics improved auditability, strengthened controls, and provided management with objective visibility into workload distribution, aging, and efficiency trends.
 
-Scope
-The scope covers optimization of inter-entity and selected external payment releases using algorithmic sequencing, while adhering to settlement cutoffs, regulatory requirements, counterparty priorities, and operational risk controls.
 
-Systems Impact
-	•	Introduces an optimization layer on top of existing payment and treasury platforms
-	•	Consumes intraday balances, payment queues, cutoff times, and forecast inflows
-	•	Outputs optimized payment sequencing and release timing without altering core settlement systems
-	•	Minimal disruption to existing operational workflows
-
-Key Benefits
-	•	Reduces intraday low points and peak overdraft usage
-	•	Lowers collateral and reserve requirements
-	•	Improves liquidity utilization across currencies and entities
-	•	Reduces manual intervention and reactive liquidity management
-	•	Enhances regulatory resilience without impacting client service levels

@@ -34,3 +34,7 @@ Forward plan:
 	•	Actively share best practices on ethical AI usage with colleagues.
 
 
+Delivered MI dashboards and EUC workflows for IWM Operations, resulting in ~1 FTE efficiency savings through BAU reduction and process automation.
+	•	Developed AI-driven workflows currently in PoC, with benefits under validation and expected to deliver 1+ FTE efficiency upon production rollout.
+	•	Reduced BAU effort by automating recurring reporting, validation, and monitoring activities, enabling reallocation of capacity toward CTB initiatives.
+	•	Supported progress toward Powai Operations’ 20% efficiency target (2-year goal) through measurable productivity and unit cost improvements.

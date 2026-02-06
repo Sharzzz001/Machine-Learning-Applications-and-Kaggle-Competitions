@@ -46,3 +46,7 @@ Enabled Operations with analytics and control dashboards to provide accurate, co
 	•	Improved data completeness and accuracy through automated validation, exception flags, and standardized logic.
 	•	Reduced key-man risk by converting ad-hoc and sensitive activities (e.g., NFA, McKinsey, audit requests) into repeatable, documented, and auditable workflows.
 	•	Supported audit point closure by providing traceable, explainable outputs and consistent control evidence.
+
+
+Inclusion – EMEA, Powai and AEJ
+	•	Actively contribute to an inclusive workplace by collaborating with stakeholders across EMEA, Powai, and AEJ, respecting cultural, functional, and working-style differences while delivering analytics and AI solutions.

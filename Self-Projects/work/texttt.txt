@@ -38,3 +38,11 @@ Delivered MI dashboards and EUC workflows for IWM Operations, resulting in ~1 FT
 	•	Developed AI-driven workflows currently in PoC, with benefits under validation and expected to deliver 1+ FTE efficiency upon production rollout.
 	•	Reduced BAU effort by automating recurring reporting, validation, and monitoring activities, enabling reallocation of capacity toward CTB initiatives.
 	•	Supported progress toward Powai Operations’ 20% efficiency target (2-year goal) through measurable productivity and unit cost improvements.
+
+
+Enabled Operations with analytics and control dashboards to provide accurate, complete, and auditable insights for risk monitoring and decision-making.
+	•	Built AI-based validation controls to review BAU user commentary for sensitive actions (e.g., client account blocks) and validate whether correct controls were applied, directly supporting audit and compliance requirements.
+	•	Embedded controls into technology and workflows, reducing reliance on manual checks and post-facto reviews.
+	•	Improved data completeness and accuracy through automated validation, exception flags, and standardized logic.
+	•	Reduced key-man risk by converting ad-hoc and sensitive activities (e.g., NFA, McKinsey, audit requests) into repeatable, documented, and auditable workflows.
+	•	Supported audit point closure by providing traceable, explainable outputs and consistent control evidence.

@@ -1,52 +1,7 @@
-Worked closely with Operations, Desk, and Sales stakeholders to gather feedback, understand pain points, and refine solutions. Regular engagement ensured that analytics outputs were actionable and aligned with real business needs rather than theoretical models.
-Enabled Desk and Sales teams with structured, data-driven insights to support operational decision-making. Delivered clear metrics and validation outputs that improved transparency, reduced follow-ups, and supported quicker resolution of client-related issues.
-Designed and implemented KRIs and KPIs to measure productivity, operational risk, and process performance. These metrics improved auditability, strengthened controls, and provided management with objective visibility into workload distribution, aging, and efficiency trends.
+Article 1 – Positive Match (How to Articulate)
 
+This article reports on a US Senate hearing where Tom Cotton questions the CEO of TikTok, Shou Zi Chew, regarding TikTok’s potential links to the Chinese Communist Party.
 
-Embedding the Group Purpose into daily work
-Actively align AI/ML and analytics initiatives with the Group Purpose by focusing on solutions that improve transparency, reduce operational risk, and enhance the quality and reliability of client outcomes. By strengthening controls, auditability, and efficiency in critical operational processes, my work contributes to building trust in financial markets and supporting sustainable, responsible growth.
-Addressing gaps between current and desired state
-Recognize that while automation and analytics are increasingly adopted, there remains a gap in consistent, scalable, and explainable AI usage across operations. I plan to address this by developing standardized frameworks for validation, monitoring, and governance of AI/ML solutions, ensuring they are not only efficient but also robust, interpretable, and compliant with regulatory expectations.
-Continuous skill development in a rapidly changing environment
-Proactively invest in expanding my technical and domain expertise across areas such as advanced ML techniques, LLM-based solutions, data governance, and model risk management. In parallel, deepen business and operational understanding to better translate complex analytics into practical, value-driven outcomes for stakeholders.
+During the exchange, the CEO states that he served in the Singapore military as part of mandatory national service, which applies only to Singapore citizens. Senator Cotton challenges this by asserting that Chinese influence and infiltration are present even within Singapore, implying that the CEO’s nationality or service does not eliminate concerns of CCP influence.
 
-
-
-Ethics
-
-Commitment & actions:
-Demonstrate professional ethics by designing AI/ML solutions that reinforce transparency, accountability, and responsible decision-making in operations. A key example is the development of an AI-based validation framework that reviews BAU user commentary for client account blocks and validates whether the correct blocks are applied. This helps reduce subjectivity, strengthens control integrity, and supports fair and consistent treatment of clients.
-•	Ensure AI/ML solutions adhere to internal policies, data handling standards, and regulatory expectations.
-	•	Design validation frameworks that improve consistency in block placement, reducing compliance risk arising from human error or interpretation gaps.
-	•	Reinforce that analytics outputs are aligned with the Nomura Group Code of Conduct, Risk Appetite Statement, and applicable regulations.
-
-Forward plan:
-	•	Partner more closely with Compliance during solution design to incorporate regulatory considerations upfront.
-
-
-Conduct
-
-Standards & behavior:
-	•	Go beyond minimum regulatory requirements by promoting responsible, fair, and transparent use of data and AI.
-	•	Encourage ethical conduct by ensuring tools are used to improve decision quality, client fairness, and process integrity—not to penalize individuals.
-
-Forward plan:
-	•	Actively share best practices on ethical AI usage with colleagues.
-
-
-Delivered MI dashboards and EUC workflows for IWM Operations, resulting in ~1 FTE efficiency savings through BAU reduction and process automation.
-	•	Developed AI-driven workflows currently in PoC, with benefits under validation and expected to deliver 1+ FTE efficiency upon production rollout.
-	•	Reduced BAU effort by automating recurring reporting, validation, and monitoring activities, enabling reallocation of capacity toward CTB initiatives.
-	•	Supported progress toward Powai Operations’ 20% efficiency target (2-year goal) through measurable productivity and unit cost improvements.
-
-
-Enabled Operations with analytics and control dashboards to provide accurate, complete, and auditable insights for risk monitoring and decision-making.
-	•	Built AI-based validation controls to review BAU user commentary for sensitive actions (e.g., client account blocks) and validate whether correct controls were applied, directly supporting audit and compliance requirements.
-	•	Embedded controls into technology and workflows, reducing reliance on manual checks and post-facto reviews.
-	•	Improved data completeness and accuracy through automated validation, exception flags, and standardized logic.
-	•	Reduced key-man risk by converting ad-hoc and sensitive activities (e.g., NFA, McKinsey, audit requests) into repeatable, documented, and auditable workflows.
-	•	Supported audit point closure by providing traceable, explainable outputs and consistent control evidence.
-
-
-Inclusion – EMEA, Powai and AEJ
-	•	Actively contribute to an inclusive workplace by collaborating with stakeholders across EMEA, Powai, and AEJ, respecting cultural, functional, and working-style differences while delivering analytics and AI solutions.
+The article directly names the individual, references his role as TikTok’s CEO, and discusses allegations tied to his background and affiliations. Since the subject in the article clearly aligns with the client’s identity and role, and there are no valid discounting factors, this is treated as a positive match.

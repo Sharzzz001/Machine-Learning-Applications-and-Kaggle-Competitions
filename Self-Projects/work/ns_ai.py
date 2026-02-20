@@ -1,38 +1,55 @@
-def extract_person_spans(text, ner_results):
+def link_surnames(person_names):
     """
-    Reconstruct full person names using character offsets.
-    Correctly handles WordPiece tokenization and whitespace gaps.
+    Links standalone surnames to full names.
+    Example:
+      ['Katie Puris', 'John Matthews', 'Puris', 'Matthews']
+      → ['Katie Puris', 'John Matthews']
     """
 
-    # Keep only PER entities
-    person_tokens = [
-        ent for ent in ner_results
-        if ent["entity"].endswith("PER")
-    ]
+    full_names = []
+    surname_map = {}
 
-    if not person_tokens:
-        return []
+    # Pass 1: collect full names
+    for name in person_names:
+        parts = name.split()
+        if len(parts) >= 2:
+            full_names.append(name)
+            surname_map[parts[-1]] = name  # last name → full name
 
-    # Sort by character offset
-    person_tokens = sorted(person_tokens, key=lambda x: x["start"])
-
-    persons = []
-    span_start = person_tokens[0]["start"]
-    span_end = person_tokens[0]["end"]
-
-    for ent in person_tokens[1:]:
-        start, end = ent["start"], ent["end"]
-
-        # ✅ ALLOW WHITESPACE GAP
-        if start <= span_end + 1:
-            span_end = max(span_end, end)
+    # Pass 2: resolve names
+    resolved = []
+    for name in person_names:
+        parts = name.split()
+        if len(parts) == 1 and name in surname_map:
+            resolved.append(surname_map[name])
         else:
-            persons.append(text[span_start:span_end])
-            span_start = start
-            span_end = end
-
-    # Final span
-    persons.append(text[span_start:span_end])
+            resolved.append(name)
 
     # Deduplicate while preserving order
-    return list(dict.fromkeys(persons))
+    return list(dict.fromkeys(resolved))
+    
+
+import string
+
+def anonymise_news_article(article: str):
+    ner_results = ner_pipeline(article)
+
+    # Step 1: raw person spans
+    person_names = extract_person_spans(article, ner_results)
+
+    # Step 2: surname linking (KEY FIX)
+    person_names = link_surnames(person_names)
+
+    # Step 3: build PERSON_A, PERSON_B mapping
+    alphabet = string.ascii_uppercase
+    reverse_map = {}
+    anonymised = article
+
+    for i, name in enumerate(person_names):
+        token = f"PERSON_{alphabet[i]}"
+        reverse_map[token] = [name]
+        anonymised = anonymised.replace(name, token)
+
+    return anonymised, reverse_map
+    
+    

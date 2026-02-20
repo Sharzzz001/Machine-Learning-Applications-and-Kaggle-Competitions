@@ -1,7 +1,7 @@
 def extract_person_spans(text, ner_results):
     """
-    Correctly reconstructs person names using character offsets.
-    Works with WordPiece tokenization (##).
+    Reconstruct full person names using character offsets.
+    Correctly handles WordPiece tokenization and whitespace gaps.
     """
 
     # Keep only PER entities
@@ -23,8 +23,8 @@ def extract_person_spans(text, ner_results):
     for ent in person_tokens[1:]:
         start, end = ent["start"], ent["end"]
 
-        # If token touches or overlaps previous → same person
-        if start <= span_end:
+        # ✅ ALLOW WHITESPACE GAP
+        if start <= span_end + 1:
             span_end = max(span_end, end)
         else:
             persons.append(text[span_start:span_end])
@@ -36,21 +36,3 @@ def extract_person_spans(text, ner_results):
 
     # Deduplicate while preserving order
     return list(dict.fromkeys(persons))
-    
-import string
-
-def anonymise_news_article(article: str):
-    ner_results = ner_pipeline(article)
-
-    person_names = extract_person_spans(article, ner_results)
-
-    alphabet = string.ascii_uppercase
-    reverse_map = {}
-    anonymised = article
-
-    for i, name in enumerate(person_names):
-        token = f"PERSON_{alphabet[i]}"
-        reverse_map[token] = [name]
-        anonymised = anonymised.replace(name, token)
-
-    return anonymised, reverse_map

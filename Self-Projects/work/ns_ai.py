@@ -1,13 +1,12 @@
-from transformers import AutoTokenizer, AutoModel
+from fastcoref import FCoref
 
-MODEL_PATH = "/internal/path/coref-spanbert-large"
+coref = FCoref(device="cpu")  # or "cuda"
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL_PATH,
-    local_files_only=True
-)
+text = """
+Katie Puris said she would respond to the allegations.
+After Puris’ initial claim, she clarified her position.
+"""
 
-model = AutoModel.from_pretrained(
-    MODEL_PATH,
-    local_files_only=True
+preds = coref.predict(
+    texts=[text]
 )

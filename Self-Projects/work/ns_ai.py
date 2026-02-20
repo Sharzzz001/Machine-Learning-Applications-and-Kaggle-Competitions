@@ -1,8 +1,20 @@
+from transformers import pipeline
+
+ner_pipeline = pipeline(
+    task="ner",
+    model=model,
+    tokenizer=tokenizer
+)
+
 def extract_person_spans(text, ner_results):
     """
-    Groups contiguous B-PER / I-PER tokens into full person names.
-    Returns list of unique person names in appearance order.
+    Robustly groups B-PER / I-PER tokens into full person names.
+    Works with modern Transformers outputs.
     """
+
+    # Sort entities by character offset (CRITICAL)
+    ner_results = sorted(ner_results, key=lambda x: x["start"])
+
     persons = []
     current_start = None
     current_end = None
@@ -13,11 +25,10 @@ def extract_person_spans(text, ner_results):
         end = ent["end"]
 
         if label == "B-PER":
-            # Close previous entity
+            # Close any existing entity
             if current_start is not None:
                 persons.append(text[current_start:current_end])
 
-            # Start new entity
             current_start = start
             current_end = end
 
@@ -26,26 +37,24 @@ def extract_person_spans(text, ner_results):
             current_end = end
 
         else:
-            # Non-PER token → close entity if open
+            # Non-person token → close current entity
             if current_start is not None:
                 persons.append(text[current_start:current_end])
                 current_start = None
                 current_end = None
 
-    # Catch last open entity
+    # Catch final open entity
     if current_start is not None:
         persons.append(text[current_start:current_end])
 
     # Deduplicate while preserving order
     return list(dict.fromkeys(persons))
     
-    
 import string
 
 def anonymise_news_article(article: str):
     ner_results = ner_pipeline(article)
 
-    # Correctly grouped full names
     person_names = extract_person_spans(article, ner_results)
 
     alphabet = string.ascii_uppercase
@@ -62,4 +71,6 @@ def anonymise_news_article(article: str):
         anonymised = anonymised.replace(name, person_map[name])
 
     return anonymised, reverse_map
+    
+    
     

@@ -56,3 +56,14 @@ def anonymise_news_article(article: str):
         anonymised = anonymised.replace(name, person_map[name])
 
     return anonymised, reverse_map
+    
+article = """
+Katie Puris said she would respond to the allegations.
+John Matthews criticised the statement.
+Puris later clarified her position, Matthews responded again.
+"""
+
+anon_text, mapping = anonymise_news_article(article)
+
+print(anon_text)
+print(mapping)

@@ -54,3 +54,13 @@ def anonymise_article_entities(text):
         )
 
     return anonymised_text, entity_map
+    
+    
+article = """
+Sharan met Harish in Mumbai. Later, Sharan said he would contact Harish again.
+"""
+
+anon_text, mapping = anonymise_article_entities(article)
+
+print(anon_text)
+print(mapping)

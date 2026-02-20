@@ -1,55 +1,50 @@
-def link_surnames(person_names):
+def build_person_aliases(person_names):
     """
-    Links standalone surnames to full names.
-    Example:
-      ['Katie Puris', 'John Matthews', 'Puris', 'Matthews']
-      → ['Katie Puris', 'John Matthews']
+    Returns:
+    {
+      "PERSON_A": ["Puris", "Katie Puris"],
+      "PERSON_B": ["Matthews", "John Matthews"]
+    }
     """
-
-    full_names = []
+    canonical = []
     surname_map = {}
 
-    # Pass 1: collect full names
+    # First pass: identify full names
     for name in person_names:
         parts = name.split()
         if len(parts) >= 2:
-            full_names.append(name)
-            surname_map[parts[-1]] = name  # last name → full name
+            canonical.append(name)
+            surname_map[parts[-1]] = name
 
-    # Pass 2: resolve names
-    resolved = []
-    for name in person_names:
-        parts = name.split()
-        if len(parts) == 1 and name in surname_map:
-            resolved.append(surname_map[name])
-        else:
-            resolved.append(name)
+    # Assign PERSON tokens
+    person_aliases = {}
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-    # Deduplicate while preserving order
-    return list(dict.fromkeys(resolved))
+    for i, full_name in enumerate(canonical):
+        token = f"PERSON_{alphabet[i]}"
+        aliases = [full_name]
+
+        surname = full_name.split()[-1]
+        aliases.insert(0, surname)  # surname FIRST
+
+        person_aliases[token] = aliases
+
+    return person_aliases
     
-
-import string
-
 def anonymise_news_article(article: str):
     ner_results = ner_pipeline(article)
 
-    # Step 1: raw person spans
+    # Step 1: extract spans
     person_names = extract_person_spans(article, ner_results)
 
-    # Step 2: surname linking (KEY FIX)
-    person_names = link_surnames(person_names)
+    # Step 2: build alias map
+    person_aliases = build_person_aliases(person_names)
 
-    # Step 3: build PERSON_A, PERSON_B mapping
-    alphabet = string.ascii_uppercase
-    reverse_map = {}
     anonymised = article
 
-    for i, name in enumerate(person_names):
-        token = f"PERSON_{alphabet[i]}"
-        reverse_map[token] = [name]
-        anonymised = anonymised.replace(name, token)
+    # Step 3: replace aliases (short → long)
+    for token, aliases in person_aliases.items():
+        for alias in sorted(aliases, key=len):  # surname first
+            anonymised = anonymised.replace(alias, token)
 
-    return anonymised, reverse_map
-    
-    
+    return anonymised, person_aliases

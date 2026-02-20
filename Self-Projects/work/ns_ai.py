@@ -1,51 +1,38 @@
-from transformers import pipeline
-
-ner_pipeline = pipeline(
-    task="ner",
-    model=model,
-    tokenizer=tokenizer
-)
-
 def extract_person_spans(text, ner_results):
     """
-    Robustly groups B-PER / I-PER tokens into full person names.
-    Works with modern Transformers outputs.
+    Correctly reconstructs person names using character offsets.
+    Works with WordPiece tokenization (##).
     """
 
-    # Sort entities by character offset (CRITICAL)
-    ner_results = sorted(ner_results, key=lambda x: x["start"])
+    # Keep only PER entities
+    person_tokens = [
+        ent for ent in ner_results
+        if ent["entity"].endswith("PER")
+    ]
+
+    if not person_tokens:
+        return []
+
+    # Sort by character offset
+    person_tokens = sorted(person_tokens, key=lambda x: x["start"])
 
     persons = []
-    current_start = None
-    current_end = None
+    span_start = person_tokens[0]["start"]
+    span_end = person_tokens[0]["end"]
 
-    for ent in ner_results:
-        label = ent["entity"]
-        start = ent["start"]
-        end = ent["end"]
+    for ent in person_tokens[1:]:
+        start, end = ent["start"], ent["end"]
 
-        if label == "B-PER":
-            # Close any existing entity
-            if current_start is not None:
-                persons.append(text[current_start:current_end])
-
-            current_start = start
-            current_end = end
-
-        elif label == "I-PER" and current_start is not None:
-            # Extend current entity
-            current_end = end
-
+        # If token touches or overlaps previous → same person
+        if start <= span_end:
+            span_end = max(span_end, end)
         else:
-            # Non-person token → close current entity
-            if current_start is not None:
-                persons.append(text[current_start:current_end])
-                current_start = None
-                current_end = None
+            persons.append(text[span_start:span_end])
+            span_start = start
+            span_end = end
 
-    # Catch final open entity
-    if current_start is not None:
-        persons.append(text[current_start:current_end])
+    # Final span
+    persons.append(text[span_start:span_end])
 
     # Deduplicate while preserving order
     return list(dict.fromkeys(persons))
@@ -58,19 +45,12 @@ def anonymise_news_article(article: str):
     person_names = extract_person_spans(article, ner_results)
 
     alphabet = string.ascii_uppercase
-    person_map = {}
     reverse_map = {}
+    anonymised = article
 
     for i, name in enumerate(person_names):
         token = f"PERSON_{alphabet[i]}"
-        person_map[name] = token
         reverse_map[token] = [name]
-
-    anonymised = article
-    for name in sorted(person_map, key=len, reverse=True):
-        anonymised = anonymised.replace(name, person_map[name])
+        anonymised = anonymised.replace(name, token)
 
     return anonymised, reverse_map
-    
-    
-    

@@ -4,10 +4,7 @@ import streamlit as st
 # Prompt Builder – ARTICLE ONLY
 # -----------------------------
 
-def build_article_intelligence_prompt(
-    subject_type,
-    article_text
-):
+def build_article_intelligence_prompt(subject_type, article_text):
     prompt = f"""
 You are performing NEWS ARTICLE INTELLIGENCE EXTRACTION in an
 Investment & Wealth Management name-screening context.
@@ -15,9 +12,9 @@ Investment & Wealth Management name-screening context.
 IMPORTANT:
 - The client is UNKNOWN to you.
 - DO NOT attempt to match, discount, or assess relevance to any client.
-- DO NOT make compliance or screening decisions.
+- DO NOT make screening or compliance decisions.
 - Your role is ONLY to extract what the article explicitly states
-  OR reasonably infers based on clearly defined rules below.
+  or reasonably infers using the rules below.
 - Return ONLY valid JSON.
 
 ---------------------------------
@@ -62,9 +59,8 @@ For each subject:
 - Extract Year of Birth if explicitly stated.
 - If age is stated (e.g., "aged 24"):
   - Infer Year of Birth using the article year.
-- If the article year is explicitly stated, use it.
-- If the article year is NOT stated or cannot be determined,
-  return "Unknown".
+- Use the article year if explicitly stated or clearly implied.
+- If the article year cannot be determined, return "Unknown".
 - Do NOT guess age or year of birth from role, seniority, or appearance.
 
 ---------------------------------
@@ -73,7 +69,7 @@ PROTOCOL 3 – GENDER
 
 For each subject:
 - Extract gender if:
-  - Explicitly stated (e.g., male, female), OR
+  - Explicitly stated (male, female), OR
   - Clearly inferable from pronouns (he / she / his / her), OR
   - Clearly inferable from titles (Mr / Ms).
 - Do NOT infer gender from name alone.
@@ -119,3 +115,50 @@ REQUIRED OUTPUT FORMAT (JSON)
 Return ONLY valid JSON.
 """
     return prompt
+
+
+# -----------------------------
+# Streamlit UI
+# -----------------------------
+
+st.set_page_config(
+    page_title="Name Screening – Article Intelligence",
+    layout="wide"
+)
+
+st.title("Name Screening – LLM Article Intelligence Prompt Generator")
+
+st.subheader("Subject Type")
+subject_type = st.radio(
+    "Select subject type",
+    ["Individual", "Entity"]
+)
+
+st.divider()
+
+st.subheader("News Article")
+article_text = st.text_area(
+    "Paste full news article text here",
+    height=350,
+    placeholder="Paste the complete article text here..."
+)
+
+st.divider()
+
+if st.button("Generate LLM Prompt"):
+    if not article_text.strip():
+        st.error("Article text is mandatory.")
+    else:
+        prompt = build_article_intelligence_prompt(
+            subject_type,
+            article_text
+        )
+
+        st.subheader("Prompt to Send to LLM")
+        st.code(prompt, language="text")
+
+        st.info(
+            "This prompt is designed for Bedrock / self-hosted LLMs. "
+            "It extracts ONLY article intelligence. "
+            "Client matching and discounting must be performed locally."
+        )

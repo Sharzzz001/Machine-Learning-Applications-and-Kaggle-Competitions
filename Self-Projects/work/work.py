@@ -1,66 +1,122 @@
 import pandas as pd
-from collections import defaultdict
-from tqdm import tqdm
+from datetime import datetime
 
-def get_error_sequences(df):
-    """ Group NACK data by UTI ID and return error sequences """
-    sequences = defaultdict(list)
-    grouped = df.sort_values(by='Date').groupby('UTI ID')
+def calculate_status_ageing(df):
+    # Convert dates
+    df['File_Date'] = pd.to_datetime(df['File_Date'])
+    df['Trigger_Date'] = pd.to_datetime(df['Trigger_Date'])
 
-    for uti, group in grouped:
-        sequences[uti] = list(group['Error description'])
-        
-    return sequences
+    # Create unique request ID
+    df['Request_ID'] = (
+        df['Account_ID'].astype(str) + '|' +
+        df['Review_Type'].astype(str) + '|' +
+        df['Trigger_Date'].dt.strftime('%Y-%m-%d')
+    )
 
-def analyze_jira_impact(df1, df2):
-    """ Analyze sequences to check if JIRA release fixed the errors """
+    # Unique status values
+    doc_statuses = df['Doc_Status'].dropna().unique()
+    ns_statuses = df['Screening_Status'].dropna().unique()
+
+    doc_cols = [f'doc_{status}' for status in doc_statuses]
+    ns_cols = [f'ns_{status}' for status in ns_statuses]
+
+    # Sort and initialize
+    df = df.sort_values(by=['Request_ID', 'File_Date']).reset_index(drop=True)
+    today = pd.to_datetime(datetime.today().date())
     results = []
 
-    # Parse dates
-    df1['Release date'] = pd.to_datetime(df1['Release date'])
-    df2['Date'] = pd.to_datetime(df2['Date'])
+    for req_id, group in df.groupby('Request_ID'):
+        group = group.sort_values(by='File_Date').reset_index(drop=True)
 
-    # Get sequences
-    error_sequences = get_error_sequences(df2)
+        # Common fields
+        trigger_date = group.loc[0, 'Trigger_Date']
+        account_id = group.loc[0, 'Account_ID']
+        review_type = group.loc[0, 'Review_Type']
+        ekycid = group.loc[0, 'ekycID']
 
-    for _, jira_row in tqdm(df1.iterrows(), total=len(df1)):
-        jira_error = jira_row['Error description']
-        release_date = jira_row['Release date']
-        
-        for uti, sequence in error_sequences.items():
-            try:
-                # Split sequence into before/after release date
-                before_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] < release_date)]
-                after_release = df2[(df2['UTI ID'] == uti) & (df2['Date'] >= release_date)]
+        # Business days between Trigger → Today (inclusive)
+        full_bdays = pd.bdate_range(start=trigger_date, end=today)
 
-                before_sequence = list(before_release['Error description'])
-                after_sequence = list(after_release['Error description'])
+        # Status map
+        status_map = pd.DataFrame(index=full_bdays)
+        status_map['Doc_Status'] = None
+        status_map['Screening_Status'] = None
 
-                # Check if the JIRA error is the **first error** in the sequence
-                if before_sequence and before_sequence[0] == jira_error:
-                    # If the error disappears **after release**, tag it as fixed
-                    fixed = jira_error not in after_sequence
+        for i in range(len(group)):
+            file_date = group.loc[i, 'File_Date']
+            doc_status = group.loc[i, 'Doc_Status']
+            screening_status = group.loc[i, 'Screening_Status']
+            if file_date in status_map.index:
+                status_map.loc[file_date, 'Doc_Status'] = doc_status
+                status_map.loc[file_date, 'Screening_Status'] = screening_status
 
-                    results.append({
-                        'UTI ID': uti,
-                        'JIRA Error': jira_error,
-                        'Release Date': release_date,
-                        'Before Sequence': " -> ".join(before_sequence),
-                        'After Sequence': " -> ".join(after_sequence) if after_sequence else "None",
-                        'Fixed After Release': 'Yes' if fixed else 'No'
-                    })
-            except Exception as e:
-                print(f"Error processing UTI {uti}: {e}")
+        # Fill gaps with forward fill
+        status_map['Doc_Status'] = status_map['Doc_Status'].ffill()
+        status_map['Screening_Status'] = status_map['Screening_Status'].ffill()
 
-    return pd.DataFrame(results)
+        # Initialize ageing counters
+        doc_age = {col: 0 for col in doc_cols}
+        ns_age = {col: 0 for col in ns_cols}
 
-# Load your data
-jira_df = pd.read_excel("jira_data.xlsx")
-nack_df = pd.read_excel("nack_data.xlsx")
+        for _, row in status_map.iterrows():
+            doc_col = f'doc_{row["Doc_Status"]}'
+            ns_col = f'ns_{row["Screening_Status"]}'
+            if doc_col in doc_age:
+                doc_age[doc_col] += 1
+            if ns_col in ns_age:
+                ns_age[ns_col] += 1
 
-# Run the analysis
-result_df = analyze_jira_impact(jira_df, nack_df)
+        # Get latest statuses
+        latest_doc_status = status_map['Doc_Status'].iloc[-1]
+        latest_ns_status = status_map['Screening_Status'].iloc[-1]
 
-# Save results
-result_df.to_excel("jira_error_fix_analysis.xlsx", index=False)
-print("Analysis complete! Results saved to 'jira_error_fix_analysis.xlsx'")
+        # Count ageing for current (latest) status
+        doc_status_age = (status_map['Doc_Status'][::-1] == latest_doc_status).cumsum().where(lambda x: x == 1).count()
+        ns_status_age = (status_map['Screening_Status'][::-1] == latest_ns_status).cumsum().where(lambda x: x == 1).count()
+
+        result_row = {
+            'Account_ID': account_id,
+            'Review_Type': review_type,
+            'Trigger_Date': trigger_date,
+            'ekycID': ekycid,
+            'Total_Ageing': len(status_map),
+            'Snapshot_Count': len(group),
+            'Latest_Doc_Status': latest_doc_status,
+            'Latest_Doc_Status_Ageing': doc_status_age,
+            'Latest_Screening_Status': latest_ns_status,
+            'Latest_Screening_Status_Ageing': ns_status_age
+        }
+
+        # Add dynamic status ageing columns
+        result_row.update(doc_age)
+        result_row.update(ns_age)
+        results.append(result_row)
+
+    # Build final dataframe
+    result_df = pd.DataFrame(results)
+
+    # Ensure all dynamic columns exist and are filled
+    for col in doc_cols + ns_cols:
+        if col not in result_df.columns:
+            result_df[col] = 0
+
+    result_df[doc_cols + ns_cols] = result_df[doc_cols + ns_cols].fillna(0).astype(int)
+
+    return result_df
+    
+    
+Doc_Status_Bucket = 
+SWITCH(
+    TRUE(),
+    'YourTableName'[Latest_Doc_Status_Ageing] <= 5, "0–5 Days",
+    'YourTableName'[Latest_Doc_Status_Ageing] <= 10, "6–10 Days",
+    "11+ Days"
+)
+
+Screening_Status_Bucket = 
+SWITCH(
+    TRUE(),
+    'YourTableName'[Latest_Screening_Status_Ageing] <= 5, "0–5 Days",
+    'YourTableName'[Latest_Screening_Status_Ageing] <= 10, "6–10 Days",
+    "11+ Days"
+)

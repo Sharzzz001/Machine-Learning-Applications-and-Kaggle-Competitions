@@ -1,6 +1,38 @@
-Here’s a refined version of your key achievements with improved clarity and impact:
-	1.	Optimized System Integration & Automation – Successfully bridged the gap between two back-office systems (PCM and NEWS) and a front-office system (Spear) by developing a task-scheduled script to automate counterpart cash flow emails. This automation reduced approximately 65% of manual efforts in the Spear BAU process, enhancing operational efficiency.
-	2.	Data Analytics & Cost Reduction – Led multiple analytics projects focused on CDIT, Security Settlements, and WM, analyzing BAU processes within Nomura. Identified and implemented strategies to minimize manual efforts, operational costs, and financial expenses, resulting in improved process efficiency.
-	3.	Cash Management Process Enhancement – Automated the daily Nostro Long and Short account emails sent to various treasury teams. This significantly reduced manual workload, streamlining communication and optimizing resource allocation within the team.
+One of the challenges we faced with block notes was that they were all free-text inputs. Different users wrote different styles of notes — some typed full sentences, some used abbreviations, and some just wrote one or two words. For example, the same situation could be described as ‘KYC missing,’ ‘Docs not received,’ ‘Pending documents,’ or even ‘Awaiting KYC.’
 
-These refined points emphasize impact, efficiency, and strategic contribution while making them more structured and concise. Let me know if you’d like any further tweaks!
+To a human, all of these clearly mean the same thing. But to a computer, unless we define every possible variation, they look unrelated. Traditional keyword-based search struggles here because it only looks for exact matching words — it doesn’t understand meaning.
+
+So instead of keyword matching, I used a modern NLP technique called BERTopic. BERTopic helps identify natural groupings or topics in unstructured text using something called context-aware embeddings.
+
+To explain that simply: context-aware embeddings convert sentences into numbers — or vectors — that represent meaning, not the literal wording. So instead of storing text as letters or keywords, the system stores it as a kind of numerical ‘fingerprint’ of the idea.
+
+This works because BERTopic is based on a type of AI model called a Transformer. Transformers are very good at understanding the meaning of language because of two key design elements:
+
+The first is something called self-attention.
+Self-attention allows the model to look at all the words in a sentence and understand how they relate to each other. So if I say:
+‘The client couldn’t submit documents because the passport expired,’
+the model learns that ‘documents’ and ‘passport expired’ are connected, even though they’re far apart in the sentence.
+
+The second key piece is positional encoding.
+Because transformers don’t read text left-to-right like older models, they need a way to understand the order of the words. Positional encoding gives each word a sense of where it appears in the sentence. This helps the model distinguish meaning differences like:
+‘Screening pending for approval’ versus ‘Approval pending screening.’
+The words are the same, but the meaning is different.
+
+Finally, behind all of this are word embeddings, which are the building blocks that turn text into numeric vectors. Embeddings allow the model to understand that words like ‘passport’ and ‘ID proof’ are related concepts, even though they’re spelled differently.
+
+Using these concepts together, BERTopic analyzed all the historical free-text block notes and automatically grouped them into 13 meaningful topics. Importantly, these topics were not manually created — they emerged naturally based on meaning patterns in the text.
+
+After identifying the topics, the next question was: how do we assign new incoming free-text notes to the correct topic?
+
+For that, I used a mathematical method called cosine similarity.
+Every block note — past or future — gets converted into a vector. Each topic also has its own representative vector. Cosine similarity then measures how close the new note is to each topic vector — almost like checking which cluster it ‘belongs’ to in this meaning-based space.
+
+The closest match wins, and that’s how the new entry gets categorized. So instead of manually tagging or relying on questionably consistent keywords, the system now understands meaning and classifies automatically — even if users type differently.
+
+The result is that we now have structured, consistent, and searchable data. We can easily run reporting, trend analysis, or controls — and we’ve reduced manual interpretation. In short, we turned unstructured human language into standardized operational insights using meaning-based AI rather than keyword rules.”
+
+⸻
+
+✨ One-Sentence Closing (optional)
+
+“So instead of forcing users or systems to think in exact words, we now let the model understand what was meant — just like a human would.”

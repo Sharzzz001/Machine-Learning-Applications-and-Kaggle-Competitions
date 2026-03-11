@@ -271,3 +271,6 @@ Self-Projects/work/SiteSpam/amortization_schedule.csv
 S6E2/sample_submission.csv
 S6E2/train.csv
 S6E2/test.csv
+/S6E2/ag_models
+S6E2/submission_baseline.csv
+S6E2/submission_interactions.csv

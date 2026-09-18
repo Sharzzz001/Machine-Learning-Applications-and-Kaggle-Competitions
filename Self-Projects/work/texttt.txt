@@ -1,7 +1,19 @@
-Article 1 – Positive Match (How to Articulate)
+I’m building an app which helps do name screening in a CIB. It fetches the client details, from ASAM (Vendor system provided by ripjar for screening dow jones and factiva database for alerts and news articles)
 
-This article reports on a US Senate hearing where Tom Cotton questions the CEO of TikTok, Shou Zi Chew, regarding TikTok’s potential links to the Chinese Communist Party.
+The tool I’ve built has been combined of two POCs
 
-During the exchange, the CEO states that he served in the Singapore military as part of mandatory national service, which applies only to Singapore citizens. Senator Cotton challenges this by asserting that Chinese influence and infiltration are present even within Singapore, implying that the CEO’s nationality or service does not eliminate concerns of CCP influence.
+ASAM returns alerts (which is created when our client record matches asam database of names). Now one alert can have multiple hits or evidences (which are different people in asam database having similar names). Each hit can have one or multiple news articles
 
-The article directly names the individual, references his role as TikTok’s CEO, and discusses allegations tied to his background and affiliations. Since the subject in the article clearly aligns with the client’s identity and role, and there are no valid discounting factors, this is treated as a positive match.
+POC-1: A name matching algorithm that works at alert-evidence level. It checks the nomura clients name, gender, dob. Then it compares it against the evidence or hits name, gender, dob to find differences. If there are any differences then it would mark that hit as a false match ( now we dont even need to read the news articles in these hits for adverse news since its a name mismatch at hit level)
+
+Poc-1 can mark some or all hits within an alert as false match, it all depends on the names that come under an alert as hits
+
+Poc-2: for all those hits which are marked as manual review required by poc-1, poc2 is applicable. Poc2 uses llm and prompts to find if the client in the article is relevant (is it really the client we’re screening) by using factors like name, age, gender, nationality, mention_type (primary, secondary, or incidental mention in the article). Secondly if poc2 cannot discount the article in pass 1, which proves the client in the article is the one we are screening, it would then do a materiality analysis. Where we have given it fields or categories which define financial crime, non financial crime. If it cannot determine any materiality in the article which relates to adverse news as per our name screening guidelines, it would deem the article non material. 
+
+Also once materiality is identified it also suggests who to route the article to (either FCC, or BM, or head of department) which is also taken from the guidelines and mentioned in the prompt
+
+What i want to do is build a very cool looking UI for this. It should be minimalist with smooth animations and design flows. Where do you think i can take inspiration from? I tried looking in 21st.dev but i couldn’t find good ones as you see this one requires us to have tables which shows all the hits in an alert which user inputs the alert id for, then display all hits with poc1 decision for each hit in it.
+
+Then runs poc2 and show the results of every news article with the materiality assessment and final decision (escalate, discount, non material)
+
+How to build this ui, any websites or search phrases that will help me get good templates? Also I’m under corporate proxy so i can’t do npm install which a lot of templates on 21st dev suggests

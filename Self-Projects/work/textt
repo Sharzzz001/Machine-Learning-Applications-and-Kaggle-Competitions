@@ -1,72 +1,73 @@
-Great news — since you’re already using the folder mode (not --onefile), you’re halfway there. Here’s what’s happening and how to speed things up:
-Why It’s Slow
-PyInstaller apps on network drives are slow because on launch, Python needs to read hundreds of small .pyc, .dll, and .so files from the _internal/ folder — and each file read over a slow network link adds latency.
-
-Solutions (Best to Easiest)
-1. 🏆 Cache to Local Temp on Startup (Best Fix)
-Wrap your app with a small launcher script that copies the folder to the local machine first, then runs it from there:
-
-# launcher.py
-import os, shutil, subprocess, sys, tempfile
-
-src = os.path.dirname(os.path.abspath(__file__))  # network drive location
-dst = os.path.join(tempfile.gettempdir(), "myapp_cache")
-
-# Only re-copy if files changed (compare modified time of exe)
-src_exe = os.path.join(src, "myapp.exe")
-dst_exe = os.path.join(dst, "myapp.exe")
-
-if not os.path.exists(dst_exe) or os.path.getmtime(src_exe) > os.path.getmtime(dst_exe):
-    shutil.copytree(src, dst, dirs_exist_ok=True)
-
-subprocess.run([dst_exe] + sys.argv[1:])
-
-
-This copies once and caches — subsequent launches are near-instant as long as the exe hasn’t changed.
-
-2. Zip the _internal Folder (PKG Archive)
-PyInstaller supports loading from a .pkg zip archive. You can consolidate all the internal files into one large file — one big sequential read is faster than thousands of small reads over a network:
-
-pyinstaller yourscript.py --collect-all yourpackage
-
-
-Then in your .spec file:
-
-exe = EXE(..., contents_directory='.')  # flattens layout (PyInstaller 6+)
-
-
-Or use --contents-directory . flag to put everything next to the exe rather than in _internal/.
-
-3. Exclude Unused Modules
-Fewer files = faster load. Aggressively exclude what you don’t need in your .spec:
-
-a = Analysis(
-    ['script.py'],
-    excludes=[
-        'tkinter', 'unittest', 'email', 'html', 'http',
-        'urllib', 'xml', 'pydoc', 'doctest', 'argparse',
-        'difflib', 'multiprocessing'
-    ],
-)
+Structure the interview around four areas: communication, AI intuition, practical automation, and ownership. Since this is for an intern, you are testing for structured thinking, pragmatism, and how they handle ambiguity—not whether they have memorized enterprise architecture.
+1. Conversational & Communication
+Q1: "Pick a technical project you’re proud of and explain it to me as if I’m an Operations Manager who doesn’t code."
+ * Recommended Answer: They skip the library names and model architectures at first, focusing instead on the problem, the before/after workflow, and the impact (time saved, fewer manual errors). They use plain language and check if you’re following along.
+ * How to Guide & Follow-Ups:
+   * If they get too technical: Interrupt gently: "Pretend I don't know what an API or a vector database is—why should my team care?"
+   * Follow-up: "What was the hardest part of getting that project to actually work in practice, not just in theory?"
+Q2: "Tell me about a time you built something—a script, a project, or a workflow—and it broke or gave completely wrong results. What did you do?"
+ * Recommended Answer: They own the mistake without blaming others, walk through a logical debugging process (isolating variables, checking inputs/outputs, reading logs), and mention what they changed to prevent it from happening again.
+ * How to Guide & Follow-Ups:
+   * If they give a generic answer: Push for specifics: "How did you actually realize it was broken? Did you catch it, or did someone else?"
+   * Follow-up: "If you had to hand that project over to someone else tomorrow, what’s the one edge case you’d warn them about?"
+2. AI & Prompting Intuition
+Q3: "When should we use a simple one-shot prompt versus a multi-step AI agent—or skip AI altogether?"
+ * Recommended Answer:
+   * Skip AI: When rules are fixed and deterministic (e.g., moving structured CSV data, standard calculations). Regular code is faster, cheaper, and 100% predictable.
+   * One-shot prompt: For self-contained, single-step tasks like summarizing an email, classifying a ticket, or extracting fields into JSON.
+   * Agentic workflow: Only when the task requires dynamic decision-making, tool use (querying a database, calling an API), or iterating based on intermediate results.
+ * How to Guide & Follow-Ups:
+   * If they want to use agents for everything: Nudge them: "Agents are slower, cost more tokens, and can get stuck in loops. Why not just chain two simple prompts together?"
+   * Follow-up: "How would you know if an agent is actually performing better than a simpler prompt?"
+Q4: "In banking operations, 95% accuracy isn't good enough—a 5% error rate can mean a failed trade or a compliance breach. How do you stop an LLM from silently making a mistake?"
+ * Recommended Answer: They shouldn't just say "write a better prompt." Look for practical guardrails:
+   * Enforcing structured outputs (e.g., JSON schemas) and validating them with code.
+   * Adding confidence thresholds or human-in-the-loop (HITL) reviews for edge cases or high-value actions.
+   * Using deterministic code for math/lookups rather than letting the LLM calculate anything.
+   * Building a small test set of real examples (evals) to test changes before deploying.
+ * How to Guide & Follow-Ups:
+   * If they get stuck: Give them a hint: "Imagine the LLM is extracting a dollar amount from a PDF. What could go wrong, and how could Python double-check the LLM's work?"
+   * Follow-up: "If an LLM isn't sure about an answer, how do you force it to say 'I don't know' instead of guessing?"
+3. Live Automation Case Study
+Q5: "An Ops team spends 20 hours a week reading unstructured client emails, pulling out key details (client name, trade ID, issue type), and typing them into an internal tracker. Walk me through how you’d automate this."
+ * Recommended Answer: A strong intern breaks this into a pipeline rather than jumping straight to code:
+   * Clarify first: Ask about email volume, attachments, data sensitivity, and whether the internal tracker has an API.
+   * Ingestion & Extraction: Fetch emails programmatically, use a one-shot LLM call with a strict JSON schema to extract the fields, and flag missing/ambiguous fields.
+   * Validation & Routing: Check the extracted Trade ID against a database (deterministic check). If valid, push to the tracker; if not, route to a human exception queue.
+   * Measure Impact: Track how many emails go straight through (straight-through processing rate) vs. how many still need human review, translating that into hours/FTE saved.
+ * How to Guide & Follow-Ups:
+   * If they jump straight into tools: Pull them back: "Before we pick a model or framework, what questions would you ask the Ops team first?"
+   * Follow-up 1: "What happens if a client sends a follow-up email on the same thread correcting the Trade ID?"
+   * Follow-up 2: "How would you prove to leadership after 1 month that this actually saved FTE time?"
+4. Closing & Culture Check
+Q6: "What’s something you’ve learned recently on your own—technical or non-technical—just because you were curious?"
+ * Recommended Answer: Genuine enthusiasm and depth. It doesn't have to be AI-related. You are looking for someone who naturally goes down rabbit holes, figures things out without hand-holding, and can articulate what they learned.
+ * How to Guide & Follow-Ups:
+   * Follow-up: "What’s one thing about working in a bank's Operations or AI team that you’re unsure about or want to know more about?" (Pay close attention to the questions they ask you at the end—strong candidates ask about the team's tech stack, how projects get adopted by Ops, or what success looks like in the first 30 days.)
 
 
-4. Use UPX Compression
-Reduces total file size (fewer bytes over the wire):
-
-pyinstaller yourscript.py --upx-dir /path/to/upx
-
-
-5. Pre-warm with a Shortcut (Quick Win)
-If code changes are rare, just run the app once locally from the network path to let the OS file cache warm up. The second and subsequent launches on the same machine will be much faster until the cache is evicted.
-
-Recommended Combo
-
-
-
-|Scenario           |Recommendation                  |
-|-------------------|--------------------------------|
-|Files change rarely|Launcher script with local cache|
-|Files change often |Exclude unused modules + UPX    |
-|PyInstaller 6+     |`--contents-directory .` + UPX  |
-
-The launcher cache approach (#1) will give you the most dramatic improvement with no rebuild required.​​​​​​​​​​​​​​​​
+For an intern, you aren’t testing whether they can build a Jenkins pipeline from scratch—you’re testing for good hygiene: making sure they won’t accidentally commit an API key, overwrite someone else’s work, or panic when they see a Linux terminal.
+Q1: "You’ve built a Python script that calls an internal LLM API using an API key, and you’re ready to add it to our shared Git repo. Walk me through how you get your code from your laptop into the main branch."
+ * Recommended Answer:
+   * Secrets management: Store the API key in a .env file (or environment variable) and verify .env is in .gitignore so credentials never hit Git.
+   * Branching: Create a separate feature branch (e.g., feature/email-extractor) rather than committing directly to main.
+   * Review: Push the branch and open a Pull Request (PR) with a clear description so a teammate can review it before merging.
+ * How to Guide & Follow-Ups:
+   * If they forget about the API key: Prompt them: "What happens if that API key gets pushed to the repo by mistake? Is just deleting it in the next commit enough?" (Good answer: No, it stays in the Git history—you have to rotate/revoke the key immediately.)
+   * Follow-up: "What do you do if someone else updated main while you were working, and now you have a merge conflict?"
+Q2: "Your automation script works perfectly on your laptop, so we move it to our non-prod Linux server—and it immediately crashes. What are the first 3 things you check?"
+ * Recommended Answer: Look for systematic, practical troubleshooting rather than guessing:
+   * Dependencies & Environment: Is it using the right Python version and virtual environment (venv), and were all packages installed from requirements.txt?
+   * OS & Path Differences: Are there hardcoded Windows paths (like C:\Users\...) or case-sensitivity issues in filenames?
+   * Config & Permissions: Are the environment variables set on the server, and does the script have read/write permissions for the folders or network endpoints it needs?
+ * How to Guide & Follow-Ups:
+   * If they haven't used Linux much: Reassure them it’s fine, then test their intuition: "If the script is running in the background on a server with no screen, how would you figure out why it crashed at 3 AM?" (Looking for: logging to a file, checking error logs/stack traces instead of relying on print() statements.)
+   * Follow-up: "Have you used the Linux command line before? If you needed to check if a script is still running or see the last 50 lines of a log file, how would you approach it?" (They don't need to memorize ps aux or tail -n 50, just know that those tools exist and they can look up the flags.)
+Q3: "Since our team is still maturing our CI/CD setup, explain in simple terms what a basic CI/CD pipeline would actually do for us—and what’s the first automated check you’d want to add."
+ * Recommended Answer:
+   * CI (Continuous Integration): Automatically checks code whenever someone opens a PR—running tests or linters so broken code doesn't get merged into main.
+   * CD (Continuous Deployment): Automatically deploys approved code to the non-prod server so nobody has to manually SSH in, pull code, and restart scripts (which causes human error).
+   * First check to add: A secret scanner (to catch leaked keys), basic linting/syntax checks, or a small suite of unit tests to verify core logic hasn't broken.
+ * How to Guide & Follow-Ups:
+   * If they freeze on the acronym: Demystify it: "Ignore the buzzword—imagine 4 people are deploying scripts to the same Linux server every week. What could go wrong if everyone does it manually?"
+   * Follow-up: "For an AI solution specifically, why is automated testing trickier than for a regular Python script?" (Great bridge back to AI: LLM outputs are non-deterministic, so you often have to test the surrounding deterministic code separately from the prompt evaluation.)
